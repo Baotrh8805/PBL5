@@ -14,14 +14,7 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    /**
-     * Tìm một User theo địa chỉ email.
-     *
-     * @param email Địa chỉ email cần tìm
-     * @return Optional<User> – có giá trị nếu tìm thấy, rỗng nếu không tồn tại
-     */
-    Optional<User> findByEmail(String email);
-
+    
     /**
      * Tìm một User theo địa chỉ email hoặc tên đăng nhập.
      *

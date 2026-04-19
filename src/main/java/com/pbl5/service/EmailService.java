@@ -43,17 +43,16 @@ public class EmailService {
 
     /**
      * Gửi email đặt lại mật khẩu khi người dùng quên mật khẩu.
-     * Email chứa một đường link gồm resetToken (UUID) để người dùng click đặt lại mật khẩu.
+     * Email chứa một mã PIN 6 số để người dùng nhập đặt lại mật khẩu.
      *
      * @param to    Địa chỉ email người nhận
-     * @param token Token UUID ngẫu nhiên để đặt lại mật khẩu (lưu trong DB)
+     * @param token Mã PIN ngẫu nhiên để đặt lại mật khẩu (lưu trong DB)
      */
     public void sendResetPasswordEmail(String to, String token) {
         String subject = "Đặt lại mật khẩu";
 
-        // Tạo URL reset – người dùng click vào link này để đến trang đặt lại mật khẩu
-        String resetUrl = "http://localhost:8080/?token=" + token;
-        String message = "Vui lòng click vào link sau để đặt lại mật khẩu: " + resetUrl;
+        String message = "Mã xác nhận (PIN) để khôi phục mật khẩu của bạn là: " + token + "\n\n"
+                       + "Vui lòng nhập mã này vào trang Đặt lại mật khẩu để tiếp tục. Nếu bạn không yêu cầu, vui lòng bỏ qua email này.";
 
         // Tạo và cấu hình đối tượng email
         SimpleMailMessage email = new SimpleMailMessage();

@@ -159,9 +159,9 @@
                         <!-- BƯỚC 2 -->
                         <div id="reg-step-2" class="hidden">
                             <div class="input-group">
-                                <label for="reg-name">Họ và tên</label>
+                                <label for="reg-name">Tên hiển thị</label>
                                 <div class="input-with-icon">
-                                    <input type="text" id="reg-name" placeholder="Nguyễn Văn A">
+                                    <input type="text" id="reg-name" placeholder="Ví dụ: Lê LC">
                                     <i class="fa-solid fa-circle-check auth-icon success-icon hidden"></i>
                                 </div>
                                 <small class="error-msg"></small>
@@ -180,7 +180,7 @@
                                 <div class="input-group" style="flex: 1; min-width: 0;">
                                     <label for="reg-dob">Ngày sinh</label>
                                     <div class="input-with-icon">
-                                        <input type="date" id="reg-dob" style="font-family: inherit;">
+                                        <input type="date" id="reg-dob" max="2015-12-31" style="font-family: inherit;">
                                         <i class="fa-solid fa-circle-check auth-icon success-icon hidden" style="right: 35px;"></i>
                                     </div>
                                     <small class="error-msg"></small>
@@ -275,9 +275,12 @@
                 <!-- RESET PASSWORD SECTION -->
                 <div id="reset-password-section" class="form-section hidden">
                     <h2>Đặt lại mật khẩu</h2>
-                    <p class="subtitle">Vui lòng nhập mật khẩu mới của bạn bên dưới.</p>
+                    <p class="subtitle">Vui lòng nhập mã PIN vừa nhận được vào email và mật khẩu mới.</p>
                     <form id="reset-password-form">
-                        <input type="hidden" id="reset-token">
+                        <div class="input-group">
+                            <label for="reset-pin">Mã xác nhận (PIN)</label>
+                            <input type="text" id="reset-pin" placeholder="Ví dụ: 123456" maxlength="6" pattern="\d{6}" required autocomplete="off">
+                        </div>
                         <div class="input-group">
                             <label for="new-password">Mật khẩu mới</label>
                             <div class="password-wrapper">
@@ -286,6 +289,9 @@
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary full-width">Xác nhận thay đổi</button>
+                        <p class="switch-form-text" style="margin-top:20px;">
+                            <a href="javascript:void(0)" onclick="showSection('forgot-password-section')" class="bold-link"><i class="fa-solid fa-arrow-left"></i> Quay lại</a>
+                        </p>
                     </form>
                 </div>
                 

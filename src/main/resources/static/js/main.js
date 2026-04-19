@@ -114,9 +114,9 @@ document.getElementById('reg-password')?.addEventListener('input', () => {
 });
 document.getElementById('reg-confirm-password')?.addEventListener('input', () => validateField('reg-confirm-password', null, 'Xác nhận mật khẩu không được bỏ trống', 'Mật khẩu không khớp.', 'reg-password'));
 document.getElementById('reg-name')?.addEventListener('input', () => validateField('reg-name', /^.+$/, 'Họ và tên không được bỏ trống', 'Họ và tên không hợp lệ.'));
-document.getElementById('reg-phone')?.addEventListener('input', () => validateField('reg-phone', /^(84|0[3|5|7|8|9])+([0-9]{8})$/, 'Số điện thoại không được bỏ trống', 'Số điện thoại không hợp lệ.'));
+document.getElementById('reg-phone')?.addEventListener('input', () => validateField('reg-phone', /^\d{10}$/, 'Số điện thoại không được bỏ trống', 'Số điện thoại phải bao gồm đúng 10 chữ số.'));
 
-document.getElementById('reg-dob')?.addEventListener('change', () => validateField('reg-dob', /^.+$/, 'Vui lòng chọn ngày sinh', 'Ngày sinh không hợp lệ'));
+document.getElementById('reg-dob')?.addEventListener('change', () => validateField('reg-dob', /^(19\d{2}|200\d|201[0-5])-\d{2}-\d{2}$/, 'Vui lòng chọn ngày sinh', 'Năm sinh phải chọn dưới năm 2016.'));
 
 document.getElementById('reg-gender')?.addEventListener('change', () => validateField('reg-gender', /^.+$/, 'Vui lòng chọn giới...', 'Vui lòng chọn giới tính'));
 
@@ -129,8 +129,8 @@ window.nextStep = function(currentStep) {
         isValid &= validateField('reg-confirm-password', null, 'Xác nhận mật khẩu không được bỏ trống', 'Mật khẩu không khớp.', 'reg-password');
     } else if (currentStep === 2) {
         isValid &= validateField('reg-name', /^.+$/, 'Họ và tên không được bỏ trống', 'Họ và tên không hợp lệ.');
-        isValid &= validateField('reg-phone', /^(84|0[3|5|7|8|9])+([0-9]{8})$/, 'Số điên thoại không được bỏ trống', 'Số điện thoại không hợp lệ.');
-        isValid &= validateField('reg-dob', /^.+$/, 'Vui lòng chọn ngày sinh', 'Ngày sinh không hợp lệ');
+        isValid &= validateField('reg-phone', /^\d{10}$/, 'Số điện thoại không được bỏ trống', 'Số điện thoại phải bao gồm đúng 10 chữ số.');
+        isValid &= validateField('reg-dob', /^(19\d{2}|200\d|201[0-5])-\d{2}-\d{2}$/, 'Vui lòng chọn ngày sinh', 'Năm sinh phải chọn dưới năm 2016.');
         isValid &= validateField('reg-gender', /^.+$/, 'Vui lòng chọn giới...', 'Vui lòng chọn giới tính');
     }
     
@@ -256,8 +256,9 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         if (!res.ok) throw new Error(data.message || 'Lỗi đăng nhập');
         
         localStorage.setItem('token', data.token);
-        showSection('dashboard-section'); // (nếu có dashboard-section trong HTML)
-        showNotification(data.message);
+        // showSection('dashboard-section'); // (nếu có dashboard-section trong HTML)
+        // showNotification(data.message);
+        window.location.href = '/html/home.html';
     } catch (err) {
         showNotification(err.message, true);
     }
@@ -271,7 +272,9 @@ document.getElementById('forgot-password-form').addEventListener('submit', async
         const res = await fetch(`${API_URL}/forgot-password?email=${encodeURIComponent(email)}`, { method: 'POST' });
         const data = await res.text();
         if (!res.ok) throw new Error(data || 'Lỗi gửi yêu cầu');
-        showNotification(data);
+        showNotification("Mã PIN khôi phục đã được gửi vào email của bạn!");
+        // Chuyển sang form đặt lại mật khẩu để nhập mã PIN
+        showSection('reset-password-section');
     } catch (err) {
         showNotification(err.message, true);
     }
@@ -279,7 +282,7 @@ document.getElementById('forgot-password-form').addEventListener('submit', async
 
 document.getElementById('reset-password-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const token = document.getElementById('reset-token').value;
+    const token = document.getElementById('reset-pin').value;
     const newPassword = document.getElementById('new-password').value;
 
     try {
@@ -323,13 +326,12 @@ window.onload = async () => {
     if (urlParams.has('oauth_token')) {
         localStorage.setItem('token', urlParams.get('oauth_token'));
         window.history.replaceState({}, document.title, window.location.pathname);
-        showSection('dashboard-section');
-        showNotification('Đăng nhập bằng Google thành công!', false);
+        window.location.href = '/html/home.html';
     } else if (urlParams.has('token')) {
         document.getElementById('reset-token').value = urlParams.get('token');
         showSection('reset-password-section');
     } else if (localStorage.getItem('token')) {
-        // Nếu user đã có token local storage thì đưa vào dashboard
-        // showSection('dashboard-section'); 
+        // Nếu user đã có token local storage thì đưa vào home
+        window.location.href = '/html/home.html';
     }
 };

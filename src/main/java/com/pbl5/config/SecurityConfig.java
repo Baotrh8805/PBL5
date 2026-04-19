@@ -70,7 +70,7 @@ public class SecurityConfig {
                 // - /css/**, /js/** → tài nguyên tĩnh (CSS, JavaScript)
                 // - /error        → trang lỗi mặc định của Spring
                 // - /login/oauth2/** → callback URL của Google OAuth2
-                .requestMatchers("/api/auth/**", "/auth/**", "/", "/index.html", "/css/**", "/js/**", "/error", "/login/oauth2/**").permitAll()
+                .requestMatchers("/api/auth/**", "/auth/**", "/", "/index.html", "/css/**", "/js/**", "/error", "/login/oauth2/**", "/html/**", "/uploads/**", "/api/users/**", "/api/posts/**", "/api/upload/**").permitAll()
 
                 // Mọi request khác đều yêu cầu người dùng đã đăng nhập
                 .anyRequest().authenticated()

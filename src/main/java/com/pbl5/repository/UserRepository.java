@@ -16,6 +16,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     
     /**
+     * Tìm một User theo địa chỉ email.
+     *
+     * @param email Địa chỉ email
+     * @return Optional<User>
+     */
+    Optional<User> findByEmail(String email);
+
+    /**
      * Tìm một User theo địa chỉ email hoặc tên đăng nhập.
      *
      * @param email Địa chỉ email
@@ -54,4 +62,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
     
     boolean existsByPhoneNumber(String phoneNumber);
+
+    /**
+     * Kiểm tra xem fullName (Tên hiển thị) đã được ai đó sử dụng chưa.
+     */
+    boolean existsByFullName(String fullName);
 }

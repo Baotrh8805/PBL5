@@ -22,8 +22,8 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
-    /** Họ và tên đầy đủ của người dùng */
-    @Column(nullable = false)
+    /** Tên hiển thị của người dùng (Không được trùng lặp và không được để trống) */
+    @Column(nullable = false, unique = true)
     private String fullName;
 
     /** Mật khẩu đã được mã hóa (BCrypt). Có thể null nếu đăng nhập bằng Google OAuth2 */
@@ -36,6 +36,14 @@ public class User {
     /** Giới tính */
     @Column(nullable = true)
     private String gender;
+
+    /** Tiểu sử */
+    @Column(length = 255)
+    private String bio;
+
+    /** Mối quan hệ */
+    @Column(length = 100)
+    private String relationshipStatus;
 
     /** Số điện thoại */
     @Column(unique = true, nullable = true)
@@ -66,6 +74,18 @@ public class User {
     /** Token UUID dùng để đặt lại mật khẩu. Sẽ bị xóa sau khi đặt lại thành công. */
     private String resetPasswordToken;
 
+    @Column(length = 500)
+    private String avatar;
+
+    @Column(length = 500)
+    private String cover;
+
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
+
+    public String getCover() { return cover; }
+    public void setCover(String cover) { this.cover = cover; }
+
     // ==================== Getters và Setters ====================
 
     /** Trả về ID của người dùng */
@@ -93,6 +113,14 @@ public class User {
     public String getGender() { return gender; }
 
     public void setGender(String gender) { this.gender = gender; }
+
+    public String getBio() { return bio; }
+
+    public void setBio(String bio) { this.bio = bio; }
+
+    public String getRelationshipStatus() { return relationshipStatus; }
+
+    public void setRelationshipStatus(String relationshipStatus) { this.relationshipStatus = relationshipStatus; }
 
     public String getPhoneNumber() { return phoneNumber; }
 

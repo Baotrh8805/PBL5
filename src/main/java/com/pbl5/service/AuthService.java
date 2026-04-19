@@ -74,6 +74,14 @@ public class AuthService {
             throw new RuntimeException("Số điện thoại đã được sử dụng");
         }
 
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Tên hiển thị không được bỏ trống");
+        }
+
+        if (userRepository.existsByFullName(request.getFullName().trim())) {
+            throw new RuntimeException("Tên hiển thị đã có người sử dụng. Vui lòng chọn tên khác!");
+        }
+
         // Tạo mã PIN xác thực ngẫu nhiên 6 số
         String verifyCode = String.format("%06d", new java.util.Random().nextInt(999999));
         
@@ -191,14 +199,12 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
 
-        
-
-        // Tạo token ngẫu nhiên và lưu vào trường resetPasswordToken
-        String resetToken = UUID.randomUUID().toString();
+        // Tạo mã PIN (6 chữ số) ngẫu nhiên thay vì UUID
+        String resetToken = String.format("%06d", new java.util.Random().nextInt(999999));
         user.setResetPasswordToken(resetToken);
         userRepository.save(user);
 
-        // Gửi email chứa link đặt lại mật khẩu kèm token
+        // Gửi email chứa mã PIN
         emailService.sendResetPasswordEmail(user.getEmail(), resetToken);
     }
 

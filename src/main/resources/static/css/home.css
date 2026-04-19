@@ -164,6 +164,97 @@ button {
     border: 2px solid white;
 }
 
+.notification-container {
+    position: relative;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    width: 340px;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    z-index: 1200;
+    overflow: hidden;
+}
+
+.dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dropdown-header h4 {
+    margin: 0;
+    font-size: 17px;
+    color: var(--text-main);
+}
+
+.mark-all-read-btn {
+    color: var(--primary-color);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.dropdown-body {
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    color: inherit;
+}
+
+.notification-item:hover {
+    background: #f3f6f8;
+}
+
+.notification-item.unread {
+    background: #e8faf6;
+}
+
+.notification-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.notification-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.notification-msg {
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--text-main);
+}
+
+.notification-time {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.notification-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    flex-shrink: 0;
+}
+
 .user-avatar-btn img, 
 .avatar-large, 
 .avatar-medium, 

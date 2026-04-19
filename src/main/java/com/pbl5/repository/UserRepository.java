@@ -67,4 +67,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * Kiểm tra xem fullName (Tên hiển thị) đã được ai đó sử dụng chưa.
      */
     boolean existsByFullName(String fullName);
+
+    java.util.List<User> findByFullNameContainingIgnoreCase(String fullName);
+
 }

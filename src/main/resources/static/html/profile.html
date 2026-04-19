@@ -10,6 +10,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/home.css">
     <link rel="stylesheet" href="/css/profile.css">
+    <link rel="stylesheet" href="/css/chat.css">
+    <!-- WebSocket libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 </head>
 <body>
     <!-- Header Navigation -->
@@ -20,8 +24,7 @@
             </a>
             <nav class="main-nav">
                 <a href="/html/home.html" class="nav-link">Trang chủ</a>
-                <a href="#" class="nav-link">Bạn bè</a>
-                <a href="#" class="nav-link">Thông báo</a>
+                <a href="/html/friends.html" class="nav-link">Bạn bè</a>
             </nav>
         </div>
         <div class="header-center">
@@ -31,11 +34,22 @@
             </div>
         </div>
         <div class="header-right">
-            <button class="icon-btn"><i class="fa-regular fa-envelope"></i></button>
-            <button class="icon-btn notification-btn">
-                <i class="fa-regular fa-bell"></i>
-                <span class="badge">1</span>
-            </button>
+            <button class="icon-btn" id="nav-message-btn" onclick="toggleChatSidebar()"><i class="fa-regular fa-envelope"></i></button>
+            <div class="notification-container" style="position: relative;">
+                <button class="icon-btn notification-btn" onclick="toggleNotificationDropdown()">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="badge" id="notification-badge" style="display:none;">0</span>
+                </button>
+                <div id="notification-dropdown" class="notification-dropdown" style="display:none;">
+                    <div class="dropdown-header">
+                        <h4>Thông báo</h4>
+                        <button class="mark-all-read-btn" onclick="markAllNotificationsAsRead()">Đánh dấu đã đọc</button>
+                    </div>
+                    <div class="dropdown-body" id="notification-list">
+                        <!-- Notifications appended here dynamically -->
+                    </div>
+                </div>
+            </div>
             <div class="user-avatar-btn">
                 <img src="/uploads/default-avatar.png" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
             </div>
@@ -62,7 +76,9 @@
                 </div>
                 
                 <div class="profile-actions">
-                    <button class="btn btn-secondary"><i class="fa-solid fa-pen"></i> Chỉnh sửa trang cá nhân</button>
+                    <button class="btn btn-secondary" id="btn-message" style="display:none;"><i class="fa-regular fa-envelope"></i> Nhắn tin</button>
+                    <span id="friendship-actions" style="display:none;"></span>
+                    <button class="btn btn-secondary" id="btn-edit-profile"><i class="fa-solid fa-pen"></i> Chỉnh sửa trang cá nhân</button>
                 </div>
             </div>
             
@@ -159,6 +175,39 @@
         </div>
     </div>
 
+    <!-- Chat Sidebar -->
+    <div id="chat-sidebar" class="chat-sidebar">
+        <div class="chat-sidebar-title">Người liên hệ</div>
+        <div class="chat-sidebar-search" style="padding: 10px; border-bottom: 1px solid #ddd;">
+            <input type="text" id="chat-sidebar-search-input" placeholder="Tìm kiếm người dùng..." style="width:100%; padding: 8px; border-radius: 20px; border: 1px solid #ced0d4; outline:none;" onkeyup="searchChatUsers(this.value)">
+        </div>
+        <div id="chat-contact-list">
+            <!-- Fetch friends dynamically -->
+            <div style="padding: 15px; color:#65676B; font-size:14px;">Đang tải...</div>
+        </div>
+    </div>
+
+    <!-- Chat Box -->
+    <div id="chat-box" class="chat-box">
+        <div class="chat-header">
+            <div class="chat-target-info">
+                <img id="chat-target-avatar" src="/uploads/default-avatar.png">
+                <span id="chat-target-name">Tên bạn bè</span>
+            </div>
+            <div class="chat-header-actions" onclick="closeChatBox()">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+        </div>
+        <div id="chat-messages-container" class="chat-messages">
+            <!-- Messages here -->
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input-text" placeholder="Nhập tin nhắn...">
+            <button onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
     <script src="/js/profile.js"></script>
+    <script src="/js/chat.js"></script>
 </body>
 </html>

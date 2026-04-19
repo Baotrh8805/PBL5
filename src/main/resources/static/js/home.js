@@ -423,7 +423,7 @@ function renderPosts(posts, token) {
             <div class="post-header">
                 <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
-                    <h4 class="post-author">${post.authorName}</h4>
+                    <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                     <span class="post-time">${timeSince(post.createdAt)} ${visibilityIcon}</span>
                 </div>
             </div>
@@ -623,7 +623,7 @@ async function fetchComments(postId) {
                 <div class="comment" style="display: flex; gap: 8px; margin-bottom: 10px;">
                     <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
                     <div class="comment-bubble" style="background: #f0f2f5; padding: 8px 12px; border-radius: 18px; max-width: 80%;">
-                        <strong style="font-size: 13px;">${c.authorName}</strong>
+                        <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
                         <div style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
                     </div>
                 </div>

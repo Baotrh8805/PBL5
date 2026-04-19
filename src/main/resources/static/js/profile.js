@@ -1,3 +1,6 @@
+let targetUserId = null;
+let currentUserId = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Kiểm tra đăng nhập
     const token = localStorage.getItem('token');
@@ -6,63 +9,149 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('userId');
+    if (id) targetUserId = parseInt(id);
+
     // 2. Fetch User Info
     fetchUserProfile();
 });
 
 function fetchUserProfile() {
     const token = localStorage.getItem('token');
+    
+    // First fetch current user logic to populate header and compare IDs
     fetch('/api/users/profile', {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => {
         if (!res.ok) throw new Error('Token hết hạn');
         return res.json();
     })
-    .then(user => {
-        // Cập nhật Header
+    .then(currentUser => {
+        currentUserId = currentUser.id;
+        
+        // Update header for current user
         const headerAvatar = document.getElementById('header-avatar');
-        if (headerAvatar && user.avatar) {
-            headerAvatar.src = user.avatar;
+        if (headerAvatar && currentUser.avatar) {
+            headerAvatar.src = currentUser.avatar;
         }
 
-        // Cập nhật Trang cá nhân
-        document.getElementById('profile-name').innerText = user.fullName || "Người dùng";
-        document.getElementById('profile-bio').innerText = user.bio || "Chưa có tiểu sử.";
-        
-        if (user.avatar) {
-            document.getElementById('profile-avatar').src = user.avatar;
-            document.getElementById('create-post-avatar').src = user.avatar;
-            const modalAvatar = document.getElementById('modal-avatar');
-            if (modalAvatar) modalAvatar.src = user.avatar;
+        if (targetUserId && targetUserId !== currentUserId) {
+            // Xem trang của người khác
+            fetchTargetUser(targetUserId, token);
+        } else {
+            // Xem trang của mình
+            fillProfileData(currentUser, true);
+            fetchMyPosts('/api/posts/me');
         }
-
-        document.getElementById('profile-relationship').innerText = user.relationshipStatus || '---';
-        document.getElementById('profile-email').innerText = user.email || '---';
-        document.getElementById('profile-phone').innerText = user.phoneNumber || '---';
-        document.getElementById('profile-dob').innerText = user.dateOfBirth ? formatDate(user.dateOfBirth) : '---';
-        document.getElementById('profile-gender').innerText = user.gender || '---';
-        
-        document.querySelectorAll('.modal-user-name').forEach(el => {
-            el.textContent = user.fullName || 'Người dùng';
-        });
-
-        // Setup placeholders
-        document.getElementById('post-content-input').placeholder = `Bạn đang nghĩ gì?`;
-        const modalPostContent = document.getElementById('modal-post-content');
-        if (modalPostContent) {
-            modalPostContent.placeholder = `${user.fullName} ơi, bạn đang nghĩ gì thế?`;
-        }
-        
-        // 3. Tải bài viết
-        fetchMyPosts();
     })
     .catch(() => {
         localStorage.removeItem('token');
         window.location.href = "/";
     });
+}
+
+function fetchTargetUser(id, token) {
+    fetch(`/api/users/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Không lấy được user');
+        return res.json();
+    })
+    .then(targetUser => {
+        fillProfileData(targetUser, false);
+        fetchMyPosts(`/api/posts/user/${targetUser.id}`);
+    })
+    .catch(err => console.error(err));
+}
+
+function fillProfileData(user, isCurrentUser) {
+    // Cập nhật Trang cá nhân
+    document.getElementById('profile-name').innerText = user.fullName || "Người dùng";
+    document.getElementById('profile-bio').innerText = user.bio || "Chưa có tiểu sử.";
+    
+    if (user.avatar) {
+        const pAvatar = document.getElementById('profile-avatar');
+        if (pAvatar) pAvatar.src = user.avatar;
+        const cpAvatar = document.getElementById('create-post-avatar');
+        if (cpAvatar) cpAvatar.src = user.avatar;
+        const modalAvatar = document.getElementById('modal-avatar');
+        if (modalAvatar) modalAvatar.src = user.avatar;
+    }
+
+    const relEl = document.getElementById('profile-relationship');
+    if (relEl) relEl.innerText = user.relationshipStatus || '---';
+    const emailEl = document.getElementById('profile-email');
+    if (emailEl) emailEl.innerText = user.email || '---';
+    const phoneEl = document.getElementById('profile-phone');
+    if (phoneEl) phoneEl.innerText = user.phoneNumber || '---';
+    const dobEl = document.getElementById('profile-dob');
+    if (dobEl) dobEl.innerText = user.dateOfBirth ? formatDate(user.dateOfBirth) : '---';
+    const genderEl = document.getElementById('profile-gender');
+    if (genderEl) genderEl.innerText = user.gender || '---';
+    
+    document.querySelectorAll('.modal-user-name').forEach(el => {
+        el.textContent = user.fullName || 'Người dùng';
+    });
+
+    if (isCurrentUser) {
+        // Setup placeholders
+        const pcInput = document.getElementById('post-content-input');
+        if (pcInput) pcInput.placeholder = `Bạn đang nghĩ gì?`;
+        const modalPostContent = document.getElementById('modal-post-content');
+        if (modalPostContent) {
+            modalPostContent.placeholder = `${user.fullName} ơi, bạn đang nghĩ gì thế?`;
+        }
+    } else {
+        // Ẩn các nút chỉnh sửa
+        const btnEdit = document.getElementById('btn-edit-profile');
+        if (btnEdit) btnEdit.style.display = 'none';
+        
+        const editAvt = document.querySelector('.edit-avatar-btn');
+        if (editAvt) editAvt.style.display = 'none';
+        const editCov = document.querySelector('.edit-cover-btn');
+        if (editCov) editCov.style.display = 'none';
+
+        // Lấy elements có thể không tồn tại
+        const createPostBlock = document.querySelector('.create-post-container');
+        if (createPostBlock) createPostBlock.style.display = 'none';
+
+        // Hiện nút nhắn tin
+        const btnMsg = document.getElementById('btn-message');
+        if (btnMsg) {
+        const fAction = document.getElementById('friendship-actions');
+        if (fAction) {
+            fAction.style.display = 'inline-block';
+            const status = user.friendshipStatus;
+            const targetId = user.id;
+            if (!status || status === 'NONE') {
+                fAction.innerHTML = `<button class="btn btn-primary" onclick="sendFriendRequest(${targetId})"><i class="fa-solid fa-user-plus"></i> Thêm bạn bè</button>`;
+            } else if (status === 'PENDING') {
+                if (targetId === user.receiverId) {
+                    fAction.innerHTML = `<button class="btn btn-secondary" onclick="removeFriend(${targetId})"><i class="fa-solid fa-user-clock"></i> Đã gửi lời mời</button>`;
+                } else {
+                    fAction.innerHTML = `
+                        <button class="btn btn-primary" onclick="acceptFriendRequest(${targetId})"><i class="fa-solid fa-user-check"></i> Chấp nhận</button>
+                        <button class="btn btn-secondary" onclick="removeFriend(${targetId})"><i class="fa-solid fa-user-xmark"></i> Xóa</button>
+                    `;
+                }
+            } else if (status === 'ACCEPTED') {
+                fAction.innerHTML = `<button class="btn btn-secondary" onclick="removeFriend(${targetId})"><i class="fa-solid fa-user-group"></i> Bạn bè</button>`;
+            }
+        }
+            btnMsg.style.display = 'inline-block';
+            let avt = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+            btnMsg.onclick = () => {
+                if (typeof openChatBox === "function") {
+                    openChatBox(user.id, user.fullName, avt);
+                } else {
+                    console.error("Chat functionality not loaded");
+                }
+            };
+        }
+    }
 }
 
 function formatDate(dateStr) {
@@ -71,9 +160,10 @@ function formatDate(dateStr) {
     return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
 }
 
-function fetchMyPosts() {
+function fetchMyPosts(endpointUrl) {
     const token = localStorage.getItem('token');
-    fetch('/api/posts/me', {
+    const url = endpointUrl || '/api/posts/me';
+    fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => res.json())
@@ -121,7 +211,7 @@ function renderProfilePosts(posts) {
             <div class="post-header">
                 <img src="${post.authorAvatar || '/uploads/default-avatar.png'}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
-                    <h4 class="post-author">${post.authorName}</h4>
+                    <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                     <span class="post-time">${timeSince(post.createdAt)} ${visibilityIcon}</span>
                 </div>
             </div>
@@ -321,7 +411,7 @@ async function fetchComments(postId) {
                     <div class="comment" style="display: flex; gap: 8px;">
                         <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
                         <div class="comment-bubble" style="background: #f0f2f5; padding: 8px 12px; border-radius: 18px; max-width: 80%;">
-                            <strong style="font-size: 13px;">${c.authorName}</strong>
+                            <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
                             <div style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
                         </div>
                     </div>
@@ -502,3 +592,40 @@ async function submitModalPost() {
         checkModalPostContent();
     }
 }
+
+// === FRIENDSHIP START ===
+function sendFriendRequest(id) {
+    const token = localStorage.getItem('token');
+    fetch(`/api/friends/request/${id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => {
+        if(res.ok) location.reload();
+        else alert("Lỗi gửi yêu cầu");
+    });
+}
+function acceptFriendRequest(id) {
+    const token = localStorage.getItem('token');
+    fetch(`/api/friends/accept/${id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => {
+        if(res.ok) location.reload();
+        else alert("Lỗi chấp nhận yêu cầu");
+    });
+}
+function removeFriend(id) {
+    if(!confirm("Bạn có chắc chắn muốn thực hiện thao tác này?")) return;
+    const token = localStorage.getItem('token');
+    fetch(`/api/friends/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => {
+        if(res.ok) location.reload();
+        else alert("Lỗi xóa/hủy");
+    });
+}
+// === FRIENDSHIP END ===

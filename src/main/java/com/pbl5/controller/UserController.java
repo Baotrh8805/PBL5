@@ -2,6 +2,9 @@ package com.pbl5.controller;
 
 import com.pbl5.model.User;
 import com.pbl5.repository.UserRepository;
+import com.pbl5.repository.FriendshipRepository;
+import com.pbl5.model.Friendship;
+import com.pbl5.enums.FriendshipStatus;
 import com.pbl5.security.JwtTokenProvider;
 import com.pbl5.dto.OnboardingRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,9 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private FriendshipRepository friendshipRepository;
 
     @Autowired
     private JwtTokenProvider tokenProvider;
@@ -57,6 +63,81 @@ public class UserController {
         
         return ResponseEntity.status(404).body("Không tìm thấy người dùng");
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id, @RequestHeader(value="Authorization", required=false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body("Chưa đăng nhập");
+        }
+        
+        String token = authHeader.substring(7);
+        if (!tokenProvider.validateToken(token)) {
+            return ResponseEntity.status(401).body("Token không hợp lệ");
+        }
+
+        Optional<User> userOpt = userRepository.findById(id);
+        
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            Map<String, Object> profile = new HashMap<>();
+            profile.put("id", user.getId());
+            profile.put("email", user.getEmail());
+            profile.put("fullName", user.getFullName());
+            profile.put("gender", user.getGender());
+            profile.put("bio", user.getBio());
+            profile.put("relationshipStatus", user.getRelationshipStatus());
+            profile.put("avatar", user.getAvatar() != null ? user.getAvatar() : "");
+            profile.put("cover", user.getCover() != null ? user.getCover() : "");
+            
+            String currentUserEmail = tokenProvider.getEmailFromJWT(token);
+            if (currentUserEmail != null && !currentUserEmail.equals(user.getEmail())) {
+                Optional<User> currentUserOpt = userRepository.findByEmail(currentUserEmail);
+                if (currentUserOpt.isPresent()) {
+                    Optional<Friendship> f = friendshipRepository.findByUsers(currentUserOpt.get(), user);
+                    if (f.isPresent()) {
+                        Friendship fr = f.get();
+                        profile.put("friendshipStatus", fr.getStatus().toString());
+                        profile.put("requesterId", fr.getRequester().getId());
+                        profile.put("receiverId", fr.getReceiver().getId());
+                    } else {
+                        profile.put("friendshipStatus", "NONE");
+                    }
+                }
+            }
+            return ResponseEntity.ok(profile);
+        }
+        
+        return ResponseEntity.status(404).body("Không tìm thấy người dùng");
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUsers(@RequestParam("q") String query, @RequestHeader(value="Authorization", required=false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body("Chưa đăng nhập");
+        }
+        String token = authHeader.substring(7);
+        if (!tokenProvider.validateToken(token)) {
+            return ResponseEntity.status(401).body("Token không hợp lệ");
+        }
+        String email = tokenProvider.getEmailFromJWT(token);
+        Optional<User> currentUserOpt = userRepository.findByEmail(email);
+        if (currentUserOpt.isEmpty()) {
+            return ResponseEntity.status(404).body("Không tìm thấy người dùng");
+        }
+        
+        java.util.List<User> users = userRepository.findByFullNameContainingIgnoreCase(query);
+        java.util.List<Map<String, Object>> result = new java.util.ArrayList<>();
+        for (User u : users) {
+            if (u.getId().equals(currentUserOpt.get().getId())) continue;
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", u.getId());
+            map.put("fullName", u.getFullName());
+            map.put("avatar", u.getAvatar());
+            result.add(map);
+        }
+        return ResponseEntity.ok(result);
+    }
+
 
     @PutMapping("/onboarding")
     public ResponseEntity<?> updateOnboarding(

@@ -16,6 +16,11 @@ import com.pbl5.repository.UserRepository;
 import com.pbl5.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import com.pbl5.repository.NotificationRepository;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -25,6 +30,12 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @Autowired
     private PostRepository postRepository;
@@ -112,6 +123,21 @@ public class PostController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getUserPosts(@RequestHeader("Authorization") String authHeader, @PathVariable Long userId) {
+        User currentUser = getAuthenticatedUser(authHeader);
+        if (currentUser == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        // NOTE: Later we should filter posts based on visibility: PUBLIC for everyone, FRIENDS if they are friends, etc.
+        // For now, let's return all posts or just public/friends if we don't have friendship check easily available here.
+        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        List<PostResponse> responses = new ArrayList<>();
+        for (Post p : posts) {
+            responses.add(convertToResponse(p, currentUser));
+        }
+        return ResponseEntity.ok(responses);
+    }
+
     // Like hoặc Unlike
     @PostMapping("/{postId}/like")
     public ResponseEntity<?> toggleLike(@RequestHeader("Authorization") String authHeader, @PathVariable Long postId) {
@@ -132,6 +158,29 @@ public class PostController {
             freshLike.setPost(post);
             freshLike.setUser(user);
             likeRepository.save(freshLike);
+
+            // Gửi thông báo cho chủ bài viết (nếu không phải tự like)
+            if (!post.getUser().getId().equals(user.getId())) {
+                com.pbl5.model.Notification notifEntity = new com.pbl5.model.Notification();
+                notifEntity.setUser(post.getUser());
+                notifEntity.setSender(user);
+                notifEntity.setType("LIKE_POST");
+                notifEntity.setMessage(user.getFullName() + " đã thích bài viết của bạn.");
+                notifEntity.setLink("/html/home.html#post-" + post.getId());
+                notifEntity = notificationRepository.save(notifEntity);
+
+                Map<String, Object> notification = new HashMap<>();
+                notification.put("id", notifEntity.getId());
+                notification.put("type", "LIKE_POST");
+                notification.put("message", notifEntity.getMessage());
+                notification.put("senderId", user.getId());
+                notification.put("senderName", user.getFullName());
+                notification.put("senderAvatar", user.getAvatar());
+                notification.put("link", notifEntity.getLink());
+                
+                messagingTemplate.convertAndSend("/topic/notifications/" + post.getUser().getId(), notification);
+            }
+
             return ResponseEntity.ok("Đã like");
         }
     }
@@ -219,6 +268,28 @@ public class PostController {
         comment.setUser(user);
         
         comment = commentRepository.save(comment);
+
+        // Gửi thông báo cho chủ bài viết (nếu không tự comment)
+        if (!postOpt.get().getUser().getId().equals(user.getId())) {
+            com.pbl5.model.Notification notifEntity = new com.pbl5.model.Notification();
+            notifEntity.setUser(postOpt.get().getUser());
+            notifEntity.setSender(user);
+            notifEntity.setType("COMMENT_POST");
+            notifEntity.setMessage(user.getFullName() + " đã bình luận về bài viết của bạn.");
+            notifEntity.setLink("/html/home.html#post-" + postOpt.get().getId());
+            notifEntity = notificationRepository.save(notifEntity);
+
+            Map<String, Object> notification = new HashMap<>();
+            notification.put("id", notifEntity.getId());
+            notification.put("type", "COMMENT_POST");
+            notification.put("message", notifEntity.getMessage());
+            notification.put("senderId", user.getId());
+            notification.put("senderName", user.getFullName());
+            notification.put("senderAvatar", user.getAvatar());
+            notification.put("link", notifEntity.getLink());
+            
+            messagingTemplate.convertAndSend("/topic/notifications/" + postOpt.get().getUser().getId(), notification);
+        }
         
         String authorName = user.getFullName() != null ? user.getFullName() : "Người dùng";
         String authorAvatar = user.getAvatar() != null ? user.getAvatar() : 

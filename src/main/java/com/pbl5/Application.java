@@ -19,7 +19,7 @@ public class Application implements CommandLineRunner {
         System.out.println("==========================================================");
         System.out.println("🚀 MÁY CHỦ JAVA SPRING BOOT ĐÃ CHẠY THÀNH CÔNG RỰC RỠ! 🚀");
         System.out.println("🌐 Địa chỉ nội bộ Mac:  http://localhost:8080");
-        System.out.println("🌐 Địa chỉ ip trên mạng lan:  hãy gõ ipconfig getifaddr en0 \n sẽ hiện ra ip hiện tại của máy trên mạng lan  "
+        System.out.println("🌐 Tên miền trên mạng lan:  https://lcnetwork.loca.lt  "
                             );
 
         System.out.println("==========================================================\n");

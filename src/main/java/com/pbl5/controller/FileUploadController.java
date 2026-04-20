@@ -1,24 +1,23 @@
 package com.pbl5.controller;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/upload")
 public class FileUploadController {
 
-    private final String UPLOAD_DIR = "src/main/resources/static/uploads/";
+    @Autowired
+    private Cloudinary cloudinary;
 
     @PostMapping("/image")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
@@ -27,28 +26,21 @@ public class FileUploadController {
         }
 
         try {
-            // Tự động tạo folder nếu chưa có
-            Path uploadPath = Paths.get(UPLOAD_DIR);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
+            // Tải ảnh trực tiếp lên Cloudinary thay vì lưu vào ổ cứng
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            
+            // Nhận một link https nét và vĩnh viễn từ Cloudinary trả về
+            String imageUrl = uploadResult.get("secure_url").toString();
 
-            // Đổi tên file để không bị trùng (dùng UUID)
-            String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-            String newFileName = UUID.randomUUID().toString() + "-" + fileName;
-
-            // Lưu file
-            Path filePath = uploadPath.resolve(newFileName);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            // Trả về url có thể truy cập từ frontend (tĩnh được cấu hình)
+            // Trả về url có thể truy cập 24/7 từ Cloudinary cho Frontend
             Map<String, String> response = new HashMap<>();
-            response.put("imageUrl", "/uploads/" + newFileName);
+            response.put("imageUrl", imageUrl);
             return ResponseEntity.ok(response);
 
         } catch (IOException e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Lỗi lưu file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("Lỗi tải ảnh lên Cloudinary: " + e.getMessage());
         }
     }
 }

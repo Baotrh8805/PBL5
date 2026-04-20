@@ -19,7 +19,7 @@ public class Application implements CommandLineRunner {
         System.out.println("==========================================================");
         System.out.println("🚀 MÁY CHỦ JAVA SPRING BOOT ĐÃ CHẠY THÀNH CÔNG RỰC RỠ! 🚀");
         System.out.println("🌐 Địa chỉ nội bộ Mac:  http://localhost:8080");
-        System.out.println("🌐 Tên miền trên mạng lan:  https://lcnetwork.loca.lt  "
+        System.out.println("🌐 Tên miền trên mạng lan: https://pbl5-omru.onrender.com  "
                             );
 
         System.out.println("==========================================================\n");

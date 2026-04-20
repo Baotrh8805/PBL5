@@ -69,8 +69,8 @@ public class SecurityConfig {
                 // - /index.html   → file HTML chính
                 // - /css/**, /js/** → tài nguyên tĩnh (CSS, JavaScript)
                 // - /error        → trang lỗi mặc định của Spring
-                // - /login/oauth2/** → callback URL của Google OAuth2
-                .requestMatchers("/api/auth/**", "/auth/**", "/", "/index.html", "/css/**", "/js/**", "/error", "/login/oauth2/**").permitAll()
+                // - /api/friends/**, /api/messages/**, /ws/** -> các API chat/bạn bè
+                .requestMatchers("/api/auth/**", "/auth/**", "/", "/index.html", "/css/**", "/js/**", "/error", "/login/oauth2/**", "/html/**", "/uploads/**", "/api/users/**", "/api/posts/**", "/api/upload/**", "/api/friends/**", "/api/messages/**", "/api/notifications/**", "/ws/**").permitAll()
 
                 // Mọi request khác đều yêu cầu người dùng đã đăng nhập
                 .anyRequest().authenticated()

@@ -69,7 +69,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             // TH2: User chưa từng đăng ký → tạo tài khoản mới từ dữ liệu Google
             User newUser = new User();
             newUser.setEmail(email);
-            newUser.setFullName(name);
+
+            // Xử lý chống trùng lặp Tên hiển thị khi đăng nhập Google
+            String uniqueName = name;
+            int counter = 1;
+            while (userRepository.existsByFullName(uniqueName)) {
+                uniqueName = name + " " + counter;
+                counter++;
+            }
+            newUser.setFullName(uniqueName);
+            
             newUser.setProvider(Provider.GOOGLE);
 
             // Tài khoản Google không cần xác thực email → đặt luôn status ACTIVE

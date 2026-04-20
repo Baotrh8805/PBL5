@@ -1,0 +1,1 @@
+sed -i '' "s|document.querySelector('.profile-cover').style.backgroundImage = \`url(\${user.cover})\`;|document.getElementById('profile-cover').src = user.cover;|g" src/main/resources/static/js/profile.js

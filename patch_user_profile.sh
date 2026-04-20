@@ -1,0 +1,1 @@
+sed -i '' 's|profile.put("avatar", "");|profile.put("avatar", user.getAvatar() != null ? user.getAvatar() : "");\n            profile.put("cover", user.getCover() != null ? user.getCover() : "");|g' src/main/java/com/pbl5/controller/UserController.java

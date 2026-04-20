@@ -1,9 +1,9 @@
 package com.pbl5.model;
 
 import com.pbl5.enums.Provider;
+import com.pbl5.enums.Role;
 import com.pbl5.enums.UserStatus;
 import jakarta.persistence.*;
-import java.util.UUID;
 
 /**
  * Entity đại diện cho bảng "users" trong cơ sở dữ liệu.
@@ -67,6 +67,11 @@ public class User {
      */
     @Enumerated(EnumType.STRING)
     private UserStatus status;
+
+    /** Vai trò của người dùng: USER, MODERATOR, ADMIN */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'USER'")
+    private Role role = Role.USER;
 
     /** Mã UUID dùng để xác thực email khi đăng ký tài khoản. Sẽ bị xóa sau khi xác thực xong. */
     private String verificationCode;
@@ -147,6 +152,10 @@ public class User {
 
     /** Gán trạng thái tài khoản */
     public void setStatus(UserStatus status) { this.status = status; }
+
+    public Role getRole() { return role; }
+
+    public void setRole(Role role) { this.role = role; }
 
     /** Trả về mã xác thực email */
     public String getVerificationCode() { return verificationCode; }

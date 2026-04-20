@@ -55,8 +55,9 @@ public class UserController {
             profile.put("relationshipStatus", user.getRelationshipStatus());
 
             // If they don't have an avatar logic yet, pass a blank string to trigger JS avatar creation
-            profile.put("avatar", "");
+            profile.put("avatar", user.getAvatar() != null ? user.getAvatar() : "");
             profile.put("status", user.getStatus());
+            profile.put("role", user.getRole());
             
             return ResponseEntity.ok(profile);
         }

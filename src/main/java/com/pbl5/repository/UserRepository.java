@@ -70,4 +70,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     java.util.List<User> findByFullNameContainingIgnoreCase(String fullName);
 
+    java.util.List<User> findByRole(com.pbl5.enums.Role role);
+
+    long countByRole(com.pbl5.enums.Role role);
+
 }

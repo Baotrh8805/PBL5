@@ -40,6 +40,8 @@ public class Application implements CommandLineRunner {
     private static final String ADMIN_FULLNAME = "Administrator";
 
     public static void main(String[] args) {
+        // Thiết lập múi giờ từ lúc ứng dụng mới bắt đầu khởi động
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         SpringApplication.run(Application.class, args);
         System.out.println("\n");
         System.out.println("==========================================================");

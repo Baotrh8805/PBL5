@@ -53,8 +53,8 @@ public class AuthController {
         try {
             String ip = httpRequest.getHeader("X-Forwarded-For");
             if (ip == null || ip.isBlank()) ip = httpRequest.getRemoteAddr();
-            String token = authService.login(request, ip);
-            return ResponseEntity.ok(new AuthResponse(token, "Đăng nhập thành công."));
+            java.util.Map<String, String> result = authService.login(request, ip);
+            return ResponseEntity.ok(new AuthResponse(result.get("token"), "Đăng nhập thành công.", result.get("role")));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new AuthResponse(null, e.getMessage()));
         }

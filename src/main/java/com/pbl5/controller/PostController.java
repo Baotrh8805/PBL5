@@ -11,6 +11,9 @@ import com.pbl5.model.Like;
 import com.pbl5.model.Comment;
 import com.pbl5.repository.CommentRepository;
 import com.pbl5.repository.LikeRepository;
+import com.pbl5.enums.FriendshipStatus;
+import com.pbl5.model.Friendship;
+import com.pbl5.repository.FriendshipRepository;
 import com.pbl5.repository.PostRepository;
 import com.pbl5.repository.UserRepository;
 import com.pbl5.security.JwtTokenProvider;
@@ -41,6 +44,9 @@ public class PostController {
     private PostRepository postRepository;
 
     @Autowired
+    private FriendshipRepository friendshipRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -51,6 +57,19 @@ public class PostController {
 
     @Autowired
     private JwtTokenProvider tokenProvider;
+
+
+    private boolean canViewPost(Post p, User currentUser) {
+        if (p.getUser().getId().equals(currentUser.getId())) return true;
+        if (p.getVisibility() == PostVisibility.PUBLIC || p.getVisibility() == null) return true;
+        if (p.getVisibility() == PostVisibility.PRIVATE) return false;
+        if (p.getVisibility() == PostVisibility.FRIENDS) {
+            return friendshipRepository.findByUsers(currentUser, p.getUser())
+                .map(f -> f.getStatus() == FriendshipStatus.ACCEPTED)
+                .orElse(false);
+        }
+        return false;
+    }
 
     private User getAuthenticatedUser(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
@@ -89,20 +108,7 @@ public class PostController {
         List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
         List<PostResponse> responses = new ArrayList<>();
         for (Post p : posts) {
-            // Kiểm tra quyền xem bài viết
-            boolean canView = false;
-            boolean isMine = p.getUser().getId().equals(currentUser.getId());
-            
-            if (p.getVisibility() == PostVisibility.PUBLIC) {
-                canView = true;
-            } else if (p.getVisibility() == PostVisibility.PRIVATE) {
-                canView = isMine;
-            } else if (p.getVisibility() == PostVisibility.FRIENDS) {
-                // TODO: Logic kiểm tra bạn bè ở đây, hiện tại coi như xem được hoặc chỉ cho phép nếu isMine
-                canView = true; // Sẽ update sau khi có bảng Friend
-            }
-
-            if (canView) {
+            if (canViewPost(p, currentUser)) {
                 responses.add(convertToResponse(p, currentUser));
             }
         }
@@ -118,7 +124,9 @@ public class PostController {
         List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
         List<PostResponse> responses = new ArrayList<>();
         for (Post p : posts) {
-            responses.add(convertToResponse(p, currentUser));
+            if (canViewPost(p, currentUser)) {
+                responses.add(convertToResponse(p, currentUser));
+            }
         }
         return ResponseEntity.ok(responses);
     }
@@ -133,7 +141,9 @@ public class PostController {
         List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId);
         List<PostResponse> responses = new ArrayList<>();
         for (Post p : posts) {
-            responses.add(convertToResponse(p, currentUser));
+            if (canViewPost(p, currentUser)) {
+                responses.add(convertToResponse(p, currentUser));
+            }
         }
         return ResponseEntity.ok(responses);
     }
@@ -241,6 +251,7 @@ public class PostController {
             responses.add(new CommentResponse(
                 c.getId(),
                 c.getContent(),
+                c.getUser().getId(),
                 authorName,
                 authorAvatar,
                 c.getCreatedAt(),
@@ -298,6 +309,7 @@ public class PostController {
         CommentResponse response = new CommentResponse(
             comment.getId(),
             comment.getContent(),
+            user.getId(),
             authorName,
             authorAvatar,
             comment.getCreatedAt(),
@@ -319,13 +331,15 @@ public class PostController {
         }
 
         String authorName = post.getUser().getFullName() != null ? post.getUser().getFullName() : "Người dùng";
-        String authorAvatar = "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
+        String authorAvatar = post.getUser().getAvatar() != null ? post.getUser().getAvatar() : 
+            "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
 
         return new PostResponse(
             post.getId(),
             post.getContent(),
             post.getImageUrl(),
             post.getCreatedAt(),
+            post.getUser().getId(),
             authorName,
             authorAvatar,
             likeCount,

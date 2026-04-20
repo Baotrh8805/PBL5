@@ -114,8 +114,8 @@ function fillProfileData(user, isCurrentUser) {
         const editCov = document.querySelector('.edit-cover-btn');
         if (editCov) editCov.style.display = 'none';
 
-        // Lấy elements có thể không tồn tại
-        const createPostBlock = document.querySelector('.create-post-container');
+        // Ẩn khung tạo bài viết
+        const createPostBlock = document.querySelector('.create-post-box');
         if (createPostBlock) createPostBlock.style.display = 'none';
 
         // Hiện nút nhắn tin
@@ -540,7 +540,8 @@ async function submitModalPost() {
             const uploadRes = await fetch('/api/upload/image', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
+                headers: {'Authorization': `Bearer ${token}`},
+            body: formData
             });
             if (uploadRes.ok) {
                 const uploadData = await uploadRes.json();
@@ -629,3 +630,197 @@ function removeFriend(id) {
     });
 }
 // === FRIENDSHIP END ===
+
+// === CHỈNH SỬA TRANG CÁ NHÂN ===
+let currentProfileData = null;
+
+const originalFillProfileData = fillProfileData;
+fillProfileData = function(user, isCurrentUser) {
+    if(isCurrentUser) currentProfileData = user;
+    
+    if (user.cover) {
+        document.getElementById('profile-cover').src = user.cover;
+    }
+    
+    originalFillProfileData(user, isCurrentUser);
+};
+
+function openEditProfileModal() {
+    if(!currentProfileData) return;
+    document.getElementById('edit-fullname').value = currentProfileData.fullName || '';
+    document.getElementById('edit-bio').value = currentProfileData.bio || '';
+    document.getElementById('edit-relationship').value = currentProfileData.relationshipStatus || 'Độc thân';
+    document.getElementById('edit-phone').value = currentProfileData.phoneNumber || '';
+    
+    if(currentProfileData.dateOfBirth) {
+        let dob = new Date(currentProfileData.dateOfBirth);
+        let yyyy = dob.getFullYear();
+        let mm = String(dob.getMonth() + 1).padStart(2, '0');
+        let dd = String(dob.getDate()).padStart(2, '0');
+        document.getElementById('edit-dob').value = `${yyyy}-${mm}-${dd}`;
+    }
+    
+    document.getElementById('edit-gender').value = currentProfileData.gender || 'Nam';
+    
+    document.getElementById('edit-profile-modal').style.display = 'flex';
+}
+
+function closeEditProfileModal() {
+    document.getElementById('edit-profile-modal').style.display = 'none';
+}
+
+async function saveProfileChanges() {
+    const token = localStorage.getItem('token');
+    
+    const req = {
+        fullName: document.getElementById('edit-fullname').value.trim(),
+        bio: document.getElementById('edit-bio').value.trim(),
+        relationshipStatus: document.getElementById('edit-relationship').value,
+        phoneNumber: document.getElementById('edit-phone').value.trim(),
+        dateOfBirth: document.getElementById('edit-dob').value,
+        gender: document.getElementById('edit-gender').value
+    };
+    
+    try {
+        const res = await fetch('/api/users/profile', {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(req)
+        });
+        
+        if (res.ok) {
+            alert('Cập nhật thông tin thành công!');
+            location.reload();
+        } else {
+            const err = await res.text();
+            alert('Lỗi cập nhật: ' + err);
+        }
+    } catch(e) {
+        console.error(e);
+        alert('Đã xảy ra lỗi!');
+    }
+}
+
+let cropper;
+let currentCropType = null;
+let currentCropFile = null;
+
+function uploadImage(type, ev) {
+    const file = ev.target.files[0];
+    if(!file) return;
+    
+    currentCropType = type;
+    currentCropFile = file;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('cropper-image').src = e.target.result;
+        document.getElementById('cropper-modal').style.display = 'flex';
+        document.getElementById('cropper-title').textContent = type === 'cover' ? "Căn chỉnh ảnh bìa" : "Căn chỉnh ảnh đại diện";
+        
+        if (cropper) {
+            cropper.destroy();
+        }
+        
+        const aspectRatio = type === 'cover' ? 1095 / 350 : 1;
+        
+        cropper = new Cropper(document.getElementById('cropper-image'), {
+            aspectRatio: aspectRatio,
+            viewMode: 1, // Restrict the crop box to not exceed the size of the canvas
+            autoCropArea: 1,
+            dragMode: 'move', // Allow moving the image itself
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: false, // For cover photo style, we move the image inside the box usually, but viewMode 1 handles it
+            cropBoxResizable: false, // Fix the aspect ratio strictly
+        });
+    };
+    reader.readAsDataURL(file);
+    ev.target.value = ''; // Reset input to allow re-uploading the same file
+}
+
+function closeCropperModal() {
+    document.getElementById('cropper-modal').style.display = 'none';
+    if(cropper) {
+        cropper.destroy();
+        cropper = null;
+    }
+    currentCropType = null;
+    currentCropFile = null;
+}
+
+async function saveCroppedImage() {
+    if(!cropper || !currentCropType) return;
+    
+    const btn = document.getElementById('cropper-btn-save');
+    const originalText = btn.textContent;
+    btn.textContent = "Đang xử lý...";
+    btn.disabled = true;
+
+    // Get the cropped image data
+    cropper.getCroppedCanvas({
+        fillColor: '#fff',
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high',
+    }).toBlob(async (blob) => {
+        if (!blob) {
+            alert('Có lỗi xảy ra khi cắt ảnh');
+            btn.textContent = originalText;
+            btn.disabled = false;
+            return;
+        }
+
+        const formData = new FormData();
+        // Give it the original file's name and append timestamp
+        const ext = currentCropFile.name.split('.').pop();
+        formData.append('file', blob, `cropped-${Date.now()}.${ext}`);
+        
+        try {
+            const token = localStorage.getItem('token');
+            const uploadRes = await fetch('/api/upload/image', {
+                method: 'POST',
+                headers: {'Authorization': `Bearer ${token}`},
+                body: formData
+            });
+            
+            if(!uploadRes.ok) {
+                const text = await uploadRes.text(); alert('Lỗi khi tải ảnh lên: ' + text);
+                return;
+            }
+            
+            const uploadData = await uploadRes.json();
+            const imageUrl = uploadData.imageUrl;
+            
+            // Update user profile
+            const updateRes = await fetch(`/api/users/profile/${currentCropType}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ [currentCropType]: imageUrl })
+            });
+            
+            if (updateRes.ok) {
+                closeCropperModal();
+                location.reload();
+            } else {
+                alert(`Lỗi cập nhật ${currentCropType}`);
+            }
+        } catch(e) {
+            console.error(e);
+            alert('Đã xảy ra lỗi tải ảnh.');
+        } finally {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    });
+}
+
+window.uploadImage = uploadImage;
+window.closeCropperModal = closeCropperModal;
+window.saveCroppedImage = saveCroppedImage;

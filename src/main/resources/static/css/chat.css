@@ -104,11 +104,15 @@
 
 .chat-message {
     max-width: 75%;
+    width: fit-content;
     padding: 8px 12px;
     border-radius: 18px;
     font-size: 14px;
     line-height: 1.4;
     word-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+    box-sizing: border-box;
 }
 
 .chat-message.sent {

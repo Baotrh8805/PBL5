@@ -254,11 +254,13 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Lỗi đăng nhập');
-        
+
         localStorage.setItem('token', data.token);
-        // showSection('dashboard-section'); // (nếu có dashboard-section trong HTML)
-        // showNotification(data.message);
-        window.location.href = '/html/home.html';
+        if (data.role === 'ADMIN') {
+            window.location.href = '/html/admin.html';
+        } else {
+            window.location.href = '/html/home.html';
+        }
     } catch (err) {
         showNotification(err.message, true);
     }
@@ -324,14 +326,37 @@ window.onload = async () => {
     }
     
     if (urlParams.has('oauth_token')) {
-        localStorage.setItem('token', urlParams.get('oauth_token'));
+        const t = urlParams.get('oauth_token');
+        localStorage.setItem('token', t);
         window.history.replaceState({}, document.title, window.location.pathname);
-        window.location.href = '/html/home.html';
+        await redirectByRole(t);
     } else if (urlParams.has('token')) {
         document.getElementById('reset-token').value = urlParams.get('token');
         showSection('reset-password-section');
     } else if (localStorage.getItem('token')) {
-        // Nếu user đã có token local storage thì đưa vào home
-        window.location.href = '/html/home.html';
+        await redirectByRole(localStorage.getItem('token'));
     }
 };
+
+async function redirectByRole(token) {
+    try {
+        const res = await fetch('/api/users/profile', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) {
+            localStorage.removeItem('token');
+            return;
+        }
+        const profile = await res.json();
+        const role = typeof profile.role === 'object' ? profile.role?.name ?? profile.role : profile.role;
+        if (role === 'ADMIN') {
+            window.location.href = '/html/admin.html';
+        } else if (role === 'MODERATOR') {
+            window.location.href = '/html/home.html';
+        } else {
+            window.location.href = '/html/home.html';
+        }
+    } catch (e) {
+        window.location.href = '/html/home.html';
+    }
+}

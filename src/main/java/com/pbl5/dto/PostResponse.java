@@ -7,6 +7,7 @@ public class PostResponse {
     private String content;
     private String imageUrl;
     private LocalDateTime createdAt;
+    private Long authorId;
     private String authorName;
     private String authorAvatar;
     private long likeCount;
@@ -15,11 +16,12 @@ public class PostResponse {
     private boolean isMine;
     private String visibility;
 
-    public PostResponse(Long id, String content, String imageUrl, LocalDateTime createdAt, String authorName, String authorAvatar, long likeCount, long commentCount, boolean isLikedByCurrentUser, boolean isMine, String visibility) {
+    public PostResponse(Long id, String content, String imageUrl, LocalDateTime createdAt, Long authorId, String authorName, String authorAvatar, long likeCount, long commentCount, boolean isLikedByCurrentUser, boolean isMine, String visibility) {
         this.id = id;
         this.content = content;
         this.imageUrl = imageUrl;
         this.createdAt = createdAt;
+        this.authorId = authorId;
         this.authorName = authorName;
         this.authorAvatar = authorAvatar;
         this.likeCount = likeCount;
@@ -33,6 +35,7 @@ public class PostResponse {
     public String getContent() { return content; }
     public String getImageUrl() { return imageUrl; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public Long getAuthorId() { return authorId; }
     public String getAuthorName() { return authorName; }
     public String getAuthorAvatar() { return authorAvatar; }
     public long getLikeCount() { return likeCount; }

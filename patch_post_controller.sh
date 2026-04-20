@@ -1,0 +1,2 @@
+sed -i '' 's/import com.pbl5.repository.PostRepository;/import com.pbl5.enums.FriendshipStatus;\nimport com.pbl5.repository.FriendshipRepository;\nimport com.pbl5.model.Friendship;\nimport com.pbl5.repository.PostRepository;/g' src/main/java/com/pbl5/controller/PostController.java
+sed -i '' 's/private PostRepository postRepository;/private PostRepository postRepository;\n\n    @Autowired\n    private FriendshipRepository friendshipRepository;/g' src/main/java/com/pbl5/controller/PostController.java

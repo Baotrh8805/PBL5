@@ -1,2 +1,0 @@
-ALTER TABLE posts ADD COLUMN IF NOT EXISTS visibility VARCHAR(255) DEFAULT 'PUBLIC';
-UPDATE posts SET visibility = 'PUBLIC' WHERE visibility IS NULL;

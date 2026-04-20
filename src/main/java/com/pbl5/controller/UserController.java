@@ -59,6 +59,7 @@ public class UserController {
             profile.put("avatar", user.getAvatar() != null ? user.getAvatar() : "");
             profile.put("cover", user.getCover() != null ? user.getCover() : "");
             profile.put("status", user.getStatus());
+            profile.put("role", user.getRole());
             
             return ResponseEntity.ok(profile);
         }

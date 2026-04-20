@@ -6,12 +6,20 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.beans.factory.annotation.Autowired;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import jakarta.annotation.PostConstruct;
+import java.util.TimeZone;
 
 @SpringBootApplication
 public class Application implements CommandLineRunner {
 
     @Autowired
     private DataSource dataSource;
+
+    @PostConstruct
+    public void init() {
+        // Thiết lập múi giờ mặc định cho toàn bộ ứng dụng là giờ Việt Nam
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);

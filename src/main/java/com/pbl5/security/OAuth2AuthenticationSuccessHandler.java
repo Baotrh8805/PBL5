@@ -1,5 +1,9 @@
 package com.pbl5.security;
 
+import com.pbl5.model.LoginHistory;
+import com.pbl5.model.User;
+import com.pbl5.repository.LoginHistoryRepository;
+import com.pbl5.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -10,6 +14,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Handler được gọi tự động bởi Spring Security khi đăng nhập OAuth2 (Google) thành công.
@@ -21,9 +26,14 @@ import java.io.IOException;
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    /** Provider dùng để tạo JWT token từ email */
     @Autowired
     private JwtTokenProvider tokenProvider;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private LoginHistoryRepository loginHistoryRepository;
 
     /**
      * Được Spring Security gọi tự động sau khi OAuth2 login thành công.
@@ -46,8 +56,13 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // Tạo JWT token với email là subject – mặc định Ghi nhớ đăng nhập (30 ngày) cho OAuth2
         String token = tokenProvider.generateToken(email, true);
 
-        // Redirect người dùng về trang chủ của frontend, đính kèm token trong query param
-        // Frontend sẽ đọc "oauth_token" từ URL và lưu vào bộ nhớ để gửi cùng các request sau
+        // Lưu lịch sử đăng nhập Google
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isBlank()) ip = request.getRemoteAddr();
+        final String finalIp = ip;
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        userOpt.ifPresent(user -> loginHistoryRepository.save(new LoginHistory(user, finalIp, "GOOGLE")));
+
         getRedirectStrategy().sendRedirect(request, response, "/?oauth_token=" + token);
     }
 }

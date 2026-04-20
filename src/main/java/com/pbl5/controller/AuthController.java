@@ -5,6 +5,7 @@ import com.pbl5.dto.LoginRequest;
 import com.pbl5.dto.RegisterRequest;
 import com.pbl5.dto.ResetPasswordRequest;
 import com.pbl5.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,9 +49,11 @@ public class AuthController {
      * @return 200 OK với JWT token nếu thành công, hoặc 400 Bad Request nếu sai thông tin/tài khoản bị khóa
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
-            String token = authService.login(request);
+            String ip = httpRequest.getHeader("X-Forwarded-For");
+            if (ip == null || ip.isBlank()) ip = httpRequest.getRemoteAddr();
+            String token = authService.login(request, ip);
             return ResponseEntity.ok(new AuthResponse(token, "Đăng nhập thành công."));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new AuthResponse(null, e.getMessage()));

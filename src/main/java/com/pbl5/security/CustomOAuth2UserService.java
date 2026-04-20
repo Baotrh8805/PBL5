@@ -1,6 +1,7 @@
 package com.pbl5.security;
 
 import com.pbl5.enums.Provider;
+import com.pbl5.enums.Role;
 import com.pbl5.enums.UserStatus;
 import com.pbl5.model.User;
 import com.pbl5.repository.UserRepository;
@@ -80,6 +81,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             newUser.setFullName(uniqueName);
             
             newUser.setProvider(Provider.GOOGLE);
+            newUser.setRole(Role.USER);
 
             // Tài khoản Google không cần xác thực email → đặt luôn status ACTIVE
             newUser.setStatus(UserStatus.ACTIVE);

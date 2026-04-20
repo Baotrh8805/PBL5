@@ -41,9 +41,8 @@ async function fetchUserProfile(token) {
             });
             
             // Cập nhật avatar (nếu có custom url, hiện tại tạm xài chữ cái đầu)
-            // Lấy avatar từ UI Avatars dùng chữ cái đầu của tên
             let avatarUrl = data.avatar;
-            if (data.fullName) {
+            if (!avatarUrl && data.fullName) {
                 avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=00d1b2&color=fff`;
             }
 

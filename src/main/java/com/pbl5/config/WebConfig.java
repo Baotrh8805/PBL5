@@ -12,9 +12,14 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Serve static files từ classpath:/static/ (mặc định của Spring Boot)
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/");
+
+        // Serve uploaded files từ thư mục ngoài classpath
         Path uploadDir = Paths.get("src/main/resources/static/uploads");
         String uploadPath = uploadDir.toFile().getAbsolutePath();
-
-        registry.addResourceHandler("/uploads/**").addResourceLocations("file:" + uploadPath + "/");
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + uploadPath + "/");
     }
 }

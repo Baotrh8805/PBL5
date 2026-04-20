@@ -107,7 +107,7 @@ public class AuthService {
      * @return JWT token dạng chuỗi nếu đăng nhập thành công
      * @throws RuntimeException nếu email/mật khẩu sai hoặc tài khoản không hợp lệ
      */
-    public String login(LoginRequest request, String ipAddress) {
+    public Map<String, String> login(LoginRequest request, String ipAddress) {
         // Biến email trong LoginRequest lúc này có thể chứa Email hoặc Username
         String identifier = request.getEmail();
 
@@ -139,8 +139,8 @@ public class AuthService {
         // Lưu lịch sử đăng nhập
         loginHistoryRepository.save(new LoginHistory(user, ipAddress, "LOCAL"));
 
-        // Đăng nhập thành công → tạo và trả về JWT token với subject là email và hạn sử dụng tương ứng
-        return jwtTokenProvider.generateToken(user.getEmail(), request.isRememberMe());
+        String token = jwtTokenProvider.generateToken(user.getEmail(), request.isRememberMe());
+        return Map.of("token", token, "role", user.getRole().name());
     }
 
     public void verifyEmail(String email, String code) {

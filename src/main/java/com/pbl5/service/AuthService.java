@@ -3,15 +3,18 @@ package com.pbl5.service;
 import com.pbl5.dto.LoginRequest;
 import com.pbl5.dto.RegisterRequest;
 import com.pbl5.enums.Provider;
+import com.pbl5.enums.Role;
 import com.pbl5.enums.UserStatus;
+import com.pbl5.model.LoginHistory;
 import com.pbl5.model.User;
+import com.pbl5.repository.LoginHistoryRepository;
 import com.pbl5.repository.UserRepository;
 import com.pbl5.security.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.time.LocalDateTime;
@@ -38,6 +41,9 @@ public class AuthService {
     /** Dùng để gửi email xác thực và email quên mật khẩu */
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private LoginHistoryRepository loginHistoryRepository;
 
     private static class PendingUser {
         RegisterRequest request;
@@ -101,7 +107,7 @@ public class AuthService {
      * @return JWT token dạng chuỗi nếu đăng nhập thành công
      * @throws RuntimeException nếu email/mật khẩu sai hoặc tài khoản không hợp lệ
      */
-    public String login(LoginRequest request) {
+    public String login(LoginRequest request, String ipAddress) {
         // Biến email trong LoginRequest lúc này có thể chứa Email hoặc Username
         String identifier = request.getEmail();
 
@@ -129,6 +135,9 @@ public class AuthService {
             throw new RuntimeException("Từ chối truy cập: Tài khoản đã bị khoá.");
         }
         // Lưu ý: UserStatus.WARNING vẫn được phép đăng nhập bình thường
+
+        // Lưu lịch sử đăng nhập
+        loginHistoryRepository.save(new LoginHistory(user, ipAddress, "LOCAL"));
 
         // Đăng nhập thành công → tạo và trả về JWT token với subject là email và hạn sử dụng tương ứng
         return jwtTokenProvider.generateToken(user.getEmail(), request.isRememberMe());
@@ -165,6 +174,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setProvider(Provider.LOCAL);
         user.setStatus(UserStatus.ACTIVE);
+        user.setRole(Role.USER);
 
         userRepository.save(user);
         pendingUsers.remove(email);

@@ -54,6 +54,23 @@ async function fetchUserProfile(token) {
             });
             document.getElementById('modal-post-content').placeholder = `${data.fullName || 'Người dùng'} ơi, bạn đang nghĩ gì thế?`;
             
+            // Hiện nút Admin/Moderator trong sidebar nếu có quyền
+            if (data.role === 'ADMIN' || data.role === 'MODERATOR') {
+                const sidebarNav = document.querySelector('.sidebar-nav');
+                if (sidebarNav && !document.getElementById('admin-menu-item')) {
+                    const adminLink = document.createElement('a');
+                    adminLink.id = 'admin-menu-item';
+                    adminLink.href = '/html/admin.html';
+                    adminLink.className = 'menu-item admin-menu-item';
+                    adminLink.innerHTML = data.role === 'ADMIN'
+                        ? '<i class="fa-solid fa-shield-halved"></i> Quản trị hệ thống'
+                        : '<i class="fa-solid fa-user-shield"></i> Kiểm duyệt';
+                    // Chèn trước nút Đăng xuất
+                    const logoutItem = sidebarNav.querySelector('[onclick="logout()"]');
+                    sidebarNav.insertBefore(adminLink, logoutItem);
+                }
+            }
+
             // Xử lý Onboarding (Cách 1: Ép cập nhật thông tin nếu thiếu Số đt hoặc Ngày sinh)
             if (!data.phoneNumber || !data.dateOfBirth) {
                 showOnboardingModal(data);

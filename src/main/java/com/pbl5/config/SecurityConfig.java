@@ -1,15 +1,18 @@
 package com.pbl5.config;
 
 import com.pbl5.security.CustomOAuth2UserService;
+import com.pbl5.security.JwtAuthenticationFilter;
 import com.pbl5.security.OAuth2AuthenticationSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Cấu hình bảo mật trung tâm của ứng dụng (Spring Security).
@@ -20,15 +23,17 @@ import org.springframework.security.web.SecurityFilterChain;
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
-    /** Service xử lý thông tin người dùng từ Google OAuth2 */
     @Autowired
     private CustomOAuth2UserService customOAuth2UserService;
 
-    /** Handler xử lý hành động sau khi đăng nhập Google thành công (tạo JWT, redirect) */
     @Autowired
     private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
      * Đăng ký Bean mã hóa mật khẩu sử dụng thuật toán BCrypt.
@@ -62,21 +67,23 @@ public class SecurityConfig {
 
             // 2. Cấu hình phân quyền truy cập URL
             .authorizeHttpRequests(auth -> auth
-                // Các URL sau được phép truy cập mà không cần đăng nhập (public):
-                // - /api/auth/**  → tất cả API auth (đăng ký, đăng nhập, ...)
-                // - /auth/**      → trang xác thực phía web (verify, reset-password, ...)
-                // - /             → trang chủ
-                // - /index.html   → file HTML chính
-                // - /css/**, /js/** → tài nguyên tĩnh (CSS, JavaScript)
-                // - /error        → trang lỗi mặc định của Spring
-                // - /api/friends/**, /api/messages/**, /ws/** -> các API chat/bạn bè
+                // Public: không cần đăng nhập
                 .requestMatchers("/api/auth/**", "/auth/**", "/", "/index.html", "/css/**", "/js/**", "/error", "/login/oauth2/**", "/html/**", "/uploads/**", "/api/users/**", "/api/posts/**", "/api/upload/**", "/api/friends/**", "/api/messages/**", "/api/notifications/**", "/ws/**").permitAll()
+
+                // Chỉ ADMIN mới được truy cập /api/admin/**
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                // MODERATOR và ADMIN được truy cập /api/moderator/**
+                .requestMatchers("/api/moderator/**").hasAnyRole("MODERATOR", "ADMIN")
 
                 // Mọi request khác đều yêu cầu người dùng đã đăng nhập
                 .anyRequest().authenticated()
             )
 
-            // 3. Cấu hình OAuth2 Login (đăng nhập bằng Google)
+            // 3. Đăng ký JWT filter trước UsernamePasswordAuthenticationFilter
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
+            // 4. Cấu hình OAuth2 Login (đăng nhập bằng Google)
             .oauth2Login(oauth2 -> oauth2
                 // Chỉ định service tùy chỉnh để xử lý thông tin user từ Google
                 .userInfoEndpoint(userInfo -> userInfo

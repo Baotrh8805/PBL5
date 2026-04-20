@@ -99,12 +99,39 @@ public class ModeratorController {
     @PutMapping("/users/{id}/warn")
     public ResponseEntity<?> warnUser(@PathVariable Long id) {
         Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) return ResponseEntity.status(404).body("Không tìm thấy người dùng");
+        if (userOpt.isEmpty())
+            return ResponseEntity.status(404).body("Không tìm thấy người dùng");
 
         User user = userOpt.get();
         user.setStatus(UserStatus.WARNING);
         userRepository.save(user);
         return ResponseEntity.ok(Map.of("message", "Đã gửi cảnh báo đến người dùng ID " + id));
+    }
+
+    /** Khoá người dùng (đặt status = BANNED) */
+    @PutMapping("/users/{id}/ban")
+    public ResponseEntity<?> banUser(@PathVariable Long id) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty())
+            return ResponseEntity.status(404).body("Không tìm thấy người dùng");
+
+        User user = userOpt.get();
+        user.setStatus(UserStatus.BANNED);
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "Đã khoá người dùng ID " + id));
+    }
+
+    /** Mở khoá người dùng (đặt status = ACTIVE) */
+    @PutMapping("/users/{id}/unban")
+    public ResponseEntity<?> unbanUser(@PathVariable Long id) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty())
+            return ResponseEntity.status(404).body("Không tìm thấy người dùng");
+
+        User user = userOpt.get();
+        user.setStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "Đã gỡ phạt người dùng ID " + id));
     }
 
     /** Xem bài viết của một người dùng cụ thể */

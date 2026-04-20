@@ -35,6 +35,15 @@ async function fetchUserProfile(token) {
         if (res.ok) {
             const data = await res.json();
             
+            // Redirect MODERATOR out of home feed
+            if (data.role === 'MODERATOR') {
+                window.location.href = '/html/moderator.html';
+                return;
+            } else if (data.role === 'ADMIN') {
+                window.location.href = '/html/admin.html';
+                return;
+            }
+            
             // Cập nhật tên của tài khoản đăng nhập trên màn hình (sidebar)
             document.querySelectorAll('.user-name').forEach(el => {
                 el.textContent = data.fullName || 'Người dùng';

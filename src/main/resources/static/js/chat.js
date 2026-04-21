@@ -57,6 +57,7 @@ function handleNotification(notification) {
 }
 
 let notificationDropdownOpen = false;
+let inboxDropdownOpen = false;
 
 function toggleNotificationDropdown() {
     const dropdown = document.getElementById('notification-dropdown');
@@ -65,7 +66,78 @@ function toggleNotificationDropdown() {
     dropdown.style.display = notificationDropdownOpen ? 'block' : 'none';
     if(notificationDropdownOpen) {
         fetchNotifications();
+        if(inboxDropdownOpen) toggleInboxDropdown(); // close inbox if open
     }
+}
+
+function toggleInboxDropdown() {
+    const dropdown = document.getElementById('inbox-dropdown');
+    if(!dropdown) return;
+    inboxDropdownOpen = !inboxDropdownOpen;
+    dropdown.style.display = inboxDropdownOpen ? 'flex' : 'none'; // Flex because of messenger layout
+    if(inboxDropdownOpen) {
+        if(notificationDropdownOpen) toggleNotificationDropdown();
+        loadInboxDropdown(); // Fetch and render conversations here!
+    }
+}
+
+async function loadInboxDropdown() {
+    const token = localStorage.getItem('token');
+    const inboxList = document.getElementById('inbox-list');
+    if (!inboxList) return;
+    inboxList.innerHTML = '<div style="padding: 15px; color:#65676B; font-size:14px; text-align:center;">Đang tải...</div>';
+
+    try {
+        const [friendsRes, convRes] = await Promise.all([
+            fetch('/api/friends', { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch('/api/messages/conversations', { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+
+        const friends = friendsRes.ok ? await friendsRes.json() : [];
+        const conversations = convRes.ok ? await convRes.json() : [];
+
+        // Merge logic
+        const mergedMap = new Map();
+        conversations.forEach(u => mergedMap.set(u.id, u));
+        friends.forEach(u => {
+            if (!mergedMap.has(u.id)) {
+                mergedMap.set(u.id, { ...u, isFriend: true, lastMessage: 'Các bạn đã trở thành bạn bè', lastMessageTime: null });
+            }
+        });
+        const contacts = Array.from(mergedMap.values());
+
+        inboxList.innerHTML = '';
+        if(contacts.length === 0) {
+            inboxList.innerHTML = '<div style="padding: 15px; color:#65676B; font-size:14px; text-align:center;">Chưa có đoạn chat nào.</div>';
+            return;
+        }
+
+        contacts.forEach(f => {
+            let avatarUrl = f.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff`;
+            let msgStr = f.lastMessage || 'Bạn bè';
+
+            const item = document.createElement('div');
+            item.className = 'notification-item';
+            item.style.cursor = 'pointer';
+            item.onclick = () => {
+                const dropdown = document.getElementById('inbox-dropdown');
+                if (dropdown) dropdown.style.display = 'none'; // hide dropdown
+                inboxDropdownOpen = false;
+                openChatBox(f.id, f.fullName, avatarUrl);
+            };
+
+            item.innerHTML = `
+                <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff'">
+                <div class="notification-content">
+                    <div style="font-weight: 600; font-size: 15px; color: #050505;">${f.fullName}</div>
+                    <div class="notification-msg" style="color: #65676b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
+                </div>
+                <!-- Optional unread dot here -->
+            `;
+            inboxList.appendChild(item);
+        });
+
+    } catch (e) { console.error(e); }
 }
 
 async function fetchUnreadNotificationCount() {
@@ -161,15 +233,26 @@ async function markAllNotificationsAsRead() {
 
 // Call on startup
 document.addEventListener('DOMContentLoaded', () => {
-    // Close notification dropdown when clicking outside.
+    // Close dropdowns when clicking outside.
     document.addEventListener('click', (e) => {
-        const container = document.querySelector('.notification-container');
-        const dropdown = document.getElementById('notification-dropdown');
-        if (!container || !dropdown) return;
-
-        if (!container.contains(e.target)) {
-            dropdown.style.display = 'none';
-            notificationDropdownOpen = false;
+        const notiContainer = document.querySelector('.notification-container:last-child'); // approx
+        const inboxBtnDropdownContainer = document.querySelector('.notification-container:first-child');
+        
+        const notiDropdown = document.getElementById('notification-dropdown');
+        const inboxDropdown = document.getElementById('inbox-dropdown');
+        
+        if (notiDropdown && notificationDropdownOpen) {
+            // Very brute force check if click is outside any notification container
+            if (!e.target.closest('.notification-container')) {
+                notiDropdown.style.display = 'none';
+                notificationDropdownOpen = false;
+            }
+        }
+        if (inboxDropdown && inboxDropdownOpen) {
+            if (!e.target.closest('.notification-container')) {
+                inboxDropdown.style.display = 'none';
+                inboxDropdownOpen = false;
+            }
         }
     });
 });

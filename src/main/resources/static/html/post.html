@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LC Network - Bài viết</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/home.css">
+    <link rel="stylesheet" href="/css/post.css">
+</head>
+<body class="post-page-body">
+    <!-- Header Navigation (reused from home) -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="/html/home.html" class="logo">
+                <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i> LC Network
+            </a>
+        </div>
+        <div class="header-right">
+            <a href="/html/home.html" class="icon-btn tooltip" data-tooltip="Trang chủ"><i class="fa-solid fa-house"></i></a>
+        </div>
+    </header>
+
+    <!-- Post Layout -->
+    <main class="post-split-layout">
+        <!-- Lệnh Media Bên Trái -->
+        <div class="post-media-section">
+            <!-- Nút Close (Quay lại) -->
+            <a href="javascript:history.back()" class="post-close-btn"><i class="fa-solid fa-xmark"></i></a>
+            
+            <div class="media-container">
+                <!-- Media Image Demo. Sẽ dùng JS để quyết định nếu không có media thì chuyển sang Centered Text Layout -->
+                <img src="https://images.unsplash.com/photo-1682687220063-4742bd7fd538?q=80&w=1000" alt="Post Image" id="post-main-image">
+            </div>
+        </div>
+
+        <!-- Nội dung và Bình luận Bên Phải -->
+        <div class="post-interaction-section">
+            <!-- Scrollable content -->
+            <div class="post-interaction-content">
+                <!-- Post Author Header -->
+                <div class="post-author-header">
+                    <img src="/uploads/default-avatar.png" class="avatar-medium" id="post-author-avatar">
+                    <div class="post-author-info">
+                        <div class="post-author-name">Người dùng Demo</div>
+                        <div class="post-author-time">2 giờ trước · <i class="fa-solid fa-earth-americas"></i></div>
+                    </div>
+                    <button class="options-btn"><i class="fa-solid fa-ellipsis"></i></button>
+                </div>
+
+                <!-- Post Text -->
+                <div class="post-text-content">
+                    Đây là nội dung bài viết demo hiển thị bên cạnh hình ảnh. Trải nghiệm tương tự trang chi tiết bài viết của Instagram hoặc Facebook. Tính năng này cho phép người dùng đọc bình luận dễ dàng hơn khi đang xem ảnh.
+                </div>
+
+                <!-- Post Stats (Like, Comment count) -->
+                <div class="post-stats">
+                    <span><i class="fa-solid fa-thumbs-up text-primary"></i> 1.2k Thích</span>
+                    <span>345 Bình luận</span>
+                </div>
+
+                <!-- Post Action Buttons -->
+                <div class="post-actions-bar">
+                    <button class="interaction-btn"><i class="fa-regular fa-thumbs-up"></i> Thích</button>
+                    <button class="interaction-btn"><i class="fa-regular fa-comment"></i> Bình luận</button>
+                    <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
+                </div>
+
+                <!-- Comment Section -->
+                <div class="comments-list">
+                    <!-- Comment Item -->
+                    <div class="comment-item">
+                        <img src="/uploads/default-avatar.png" class="avatar-small">
+                        <div class="comment-bubble">
+                            <div class="comment-author">Nguyễn Văn A</div>
+                            <div class="comment-text">Bức ảnh đẹp quá, chụp ở đâu vậy bạn?</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comment Input Fixed at Bottom -->
+            <div class="comment-input-area">
+                <img src="/uploads/default-avatar.png" class="avatar-small">
+                <div class="comment-input-wrapper">
+                    <input type="text" placeholder="Viết bình luận..." id="comment-input" class="modern-input">
+                    <button class="insert-emoji-btn"><i class="fa-regular fa-face-smile"></i></button>
+                    <button class="send-comment-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/post.js"></script>
+</body>
+</html>

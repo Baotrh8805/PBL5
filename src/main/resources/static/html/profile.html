@@ -21,24 +21,72 @@
     <header class="top-header">
         <div class="header-left">
             <a href="/html/home.html" class="logo">
-                <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i> LC Network
+                <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i>
+                <span class="logo-text">LC Network</span>
             </a>
-            <nav class="main-nav">
-                <a href="/html/home.html" class="nav-link">Trang chủ</a>
-                <a href="/html/friends.html" class="nav-link">Bạn bè</a>
-            </nav>
-        </div>
-        <div class="header-center">
             <div class="search-bar">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Tìm kiếm bài viết, bạn bè...">
+                <input type="text" placeholder="Tìm kiếm LC Network...">
             </div>
         </div>
+
+        <div class="header-center">
+            <nav class="main-nav">
+                <a href="/html/home.html" class="nav-link" title="Trang chủ">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+                <a href="/html/friends.html" class="nav-link" title="Bạn bè">
+                    <i class="fa-solid fa-user-group"></i>
+                </a>
+                <a href="#" class="nav-link" title="Khám phá">
+                    <i class="fa-regular fa-compass"></i>
+                </a>
+            </nav>
+        </div>
+
         <div class="header-right">
-            <button class="icon-btn" id="nav-message-btn" onclick="toggleChatSidebar()"><i class="fa-regular fa-envelope"></i></button>
+            <!-- Nút Tạo Mới nhanh -->
+            <button class="icon-btn tooltip create-btn" data-tooltip="Tạo bài viết" onclick="openPostModal()">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+
+            <!-- Inbox Dropdown -->
             <div class="notification-container" style="position: relative;">
-                <button class="icon-btn notification-btn" onclick="toggleNotificationDropdown()">
-                    <i class="fa-regular fa-bell"></i>
+                <button class="icon-btn tooltip" data-tooltip="Tin nhắn" id="nav-message-btn" onclick="toggleInboxDropdown()">
+                    <i class="fa-brands fa-facebook-messenger"></i>
+                </button>
+                <div id="inbox-dropdown" class="messenger-dropdown" style="display:none; right: -50px;">
+                    <div class="messenger-header">
+                        <h2>Đoạn chat</h2>
+                        <div class="messenger-header-actions">
+                            <button class="icon-btn-small tooltip" data-tooltip="Tùy chọn"><i class="fa-solid fa-ellipsis"></i></button>
+                            <button class="icon-btn-small tooltip" data-tooltip="Mở rộng"><i class="fa-solid fa-expand"></i></button>
+                            <button class="icon-btn-small tooltip" data-tooltip="Soạn tin nhắn mới"><i class="fa-regular fa-pen-to-square"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="messenger-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Tìm kiếm trên Messenger">
+                    </div>
+
+                    <div class="messenger-filters">
+                        <button class="filter-chip active">Tất cả</button>
+                        <button class="filter-chip">Chưa đọc</button>
+                        <button class="filter-chip">Nhóm</button>
+                    </div>
+
+                    <div class="messenger-body" id="inbox-list">
+                        <!-- Nạp động qua JS loadInboxDropdown() -->
+                        <div style="padding: 15px; text-align: center; color: #65676B;">Đang tải...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification Dropdown -->
+            <div class="notification-container" style="position: relative;">
+                <button class="icon-btn notification-btn tooltip" data-tooltip="Thông báo" onclick="toggleNotificationDropdown()">
+                    <i class="fa-solid fa-bell"></i>
                     <span class="badge" id="notification-badge" style="display:none;">0</span>
                 </button>
                 <div id="notification-dropdown" class="notification-dropdown" style="display:none;">
@@ -51,8 +99,10 @@
                     </div>
                 </div>
             </div>
-            <div class="user-avatar-btn">
-                <img src="/uploads/default-avatar.png" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+
+            <!-- User Avatar -->
+            <div class="user-avatar-btn" onclick="window.location.href='/html/profile.html'">
+                <img src="/uploads/default-avatar.png" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'" style="cursor:pointer;">
             </div>
         </div>
     </header>

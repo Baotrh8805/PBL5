@@ -1,9 +1,11 @@
 package com.pbl5.model;
 
+import com.pbl5.enums.PostStatus;
 import com.pbl5.enums.PostVisibility;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -22,6 +24,10 @@ public class Post {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "varchar(255) default 'PUBLIC'")
     private PostVisibility visibility = PostVisibility.PUBLIC;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'ACTIVE'")
+    private PostStatus status = PostStatus.ACTIVE;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -53,8 +59,39 @@ public class Post {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
-    public List<Like> getLikes() { return likes; }
+    
+    public List<Like> getLikes() { 
+        return Collections.unmodifiableList(likes); 
+    }
+    
     public void setLikes(List<Like> likes) { this.likes = likes; }
-    public List<Comment> getComments() { return comments; }
+    
+    public List<Comment> getComments() { 
+        return Collections.unmodifiableList(comments); 
+    }
+    
     public void setComments(List<Comment> comments) { this.comments = comments; }
+
+    public PostStatus getStatus() { return status; }
+    public void setStatus(PostStatus status) { this.status = status; }
+
+    // ==================== Domain Business Logic Methods ====================
+
+    /** Edit content with state check */
+    public void chinhSua(String newContent) {
+        if (this.status != PostStatus.ACTIVE) {
+            throw new IllegalStateException("Không thể chỉnh sửa bài viết đã bị xoá hoặc khoá.");
+        }
+        this.content = newContent;
+    }
+
+    /** Soft Delete */
+    public void xoa() {
+        this.status = PostStatus.DELETED;
+    }
+
+    /** Block by moderation */
+    public void khoaBaiViet() {
+        this.status = PostStatus.BLOCKED;
+    }
 }

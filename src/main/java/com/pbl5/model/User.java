@@ -168,4 +168,26 @@ public class User {
 
     /** Gán token đặt lại mật khẩu */
     public void setResetPasswordToken(String resetPasswordToken) { this.resetPasswordToken = resetPasswordToken; }
+
+    // ==================== Domain Business Logic Methods ====================
+
+    /** 
+     * Đặt lại mật khẩu. Cập nhật state nội bộ thay vì gọi setter thô 
+     */
+    public void setMatKhauMoi(String encodedPassword) {
+        if (this.status == UserStatus.BANNED) {
+            throw new IllegalStateException("Không thể đổi mật khẩu, tài khoản đang bị cấm!");
+        }
+        this.password = encodedPassword;
+    }
+
+    /** Khoá tài khoản (Ban) */
+    public void khoaTaiKhoan() {
+        this.status = UserStatus.BANNED;
+    }
+
+    /** Mở khoá tài khoản */
+    public void moKhoaTaiKhoan() {
+        this.status = UserStatus.ACTIVE;
+    }
 }

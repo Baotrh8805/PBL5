@@ -1,0 +1,555 @@
+[MAIN] Flask startup
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='\'\\v` Là\n\nwWà\n\n3v ..\n\n+N\n\n- 4\n\ns á ||\n\nÀY\n\n»\n\n,gố\n\nẠ\n\ný ,\n\n“/\n\n\\r`. J\\`Ỉ—\\\n\n,Ạ\n\nl\n\n„\n\n.\n\n=\n\nllP\n\n\\\n\nxI/\n\n\\\\\n\nl\n\nu\n\n*\n\nQ\n\n}\n\n#vt.u-\n\nW\n\nz\n\nv\n\n4\n\nLÍ!\n\nl\n\nL\n\nÌ\n\nỊ\n\nÿ\n\nH\n\n4t\n\n..\n\nu HN\n\n—]\n\nÝ.\n\n¬L\n\nøS\n\n¿% a\n\nv\n\n—\n\ni\n\nĩ\n\nlỔưì\n\nZ/, l\n\nVvw)\n\n⁄|\n\n+tfersv\n\nx v\n\ns`ấ\\\n\n/£\n\n¬\n\n/\n\nI\n\nD\n\nz\n\n`l\\\n\n <\n\n~\n\nb a\n\nN\n\nÿ\n\nỮ\n\n¬\n\nh[\\&\n\n2\n\n- ZZ\n\nufl IZ 4,ớ\n\ni\n\nƯ\n\nS ZSï.\n\nN\n\n~>Y\n\n~ 4\n\nr\n\nLv\n\nẠ À\n\n⁄ @‹\n\nĩh\n\nx\n\nIZ\n\nùng\n\n_\n\nH\n\n"MM\n\n.\n\nã „\n\n. ..\n\n=*\n\n— s\n\n.“.\n\nL p.. HB\n\n—\n\n._.,\n\n—\n\n“=2m\n\n_- -\n\n~ —\n\n_.——.\n' clean='\'\\v` Là\n\nwWà\n\n3v ..\n\n+N\n\n- 4\n\ns á ||\n\nÀY\n\n»\n\n,gố\n\nẠ\n\ný ,\n\n“/\n\n\\r`. J\\`Ỉ—\\\n\n,Ạ\n\nl\n\n„\n\n.\n\n=\n\nllP\n\n\\\n\nxI/\n\n\\\\\n\nl\n\nu\n\n*\n\nQ\n\n}\n\n#vt.u-\n\nW\n\nz\n\nv\n\n4\n\nLÍ!\n\nl\n\nL\n\nÌ\n\nỊ\n\nÿ\n\nH\n\n4t\n\n..\n\nu HN\n\n—]\n\nÝ.\n\n¬L\n\nøS\n\n¿% a\n\nv\n\n—\n\ni\n\nĩ\n\nlỔưì\n\nZ/, l\n\nVvw)\n\n⁄|\n\n+tfersv\n\nx v\n\ns`ấ\\\n\n/£\n\n¬\n\n/\n\nI\n\nD\n\nz\n\n`l\\\n\n <\n\n~\n\nb a\n\nN\n\nÿ\n\nỮ\n\n¬\n\nh[\\&\n\n2\n\n- ZZ\n\nufl IZ 4,ớ\n\ni\n\nƯ\n\nS ZSï.\n\nN\n\n~>Y\n\n~ 4\n\nr\n\nLv\n\nẠ À\n\n⁄ @‹\n\nĩh\n\nx\n\nIZ\n\nùng\n\n_\n\nH\n\n"MM\n\n.\n\nã „\n\n. ..\n\n=*\n\n— s\n\n.“.\n\nL p.. HB\n\n—\n\n._.,\n\n—\n\n“=2m\n\n_- -\n\n~ —\n\n_.——.' len=476
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='Zzz= SN\n\n.\n\n¬\n\nlỀN\n\n/\n\n…——\'ỊỊ_\n\nLIẠ.\n\n⁄\n\nIV\n\nàÀ\n\nZ ỉ"£\n\nN\n\n. -.\n\n- _\n\n—\n\n1\n\nLẠ XW\n\nØ 7\n\nI\n\n“t\n\nA\n\n\\\\\n\n#\'\n\n)Ị\n\nGá\n\nA\n\nv )\n\nl\n\nT\n\nl"\n\nÁ\\\n\n=M/\n\nr\n\nl\n\nỲ\n\nŒœ\n\nc""~-Ắ\n\nIN\n\n4 \'4#\n\nẨ IIẨ\n\n«r ẨĨ\'\n\nẢ\n\nx>x\n\n4 v\n\nL\n\n\\ Ỉí \'l"\n\n(Ñ\n\n72\n\n=\n\n— 4\n\n/\n\nL\n\nz\n\nuf›hĂ\n\n/BẠI\n\n=ý ¬\n\nổ\n\n/zết,\n\nS\n\n⁄\n\n2\n\nvẠ\n\nJ’\n\nVxQNx\n\n_\n\nì\n\nCẠ\n\n\'va- b`\n\nz\n\nL -\n\n5\n\n⁄\n\nl"\\\n\nL\n\n`¬><X\n\nl,n\n\n. j\n\n.Ø\n\n-. E\n\nt\n\nl 7\n\nt =\n\nẠ\n\nĩh\n\nu\n\nmẽblon\n\nL . U\n\n\\\n\nHL\n\n~.~\n\ncử\n\n— _\n\nzA.2m\n\n—\n\n— -\n\nTD\n\n- ~\n\n—\n\n“Eươ:\n\n— .Ề\n\nL\n\n—\n\n— .\n\nl n\n' clean='Zzz= SN\n\n.\n\n¬\n\nlỀN\n\n/\n\n…——\'ỊỊ_\n\nLIẠ.\n\n⁄\n\nIV\n\nàÀ\n\nZ ỉ"£\n\nN\n\n. -.\n\n- _\n\n—\n\n1\n\nLẠ XW\n\nØ 7\n\nI\n\n“t\n\nA\n\n\\\\\n\n#\'\n\n)Ị\n\nGá\n\nA\n\nv )\n\nl\n\nT\n\nl"\n\nÁ\\\n\n=M/\n\nr\n\nl\n\nỲ\n\nŒœ\n\nc""~-Ắ\n\nIN\n\n4 \'4#\n\nẨ IIẨ\n\n«r ẨĨ\'\n\nẢ\n\nx>x\n\n4 v\n\nL\n\n\\ Ỉí \'l"\n\n(Ñ\n\n72\n\n=\n\n— 4\n\n/\n\nL\n\nz\n\nuf›hĂ\n\n/BẠI\n\n=ý ¬\n\nổ\n\n/zết,\n\nS\n\n⁄\n\n2\n\nvẠ\n\nJ’\n\nVxQNx\n\n_\n\nì\n\nCẠ\n\n\'va- b`\n\nz\n\nL -\n\n5\n\n⁄\n\nl"\\\n\nL\n\n`¬><X\n\nl,n\n\n. j\n\n.Ø\n\n-. E\n\nt\n\nl 7\n\nt =\n\nẠ\n\nĩh\n\nu\n\nmẽblon\n\nL . U\n\n\\\n\nHL\n\n~.~\n\ncử\n\n— _\n\nzA.2m\n\n—\n\n— -\n\nTD\n\n- ~\n\n—\n\n“Eươ:\n\n— .Ề\n\nL\n\n—\n\n— .\n\nl n' len=473
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='..\n\nT S I\n\n— u\n\n—< PH\n\n`f\n\nÿ 22 t\n\n,Av>\n\nCựa\n\n—\n\nA\n\ntỹl\n\naa v\n\nN\n\nMi⁄\n\nzđi\n\nH N\n\n.Ị\n\n.\n\ncấ\n\nTN\n\nNa.\n\nA\\\n\nỔ`\\\\l\n\n;\n\nïZ⁄z6P\n\n4\n\n.\n\nv4 l\n\nT M\n\nˆ\n\n#«,\n\n_¬\n\nvỊ\n\n|\n\nl\n\ná\n\nKÃ ‹t\n\nHị\n\n.\n\n-\n\n\'a""\\b~…\\\n\nn\n\nL\n\nế | Áí`4 v%ˆu\n\n/\n\nl /f\n\n—\n\nẨ\n\n⁄\n\nK\n\n4\n\nlv\n\nm\n\n|\n\nJ`\\ỷ\'\n\nỊ\n\n> e\n\nỨ\n\n"\'_ll"\n\nn\n\n,\n\n(\n\n⁄\n\nIJ4\n\n—⁄\n\nN A\n\n~<}\n\n.=I\n\n( v -\n\n⁄\n\nt, |\n\n%\n\nl"~`_ ZZZN N\n\n<‡!\n\nà\n\n` \\/«\'u\n\nN\n\nS ì\n\nÍ|\'\n\n⁄\n\n%\n\nr\n\n/ 1\n\n~ +\n\n~\n\nl 7\n\n=\n\nĩh\n\n0n\n\ngìmùặt\n\n~ .„\n\n” ..\n\nư U\n\nh¬<~=x\n\n—X\n\nư\n\n—-.\n\n—\n\n= —\n\ni_›J\n\nc.\n\n_- n\n\n* “Sm\n\n_ —\n\n„ . —\n\nE M\n\nu\n\n— 9\n\n~ —x-e«ww\n\n-—\n\n— —\n\n— —\n\n- —\n\nHH\n\n~ ~ t\n\nz „S m\n' clean='..\n\nT S I\n\n— u\n\n—< PH\n\n`f\n\nÿ 22 t\n\n,Av>\n\nCựa\n\n—\n\nA\n\ntỹl\n\naa v\n\nN\n\nMi⁄\n\nzđi\n\nH N\n\n.Ị\n\n.\n\ncấ\n\nTN\n\nNa.\n\nA\\\n\nỔ`\\\\l\n\n;\n\nïZ⁄z6P\n\n4\n\n.\n\nv4 l\n\nT M\n\nˆ\n\n#«,\n\n_¬\n\nvỊ\n\n|\n\nl\n\ná\n\nKÃ ‹t\n\nHị\n\n.\n\n-\n\n\'a""\\b~…\\\n\nn\n\nL\n\nế | Áí`4 v%ˆu\n\n/\n\nl /f\n\n—\n\nẨ\n\n⁄\n\nK\n\n4\n\nlv\n\nm\n\n|\n\nJ`\\ỷ\'\n\nỊ\n\n> e\n\nỨ\n\n"\'_ll"\n\nn\n\n,\n\n(\n\n⁄\n\nIJ4\n\n—⁄\n\nN A\n\n~<}\n\n.=I\n\n( v -\n\n⁄\n\nt, |\n\n%\n\nl"~`_ ZZZN N\n\n<‡!\n\nà\n\n` \\/«\'u\n\nN\n\nS ì\n\nÍ|\'\n\n⁄\n\n%\n\nr\n\n/ 1\n\n~ +\n\n~\n\nl 7\n\n=\n\nĩh\n\n0n\n\ngìmùặt\n\n~ .„\n\n” ..\n\nư U\n\nh¬<~=x\n\n—X\n\nư\n\n—-.\n\n—\n\n= —\n\ni_›J\n\nc.\n\n_- n\n\n* “Sm\n\n_ —\n\n„ . —\n\nE M\n\nu\n\n— 9\n\n~ —x-e«ww\n\n-—\n\n— —\n\n— —\n\n- —\n\nHH\n\n~ ~ t\n\nz „S m' len=559
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='J l\n\n—\n\n4 2\n\ne »\n\nV>\n\n422\n\n(\n\na\n\n~v\n\n2 2\n\n.\n\nẢ—\'—\n\nH\n\n⁄\n\n\\\\\n\n2\n\n. C.\n\n.\n\nb\n\nN s\n\n⁄\n\n`, Ạ\n\n>\n\nẠ\n\nx.ị\n\n/\n\n/3⁄2\n\n~\n\n0 .J\n\n~r\'lt1í\n\n2\n\nlẠ\n\nL\n\n^ZAuM\n\n"..—`b-—\\~\n\ne\n\n4\n\nầẨ\n\nN\n\n4\n\nJ\n\nIN\n\năfzẾ\n\n.\n\n.\n\nIX\n\n— 4 I"\n\nl\n\nsẴN\n\n== ¬ 47\n\n42/\n\nlại\n\n⁄2\n\n…\'\n\nN\n\n/\n\n6\n\n\\ ›\n\nh\\\n\nIY\n\nG\n\nl\\`l_*\\\n\nỹ⁄\n\n<4h\n\n›`\n\n_4\n\n^\n\nđ\n\n\\ /Ỹủ\n\n# ⁄\n\n.\n\ni\n\n¬ Ặ\n\n⁄\n\n— -\n\nS\n\nS\n\nHL\n\n—- x\n\n- .\n\nn —“ — m\n\nu\n\n—\n\nl HN,\n\n-.\n\nỸ\'..n\n\nx\n\n—““Š—«\n\n== —\n\n. — 2 HƯ\n\n~ .\n\n—\n\n-.\n\n- m\n\nL n\n\n_ .\n\n—\n\n— x\n\n—\n\n_-r—..b’—\n' clean='J l\n\n—\n\n4 2\n\ne »\n\nV>\n\n422\n\n(\n\na\n\n~v\n\n2 2\n\n.\n\nẢ—\'—\n\nH\n\n⁄\n\n\\\\\n\n2\n\n. C.\n\n.\n\nb\n\nN s\n\n⁄\n\n`, Ạ\n\n>\n\nẠ\n\nx.ị\n\n/\n\n/3⁄2\n\n~\n\n0 .J\n\n~r\'lt1í\n\n2\n\nlẠ\n\nL\n\n^ZAuM\n\n"..—`b-—\\~\n\ne\n\n4\n\nầẨ\n\nN\n\n4\n\nJ\n\nIN\n\năfzẾ\n\n.\n\n.\n\nIX\n\n— 4 I"\n\nl\n\nsẴN\n\n== ¬ 47\n\n42/\n\nlại\n\n⁄2\n\n…\'\n\nN\n\n/\n\n6\n\n\\ ›\n\nh\\\n\nIY\n\nG\n\nl\\`l_*\\\n\nỹ⁄\n\n<4h\n\n›`\n\n_4\n\n^\n\nđ\n\n\\ /Ỹủ\n\n# ⁄\n\n.\n\ni\n\n¬ Ặ\n\n⁄\n\n— -\n\nS\n\nS\n\nHL\n\n—- x\n\n- .\n\nn —“ — m\n\nu\n\n—\n\nl HN,\n\n-.\n\nỸ\'..n\n\nx\n\n—““Š—«\n\n== —\n\n. — 2 HƯ\n\n~ .\n\n—\n\n-.\n\n- m\n\nL n\n\n_ .\n\n—\n\n— x\n\n—\n\n_-r—..b’—' len=456
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='- z\n\nửZ\n\n.“ SỐ\n\n—\n\nWw¬Y\n\n/\n\n/L\n\nA v\n\nzơ/’\n\nsoii\n\n_4\n\n2 _\n\n“”Z<q/I\n\nAỶ\n\n{⁄Z4 J\n\n-v\n\nN\n\nN%\n\nZz(m\n\n:\n\nà\n\n25221\n\n⁄\n\n-\n\ns\n\nA\n\ngíae +\n\n(\n\nI !\n\n[\n\n¿⁄\n\n2222\n\n^.\n\n4\n\nf S\n\nl\n\n_\n\nì| /y\n\n. 4\n\nx\n\n=À\n\nA- —-7\n\nm l\n\ni ~ 4\n\n/\n\nr\n\nủf\n\nểg\n\nZ4\n\n\\\n\nÝ\n\nl.ẢẮx\n\nW\n\n(xXX.\n\nS ;\n\n/\n\n-\n\n4Ú\n\nà\n\n= —z\n\nƯ\'\n\nrL\n\nlưi\n\nvÍ\n\nv\n\nSU\n\nộ\n\nì J\n\nMÀ\n\nt\n\n_¬\n\nCẠ ¡ S\n\n”\n\n\\Í/\n\n⁄ Á\n\n(\n\n/ =\n\nAN\n\nỤ\n\n\\›\'\\lỹ\\`\n\n# ýÿ⁄\n\nÈ⁄\n\nS^V\\\n\n}\n\nN\n\nz\n\nka ð\n\nbg\n\nA ¬\n\nIÌ\\íf\'\n\n,fili\n\n. HH\n\n— II\n\n—<\n\n—\n\n—=¬ s\n\n90\n\n-=§<\n\n_\n\n—\n\n—C Ư\n\n— ã\n\n— —\n\n= — A —\n\n— 4\n\n_\n\n— "-—-—Á\n\n— =\n\n— ˆ\n\n.\n\n—\n\nqẵ£~_\'_F\n\n—\n' clean='- z\n\nửZ\n\n.“ SỐ\n\n—\n\nWw¬Y\n\n/\n\n/L\n\nA v\n\nzơ/’\n\nsoii\n\n_4\n\n2 _\n\n“”Z<q/I\n\nAỶ\n\n{⁄Z4 J\n\n-v\n\nN\n\nN%\n\nZz(m\n\n:\n\nà\n\n25221\n\n⁄\n\n-\n\ns\n\nA\n\ngíae +\n\n(\n\nI !\n\n[\n\n¿⁄\n\n2222\n\n^.\n\n4\n\nf S\n\nl\n\n_\n\nì| /y\n\n. 4\n\nx\n\n=À\n\nA- —-7\n\nm l\n\ni ~ 4\n\n/\n\nr\n\nủf\n\nểg\n\nZ4\n\n\\\n\nÝ\n\nl.ẢẮx\n\nW\n\n(xXX.\n\nS ;\n\n/\n\n-\n\n4Ú\n\nà\n\n= —z\n\nƯ\'\n\nrL\n\nlưi\n\nvÍ\n\nv\n\nSU\n\nộ\n\nì J\n\nMÀ\n\nt\n\n_¬\n\nCẠ ¡ S\n\n”\n\n\\Í/\n\n⁄ Á\n\n(\n\n/ =\n\nAN\n\nỤ\n\n\\›\'\\lỹ\\`\n\n# ýÿ⁄\n\nÈ⁄\n\nS^V\\\n\n}\n\nN\n\nz\n\nka ð\n\nbg\n\nA ¬\n\nIÌ\\íf\'\n\n,fili\n\n. HH\n\n— II\n\n—<\n\n—\n\n—=¬ s\n\n90\n\n-=§<\n\n_\n\n—\n\n—C Ư\n\n— ã\n\n— —\n\n= — A —\n\n— 4\n\n_\n\n— "-—-—Á\n\n— =\n\n— ˆ\n\n.\n\n—\n\nqẵ£~_\'_F\n\n—' len=529
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='A n\n\nb\n\n——&&x»¬\n\nAv Z n\n\nsS\n\n_>`` S\n\nz\n\nl J\n\n— ]\n\nZ;.⁄\n\n⁄\n\n1Z\n\nx\n\nV\n\nd`l\n\nA\\\n\n⁄\n\n,._¬.»"\n\nN\n\nư\n\nLỘ\n\nà\n\nl\n\nl\n\n~\n\n—\n\n⁄\n\n22\n\nLÄ\n\n41\n\nZ#\n\nVại\n\nS\n\nA\n\n\\\n\n\'V\'l1J\n\n2 /\n\n[\n\nˆ\n\nẸ;,\n\n\\ SN\n\nN\n\nl.\n\nx\n\n42\n\nK\n\n/\n\nJ/\n\nX>*£&\n\nC\n\n⁄\n\nXZ\n\nZÂA\n\nI=\n\nn\n\n9\\Ý/\n\nI`\n\n⁄ 4hN\n\n/2⁄\n\nJ»v\n\n= 4\n\n1J|\n\nN\n\nN\n\n\\J’I~ụl\n\nZ\n\n\\íỈ—`\n\nn\n\n⁄Z2\n\n-\n\n⁄4\n\n\\ I`†Ỹ\n\nY\n\n)\n\n(7⁄1«\n\n>xX&~\n\n> -ä\n\n-\n\n’/\n\nIIỈ\n\n“\n\n.\n\nXX :\n\n14(\n\n€\n\nU\n\n⁄\n\n” \\’\n\n/lÌf“’1\'\n\nXề\n\nÀ\n\nSửc\n\nụg\n\nN\n\n5 <ã\n\n—\n\n{\\t!\n\nm a\n\n_ .I|\n\n—Ð-\n\nà .\n\n—\n\n—\n\n.ỉ _.-\n\n—\n\nT-.\n\n¬ EN -\n\n_\n\nu\n\n— —\n\n— —\n\n—Y\n\n—\n\n_-\n\n— —\n\n.\n\n— —ÔxYð\n\nÉ\n\nx —»\n\n_=\n' clean='A n\n\nb\n\n——&&x»¬\n\nAv Z n\n\nsS\n\n_>`` S\n\nz\n\nl J\n\n— ]\n\nZ;.⁄\n\n⁄\n\n1Z\n\nx\n\nV\n\nd`l\n\nA\\\n\n⁄\n\n,._¬.»"\n\nN\n\nư\n\nLỘ\n\nà\n\nl\n\nl\n\n~\n\n—\n\n⁄\n\n22\n\nLÄ\n\n41\n\nZ#\n\nVại\n\nS\n\nA\n\n\\\n\n\'V\'l1J\n\n2 /\n\n[\n\nˆ\n\nẸ;,\n\n\\ SN\n\nN\n\nl.\n\nx\n\n42\n\nK\n\n/\n\nJ/\n\nX>*£&\n\nC\n\n⁄\n\nXZ\n\nZÂA\n\nI=\n\nn\n\n9\\Ý/\n\nI`\n\n⁄ 4hN\n\n/2⁄\n\nJ»v\n\n= 4\n\n1J|\n\nN\n\nN\n\n\\J’I~ụl\n\nZ\n\n\\íỈ—`\n\nn\n\n⁄Z2\n\n-\n\n⁄4\n\n\\ I`†Ỹ\n\nY\n\n)\n\n(7⁄1«\n\n>xX&~\n\n> -ä\n\n-\n\n’/\n\nIIỈ\n\n“\n\n.\n\nXX :\n\n14(\n\n€\n\nU\n\n⁄\n\n” \\’\n\n/lÌf“’1\'\n\nXề\n\nÀ\n\nSửc\n\nụg\n\nN\n\n5 <ã\n\n—\n\n{\\t!\n\nm a\n\n_ .I|\n\n—Ð-\n\nà .\n\n—\n\n—\n\n.ỉ _.-\n\n—\n\nT-.\n\n¬ EN -\n\n_\n\nu\n\n— —\n\n— —\n\n—Y\n\n—\n\n_-\n\n— —\n\n.\n\n— —ÔxYð\n\nÉ\n\nx —»\n\n_=' len=537
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='⁄ 2TW\n\nx\n\n¿ ~\n\n) 4 .\n\nl.\n\n4\n\n—\n\nx N A\n\n` \\\n\nI\n\nv\n\n7(\n\nJ\n\nL>\n\n7\n\n¡ 2za. S\n\nQ .\n\n⁄\n\n(\n\nN À\n\nNI\n\nN 3\n\nP\n\nÀ\n\nA\\\n\n⁄\n\n⁄\n\ný¿ 2 US\n\nJV\n\nA\n\nS\n\n2 I\n\nz\n\n74\n\n.\n\nX\n\nÀ\n\n.\n\nl\n\n-\'tĐ\n\nz\n\nJ\'1F›.." =\n\n\'."`!ư-—`Ắ\n\nL7\n\nU\n\n_\\\n\nV/’\n\n4222 I\n\nw "Í\n\n⁄4\n\n_N\n\nI==\n\nU\n\nŸỊ\n\nléấ AhẦ\n\nN\n\nJ- Ý\n\n>\n\nl\n\nl\n\nS\n\ni\n\nz\n\nx\n\nZf\n\n72\n\nn |\n\n>\n\n(7⁄7<\n\nxÍ_\n\nẶ J\n\nv\n\nv\n\n/ Tz\n\n%`\n\n.\n\n<Y\n\n-\n\n;|\n\nỊ\n\n4\n\nIYỉd\n\nKC\n\nớ v\n\nL\n\n|\n\nA \\I\'\n\nS A\n\nÁ\n\nS&x‹\n\nùg\n\n—\n\n—\n\n=\n\nw\n\nW\n\n=—.\n\n—\n\n— x S\n\n—\n\n— —\n\n——5—\n\n~ . u.KXx[ ,\n\n—- -\n\n—\n\n—==”\n\n~=-ge\n\n. —\n\n2= Zm\n\n3. .\n\n—\n\n-. -\n\n—\n\n_\n\n—\n\n-\n\n- m\n\n_ m\n\n—\n' clean='⁄ 2TW\n\nx\n\n¿ ~\n\n) 4 .\n\nl.\n\n4\n\n—\n\nx N A\n\n` \\\n\nI\n\nv\n\n7(\n\nJ\n\nL>\n\n7\n\n¡ 2za. S\n\nQ .\n\n⁄\n\n(\n\nN À\n\nNI\n\nN 3\n\nP\n\nÀ\n\nA\\\n\n⁄\n\n⁄\n\ný¿ 2 US\n\nJV\n\nA\n\nS\n\n2 I\n\nz\n\n74\n\n.\n\nX\n\nÀ\n\n.\n\nl\n\n-\'tĐ\n\nz\n\nJ\'1F›.." =\n\n\'."`!ư-—`Ắ\n\nL7\n\nU\n\n_\\\n\nV/’\n\n4222 I\n\nw "Í\n\n⁄4\n\n_N\n\nI==\n\nU\n\nŸỊ\n\nléấ AhẦ\n\nN\n\nJ- Ý\n\n>\n\nl\n\nl\n\nS\n\ni\n\nz\n\nx\n\nZf\n\n72\n\nn |\n\n>\n\n(7⁄7<\n\nxÍ_\n\nẶ J\n\nv\n\nv\n\n/ Tz\n\n%`\n\n.\n\n<Y\n\n-\n\n;|\n\nỊ\n\n4\n\nIYỉd\n\nKC\n\nớ v\n\nL\n\n|\n\nA \\I\'\n\nS A\n\nÁ\n\nS&x‹\n\nùg\n\n—\n\n—\n\n=\n\nw\n\nW\n\n=—.\n\n—\n\n— x S\n\n—\n\n— —\n\n——5—\n\n~ . u.KXx[ ,\n\n—- -\n\n—\n\n—==”\n\n~=-ge\n\n. —\n\n2= Zm\n\n3. .\n\n—\n\n-. -\n\n—\n\n_\n\n—\n\n-\n\n- m\n\n_ m\n\n—' len=528
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='. _——\n\n2\n\n</,\n\n=`\n\n\' }\n\nX<\n\n4\n\n|\n\n. Y n . Lưn\n\nzv\n\n1\')t.\n\n`d\n\nv\n\nA\n\n22\n\nm\n\ns\n\n⁄v\n\nN\n\nl\n\nà\n\nv\n\n)\n\n—z\n\nN\n\nXY\n\nc\n\nxJÍ\n\ni\n\nLÁi\n\n\\\n\nN\n\n1⁄ZZA\n\n⁄\n\nVấấ\n\ni\n\n^\n\n, Ấ\n\n2 à\n\nì\n\nÿ\n\n2\n\n-\n\n=n\n\nV\\\n\nM\\Ấ\n\nJ\n\n(Ÿ\n\n.4 À\\\n\n\\\n\n4\n\n( ¬<g\n\nn\n\ni\n\n\\"/"\n\n)\n\nz\n\n\\`h\n\n_-\n\n1S N\n\n(77<\n\n⁄\n\n/\n\nN\n\nw |\n\ns\n\nv\n\nliạn\n\nCS\n\ni\n\nI\n\nlì†\\\n\n_-\n\n=\n\nk h\n\nJ\\`\\\\-.\n\n|›f\n\n. w Ị\n\n— —\n\n-\n\n;^`\n\nẢ>l/E\n\n"4\n\nL\n\n.\n\neútlồn\n\n¬¬\n\n- à e\n\n——\n\n-ũ\'Ự.ỮỔỂ"\'1\n\n—\n\nN I\n\n—\n\n~ -\n\n¬~ —\n\n— u\n\n——\n\n—\n\n==\n\n_¬\n\n_ A -\n\n_\n\n—\n\n- .- _\n\n. 2\n\n.\'.draẨỹ__\n\n„\n' clean='. _——\n\n2\n\n</,\n\n=`\n\n\' }\n\nX<\n\n4\n\n|\n\n. Y n . Lưn\n\nzv\n\n1\')t.\n\n`d\n\nv\n\nA\n\n22\n\nm\n\ns\n\n⁄v\n\nN\n\nl\n\nà\n\nv\n\n)\n\n—z\n\nN\n\nXY\n\nc\n\nxJÍ\n\ni\n\nLÁi\n\n\\\n\nN\n\n1⁄ZZA\n\n⁄\n\nVấấ\n\ni\n\n^\n\n, Ấ\n\n2 à\n\nì\n\nÿ\n\n2\n\n-\n\n=n\n\nV\\\n\nM\\Ấ\n\nJ\n\n(Ÿ\n\n.4 À\\\n\n\\\n\n4\n\n( ¬<g\n\nn\n\ni\n\n\\"/"\n\n)\n\nz\n\n\\`h\n\n_-\n\n1S N\n\n(77<\n\n⁄\n\n/\n\nN\n\nw |\n\ns\n\nv\n\nliạn\n\nCS\n\ni\n\nI\n\nlì†\\\n\n_-\n\n=\n\nk h\n\nJ\\`\\\\-.\n\n|›f\n\n. w Ị\n\n— —\n\n-\n\n;^`\n\nẢ>l/E\n\n"4\n\nL\n\n.\n\neútlồn\n\n¬¬\n\n- à e\n\n——\n\n-ũ\'Ự.ỮỔỂ"\'1\n\n—\n\nN I\n\n—\n\n~ -\n\n¬~ —\n\n— u\n\n——\n\n—\n\n==\n\n_¬\n\n_ A -\n\n_\n\n—\n\n- .- _\n\n. 2\n\n.\'.draẨỹ__\n\n„' len=474
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='Á\n\n-\n\n4:⁄4,\n\n\\\n\nhià 4 @\n\n-\n\n4\n\n412\n\nL\n\nn\n\nZVÀ\n\n⁄ 7\n\n-=>>>.\\\n\nr\n\nA\n\n49\n\n~.ì\n\nỔ`\n\n¬ọ\n\n\\\n\nÍ\n\nv Ầ\n\n⁄\n\n4\n\nBỞi\n\na\n\n..\n\nvì\n\nl\n\nằv\n\n?\'f\';\n\nZz\n\n”u\n\ní\n\n<zz\n\nZ\n\n7Ì`\n\n4\n\nS\n\n-ìỒở—~Ặ\n\nS\n\nV\n\nl\n\n~\n\nư n\n\n—Ø ( vÀ\n\nà\n\nl.\n\n/259:\n\n—2\n\nJêp\n\nÍ/\n\n22\n\n`.AltqÀĂ\n\nIN\n\n~ 48 =|\n\nz\n\n= ¬Ỷ\n\n4\n\n\\\\_/ 4\n\n/\n\nớ. \'?\n\n(7/27S\n\nx i\n\n1 |\n\n>:\n\nN\n\nE\n\nL SN\n\nN\n\ntày, |=\n\n⁄\n\nS\n\nZz⁄2\n\nnk\\\n\n7T-\n\nđếN 7\n\n/\n\nẾ`_\n\n`ử ẾI\n\nM=sii\n\nl\n\n2\n\n7\n\neútjLônkmúi\n\n- ~\n\n`-aO`\n\n_..\n\nx .\n\n“t€h "—~ -\n\n—\n\n—w.—\n\n—s«=z- t\n\n¬\n\n..\n\nH\n\n—\n\nx~=--¬m\n\n—\n\n—\n\n.. n\n\n- ~\n\nL A\n\n———. . .. v\n\n. ư\n\n—~\n\n— 4\n\n_ —\n\n— m\n\n—\n\n=¬\n\n—“\n\n— —\n\n—\n\n—_p\n\n—.\n\n- s m\n\n- ..\n' clean='Á\n\n-\n\n4:⁄4,\n\n\\\n\nhià 4 @\n\n-\n\n4\n\n412\n\nL\n\nn\n\nZVÀ\n\n⁄ 7\n\n-=>>>.\\\n\nr\n\nA\n\n49\n\n~.ì\n\nỔ`\n\n¬ọ\n\n\\\n\nÍ\n\nv Ầ\n\n⁄\n\n4\n\nBỞi\n\na\n\n..\n\nvì\n\nl\n\nằv\n\n?\'f\';\n\nZz\n\n”u\n\ní\n\n<zz\n\nZ\n\n7Ì`\n\n4\n\nS\n\n-ìỒở—~Ặ\n\nS\n\nV\n\nl\n\n~\n\nư n\n\n—Ø ( vÀ\n\nà\n\nl.\n\n/259:\n\n—2\n\nJêp\n\nÍ/\n\n22\n\n`.AltqÀĂ\n\nIN\n\n~ 48 =|\n\nz\n\n= ¬Ỷ\n\n4\n\n\\\\_/ 4\n\n/\n\nớ. \'?\n\n(7/27S\n\nx i\n\n1 |\n\n>:\n\nN\n\nE\n\nL SN\n\nN\n\ntày, |=\n\n⁄\n\nS\n\nZz⁄2\n\nnk\\\n\n7T-\n\nđếN 7\n\n/\n\nẾ`_\n\n`ử ẾI\n\nM=sii\n\nl\n\n2\n\n7\n\neútjLônkmúi\n\n- ~\n\n`-aO`\n\n_..\n\nx .\n\n“t€h "—~ -\n\n—\n\n—w.—\n\n—s«=z- t\n\n¬\n\n..\n\nH\n\n—\n\nx~=--¬m\n\n—\n\n—\n\n.. n\n\n- ~\n\nL A\n\n———. . .. v\n\n. ư\n\n—~\n\n— 4\n\n_ —\n\n— m\n\n—\n\n=¬\n\n—“\n\n— —\n\n—\n\n—_p\n\n—.\n\n- s m\n\n- ..' len=572
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='Ụ>>\n\nA\n\nế u\n\n`llìl\n\nl\n\nm\n\n/\n\nạ\n\n;\n\nzv\n\nSN\n\nA\n\nAV⁄!\n\n..\n\nN\n\nN\n\nN (\\ /\n\nlị|\n\n¡\n\nr\n\n/\n\n„\n\nGI\n\n-MU.\n\n(A›Ớ r2\n\n-\n\n~À\n\nS%\n\nL i J/ẫ"l \\\n\nU\n\nH\n\n224-ÑY\n\n2\n\n2 NÀ\n\nHN\n\nặIj1 xAm"\n\n/Ä\n\nN\n\n>z4Z\n\nRƯỰNA.\n\nx Á\n\nN\n\n⁄Z2\n\n\\\n\nØ ⁄\n\nI`Ị\n\n—,\n\n|V //210\n\n⁄\n\nNN\n\n⁄\n\nTv\n\n“á\n\nJầ\n\nl\n\n( ¬\n\nú¿\n\nrˆ\n\nL`ìxz\n\n[\n\nfĩ~l` DAN Ụl S\n\nÀ\n\n..\n\n-\n\n/\\\n\n\\ồ\\\n\n4\n\n6 ý\n\nÀ\n\nf\n\nA\n\n5\n\nl 7\n\n, SØ Á\n\nX\n\n— Á\n\n> CU\n\nAư_ K\n\nị.l.l\n\ntớn\n\n`-I LUaN\n\n. N.\n\n"Xên\n\n222\n\n—\n\n—\n\n- <.\n\nL\n\nL\n\nkhm Hnộ\n\n- —\n\n~\n\n. ¬\n\nl\n\n-\n\n. ;\n\nm m\n\n— . ,\n\n—\n\n— 2-—\n\n—”=\n\n_\n\n—\n\n_ T\n\n¬x c\n\n=-\n\nỂ__\'\n\n—\n\n—\n\n—\n\n—Œ\n\n*—`-t_\n\n—\n' clean='Ụ>>\n\nA\n\nế u\n\n`llìl\n\nl\n\nm\n\n/\n\nạ\n\n;\n\nzv\n\nSN\n\nA\n\nAV⁄!\n\n..\n\nN\n\nN\n\nN (\\ /\n\nlị|\n\n¡\n\nr\n\n/\n\n„\n\nGI\n\n-MU.\n\n(A›Ớ r2\n\n-\n\n~À\n\nS%\n\nL i J/ẫ"l \\\n\nU\n\nH\n\n224-ÑY\n\n2\n\n2 NÀ\n\nHN\n\nặIj1 xAm"\n\n/Ä\n\nN\n\n>z4Z\n\nRƯỰNA.\n\nx Á\n\nN\n\n⁄Z2\n\n\\\n\nØ ⁄\n\nI`Ị\n\n—,\n\n|V //210\n\n⁄\n\nNN\n\n⁄\n\nTv\n\n“á\n\nJầ\n\nl\n\n( ¬\n\nú¿\n\nrˆ\n\nL`ìxz\n\n[\n\nfĩ~l` DAN Ụl S\n\nÀ\n\n..\n\n-\n\n/\\\n\n\\ồ\\\n\n4\n\n6 ý\n\nÀ\n\nf\n\nA\n\n5\n\nl 7\n\n, SØ Á\n\nX\n\n— Á\n\n> CU\n\nAư_ K\n\nị.l.l\n\ntớn\n\n`-I LUaN\n\n. N.\n\n"Xên\n\n222\n\n—\n\n—\n\n- <.\n\nL\n\nL\n\nkhm Hnộ\n\n- —\n\n~\n\n. ¬\n\nl\n\n-\n\n. ;\n\nm m\n\n— . ,\n\n—\n\n— 2-—\n\n—”=\n\n_\n\n—\n\n_ T\n\n¬x c\n\n=-\n\nỂ__\'\n\n—\n\n—\n\n—\n\n—Œ\n\n*—`-t_\n\n—' len=532
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='2\n\nẽz>\n\nd2a. .\n\n)\n\nZ\n\nx n\n\nrỹz%Z.\n\n2852\n\nà\n\n› a\n\nI\n\n/\n\nN=ÙR=\n\nl\n\nJ\\\n\nl\n\n4\n\nA\n\nMÀ\n\nY\\JV\n\nz\n\ngI.\'JIVỔ\n\n# *\n\n4\n\nlU\n\n\\\n\n`v\n\n|\n\nNSỶ /\n\nz\n\n24\n\n72\n\nG\n\n4\n\n~+*\n\nớ œ\n\nBẠN\n\n) =C\n\nN\n\nv\n\n)Ề z\n\n2\n\n/\n\nth\n\n4\n\n9\n\nS\n\nv\n\ni\n\nư-\n\n`Ñ Ỏ/ N.\n\n2\n\n—\n\n.=>\n\nJu\n\n= /\n\nt v\n\nJ\\\n\nÑ\n\n4 IN\n\n.".o-U›\n\nn\n\nFì\\\n\nx`\\Ì`_-_/Ị_\'\n\nKÀ\n\n7\n\n(71=\n\nll` 7\n\na $\n\nỊ\n\nẦ\n\n.\n\n4\n\nx.7-J)\n\n»\n\nl 4\n\nIP\n\n.\n\n/\n\n2\n\nN\n\n# ý\n\nS\n\n/ ⁄\n\n-\n\n⁄\n\n2\n\nN\n\n⁄\n\nˆ\n\n7\n\n_ — ~À\n\n-. .-\n\nủ\\\n\nẠ\n\n.\n\n`1I.\n\nJ\n\n..\n\n..\n\n3 7 N-\n\nrn\n\n¬\n\nỰ\n\n. . ..\n\n|\n\nl /Ñ\n\nIAF\n\n— x\n\n- - m\n\n~ -\n\ns\n\n—\n\n—\n\n-.\n\n— —\n\n— ¬\n\n.\n\n* ˆ\n\nHƯN\n\n—<\n\nỀ.r #\n\nm\n\n— I\n\n=\'_7"\n\n~ —<\n\n¬\n\nx\n\n_ —\n\n~—-\n\n~ -.\n\nv\n\n— t\n\nm\n\n"—=E\n\n—\n\nNI\n\n— E\n\n—\n' clean='2\n\nẽz>\n\nd2a. .\n\n)\n\nZ\n\nx n\n\nrỹz%Z.\n\n2852\n\nà\n\n› a\n\nI\n\n/\n\nN=ÙR=\n\nl\n\nJ\\\n\nl\n\n4\n\nA\n\nMÀ\n\nY\\JV\n\nz\n\ngI.\'JIVỔ\n\n# *\n\n4\n\nlU\n\n\\\n\n`v\n\n|\n\nNSỶ /\n\nz\n\n24\n\n72\n\nG\n\n4\n\n~+*\n\nớ œ\n\nBẠN\n\n) =C\n\nN\n\nv\n\n)Ề z\n\n2\n\n/\n\nth\n\n4\n\n9\n\nS\n\nv\n\ni\n\nư-\n\n`Ñ Ỏ/ N.\n\n2\n\n—\n\n.=>\n\nJu\n\n= /\n\nt v\n\nJ\\\n\nÑ\n\n4 IN\n\n.".o-U›\n\nn\n\nFì\\\n\nx`\\Ì`_-_/Ị_\'\n\nKÀ\n\n7\n\n(71=\n\nll` 7\n\na $\n\nỊ\n\nẦ\n\n.\n\n4\n\nx.7-J)\n\n»\n\nl 4\n\nIP\n\n.\n\n/\n\n2\n\nN\n\n# ý\n\nS\n\n/ ⁄\n\n-\n\n⁄\n\n2\n\nN\n\n⁄\n\nˆ\n\n7\n\n_ — ~À\n\n-. .-\n\nủ\\\n\nẠ\n\n.\n\n`1I.\n\nJ\n\n..\n\n..\n\n3 7 N-\n\nrn\n\n¬\n\nỰ\n\n. . ..\n\n|\n\nl /Ñ\n\nIAF\n\n— x\n\n- - m\n\n~ -\n\ns\n\n—\n\n—\n\n-.\n\n— —\n\n— ¬\n\n.\n\n* ˆ\n\nHƯN\n\n—<\n\nỀ.r #\n\nm\n\n— I\n\n=\'_7"\n\n~ —<\n\n¬\n\nx\n\n_ —\n\n~—-\n\n~ -.\n\nv\n\n— t\n\nm\n\n"—=E\n\n—\n\nNI\n\n— E\n\n—' len=610
+[OCR SUMMARY] frames_with_text=11
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=559 text='..\n\nT S I\n\n— u\n\n—< PH\n\n`f\n\nÿ 22 t\n\n,Av>\n\nCựa\n\n—\n\nA\n\ntỹl\n\naa v\n\nN\n\nMi⁄\n\nzđi\n\nH N\n\n.Ị\n\n.\n\ncấ\n\nTN\n\nNa.\n\nA\\\n\nỔ`\\\\l\n\n;\n\nïZ⁄z6P\n\n4\n\n.\n\nv4 l\n\nT M\n\nˆ\n\n#«,\n\n_¬\n\nvỊ\n\n|\n\nl\n\ná\n\nKÃ ‹t\n\nHị\n\n.\n\n-\n\n\'a""\\b~…\\\n\nn\n\nL\n\nế'
+[REQUEST] Complete best_score=0.7522 frames=11 violating_words=u ph 22 av cựa
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='Uhângugt @' clean='Uhângugt @' len=10
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='Mhingm:t @' clean='Mhingm:t @' len=10
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='Thângu;t @ ' clean='Thângu;t @' len=10
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='Thngm:t @' clean='Thngm:t @' len=9
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw="Sẩngũhữ.'ccật" clean="Sẩngũhữ.'ccật" len=13
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='Sẩngũhữs c D@t' clean='Sẩngũhữs c D@t' len=14
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='SỔnguhaoot' clean='SỔnguhaoot' len=10
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='@ @u0' clean='@ @u0' len=5
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='@ @0' clean='@ @0' len=4
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='@ @mâ' clean='@ @mâ' len=5
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=10
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=14 text='Sẩngũhữs c D@t'
+[REQUEST] Complete best_score=0.7477 frames=11 violating_words=sẩngũhữs
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='Uhângugt @' clean='Uhângugt @' len=10
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='Mhingm:t @' clean='Mhingm:t @' len=10
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='Thângu;t @ ' clean='Thângu;t @' len=10
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='Thngm:t @' clean='Thngm:t @' len=9
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw="Sẩngũhữ.'ccật" clean="Sẩngũhữ.'ccật" len=13
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='Sẩngũhữs c D@t' clean='Sẩngũhữs c D@t' len=14
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='SỔnguhaoot' clean='SỔnguhaoot' len=10
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='@ @u0' clean='@ @u0' len=5
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='@ @0' clean='@ @0' len=4
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='@ @mâ' clean='@ @mâ' len=5
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=10
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=14 text='Sẩngũhữs c D@t'
+[REQUEST] Complete best_score=0.7477 frames=11 violating_words=sẩngũhữs
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=0
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=0 text=''
+[REQUEST] Complete best_score=0.3835 frames=11 violating_words=
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='Mhângmat @' clean='Mhângmat @' len=10
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='Thangugt @' clean='Thangugt @' len=10
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='Ihangmat @' clean='Ihangmat @' len=10
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='Mhàngmae @' clean='Mhàngmae @' len=10
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='8Ổùgũhữ.ậc Dât' clean='8Ổùgũhữ.ậc Dât' len=14
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='Sẩngũhug@t' clean='Sẩngũhug@t' len=10
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='8Ổnguhữ.zo Dậ8' clean='8Ổnguhữ.zo Dậ8' len=14
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='@ @u' clean='@ @u' len=4
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='@8 @M0' clean='@8 @M0' len=6
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='@ @u0' clean='@ @u0' len=5
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=10
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=4 text='@ @u'
+[REQUEST] Complete best_score=0.7594 frames=11 violating_words=u
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=0
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=0 text=''
+[REQUEST] Complete best_score=0.3835 frames=11 violating_words=
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='Tháng một lôn' clean='Tháng một lôn' len=13
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='Tháng một lòn' clean='Tháng một lòn' len=13
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='Tháng một lin' clean='Tháng một lin' len=13
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='Tháng một lòn' clean='Tháng một lòn' len=13
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='sống như súc vật' clean='sống như súc vật' len=16
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='sống như súc Đột' clean='sống như súc Đột' len=16
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='sống như súc vật' clean='sống như súc vật' len=16
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=10
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=13 text='Tháng một lôn'
+[REQUEST] Complete best_score=0.7830 frames=11 violating_words=tháng một lôn
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=0
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=0 text=''
+[REQUEST] Complete best_score=0.6590 frames=11 violating_words=
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=25.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='JUDGE' clean='JUDGE' len=5
+[VIDEO] Analyze frame_index=25 sampled_index=2
+[OCR] START frame=25 second=1
+[OCR] frame=25 sec=1 raw='JUDGE' clean='JUDGE' len=5
+[VIDEO] Analyze frame_index=50 sampled_index=3
+[OCR] START frame=50 second=2
+[OCR] frame=50 sec=2 raw='JUDGE' clean='JUDGE' len=5
+[VIDEO] Analyze frame_index=75 sampled_index=4
+[OCR] START frame=75 second=3
+[OCR] frame=75 sec=3 raw='JUDGE' clean='JUDGE' len=5
+[VIDEO] Analyze frame_index=100 sampled_index=5
+[OCR] START frame=100 second=4
+[OCR] frame=100 sec=4 raw='JUDGE' clean='JUDGE' len=5
+[VIDEO] Analyze frame_index=125 sampled_index=6
+[OCR] START frame=125 second=5
+[OCR] frame=125 sec=5 raw='JUDGE' clean='JUDGE' len=5
+[OCR SUMMARY] frames_with_text=6
+[VIDEO] Total frames analyzed: 6
+[FINAL TEXT] len=5 text='JUDGE'
+[REQUEST] Complete best_score=0.7605 frames=6 violating_words=judge
+[MAIN] Flask startup
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=16.658425593687777
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=16 sampled_index=2
+[OCR] START frame=16 second=0
+[OCR] frame=16 sec=0 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=32 sampled_index=3
+[OCR] START frame=32 second=1
+[OCR] frame=32 sec=1 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=48 sampled_index=4
+[OCR] START frame=48 second=2
+[OCR] frame=48 sec=2 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=64 sampled_index=5
+[OCR] START frame=64 second=3
+[OCR] frame=64 sec=3 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=0
+[VIDEO] Total frames analyzed: 5
+[FINAL TEXT] len=0 text=''
+[REQUEST] Complete best_score=0.6637 frames=5 violating_words=
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='Tháng một lôn' clean='Tháng một lôn' len=13
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='Tháng một lòn' clean='Tháng một lòn' len=13
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='Tháng một lin' clean='Tháng một lin' len=13
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='Tháng một lòn' clean='Tháng một lòn' len=13
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='sống như súc vật' clean='sống như súc vật' len=16
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='sống như súc Đột' clean='sống như súc Đột' len=16
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='sống như súc vật' clean='sống như súc vật' len=16
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=10
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=13 text='Tháng một lôn'
+[REQUEST] Complete best_score=0.7830 frames=11 violating_words=tháng một lôn
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='Tháng một lôn' clean='Tháng một lôn' len=13
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='Tháng một lòn' clean='Tháng một lòn' len=13
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='Tháng một lin' clean='Tháng một lin' len=13
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='Tháng một lòn' clean='Tháng một lòn' len=13
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='sống như súc vật' clean='sống như súc vật' len=16
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='sống như súc Đột' clean='sống như súc Đột' len=16
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='sống như súc vật' clean='sống như súc vật' len=16
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=10
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=13 text='Tháng một lôn'
+[REQUEST] Complete best_score=0.9900 frames=11 violating_words=lôn
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=15 text='Con chó đẹp quá'
+[FINAL TEXT] len=15 text='Con chó đẹp quá'
+[REQUEST] Complete best_score=0.9900 frames=0 violating_words=chó
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=15 text='Con chó đẹp quá'
+[FINAL TEXT] len=15 text='Con chó đẹp quá'
+[REQUEST] Complete best_score=0.9900 frames=0 violating_words=chó
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=15 text='Con chó đẹp quá'
+[FINAL TEXT] len=15 text='Con chó đẹp quá'
+[REQUEST] Complete best_score=0.9678 frames=0 violating_words=chó detailed_tags=con[O] chó[B-T] đẹp[O] quá[O]
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=15 text='mày giỏi quá đi'
+[FINAL TEXT] len=15 text='mày giỏi quá đi'
+[REQUEST] Complete best_score=0.9821 frames=0 violating_words=mày[B-T] giỏi[O] quá[O] đi[O] detailed_tags=mày[B-T] giỏi[O] quá[O] đi[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=12 text='bạn giỏi quá'
+[FINAL TEXT] len=12 text='bạn giỏi quá'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words= detailed_tags=bạn[O] giỏi[O] quá[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='Tháng một lôn' clean='Tháng một lôn' len=13
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='Tháng một lòn' clean='Tháng một lòn' len=13
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='Tháng một lin' clean='Tháng một lin' len=13
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='Tháng một lòn' clean='Tháng một lòn' len=13
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='sống như súc vật' clean='sống như súc vật' len=16
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='sống như súc Đột' clean='sống như súc Đột' len=16
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='sống như súc vật' clean='sống như súc vật' len=16
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=10
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=10 text='cái lồn má'
+[REQUEST] Complete best_score=0.9864 frames=11 violating_words=cái[O] lồn[B-T] má[I-T] detailed_tags=cái[O] lồn[B-T] má[I-T]

@@ -1,68 +1,65 @@
-"""
-Content Moderation Service - Python Flask API
-
-Moderation flow:
-1. Text post content -> hate speech model
-2. Image URL -> NSFW + violence models + OCR -> hate speech model
-3. Video URL -> sample 1 frame/second -> NSFW + violence models + OCR -> hate speech model
-"""
-
-from __future__ import annotations
-
 import os
-import re
-import tempfile
-import logging
-from dataclasses import dataclass, field
-from typing import Any
+import sys
+import io
+
+# Force UTF-8 output to prevent Windows console UnicodeEncodeError
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 import cv2
 import numpy as np
-import requests
 import torch
 import torch.nn as nn
-from flask import Flask, jsonify, request
+import tempfile
+from transformers import AutoModel, AutoTokenizer
+from flask import Flask, request, jsonify
+import urllib.request
+import requests
+import re
+import math
+import logging
+import transformers.modeling_utils as modeling_utils
+modeling_utils.check_torch_load_is_safe = lambda: None
+import unicodedata
+import easyocr
+from vietocr.tool.predictor import Predictor
+from vietocr.tool.config import Cfg
+from PIL import Image
 
-try:
-    from transformers import AutoTokenizer, AutoModel
-    import transformers.modeling_utils as modeling_utils
-    modeling_utils.check_torch_load_is_safe = lambda: None
-except ImportError:
-    AutoTokenizer = None
-    AutoModel = None
+# Khởi tạo mô hình nhận diện của VietOCR
+config = Cfg.load_config_from_name('vgg_seq2seq')
+config['cnn']['pretrained'] = False
+config['predictor']['beamsearch'] = False
+config['device'] = 'cuda' if torch.cuda.is_available() else 'cpu'
+vietocr_predictor = Predictor(config)
 
-try:
-    import pytesseract
-except Exception:
-    pytesseract = None
+# Khởi tạo EasyOCR (Chỉ dùng bộ thư viện gốc để lấy thuật toán phát hiện vùng chữ - CRAFT)
+reader = easyocr.Reader(['vi'])
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("moderation")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-if pytesseract is None:
-    logger.warning("❌ pytesseract python package is NOT installed. OCR will be disabled.")
-else:
+# Debug: Kiểm tra working directory
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEBUG_FILE = os.path.join(SCRIPT_DIR, "kiem_tra_ocr.txt")
+print(f"[INIT] Script directory: {SCRIPT_DIR}")
+print(f"[INIT] Debug file path: {DEBUG_FILE}")
+
+
+def append_debug_line(message: str):
     try:
-        tess_version = pytesseract.get_tesseract_version()
-        logger.info("✅ Tesseract OCR Engine (version %s) loaded successfully. OCR is fully enabled.", tess_version)
+        with open(DEBUG_FILE, "a", encoding="utf-8") as f:
+            f.write(message + "\n")
+            f.flush()
     except Exception as e:
-        logger.warning("❌ pytesseract package is installed, BUT Tesseract Engine is NOT found or configured incorrectly. OCR will fail! Error: %s", e)
+        print(f"[DEBUG_FILE_ERROR] {e}")
 
-MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
-MAX_VIDEO_SECONDS = 120
-DOWNLOAD_TIMEOUT_SECONDS = 120
-REJECT_THRESHOLD = 0.80
-REVIEW_THRESHOLD = 0.30
-
-
-# ═══════════════════════════════════════════════════════════════════
-#  Model Architecture Definitions (must match training code exactly)
-# ═══════════════════════════════════════════════════════════════════
 
 class NSFWModel(nn.Module):
-    """4-conv CNN for NSFW classification. Input: 3x224x224, Output: 2 classes."""
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 32, 3, padding=1)
@@ -88,607 +85,508 @@ class NSFWModel(nn.Module):
         x = self.fc2(x)
         return x
 
-
 class ViolenceModel(nn.Module):
-    """CNN-GRU model for violence detection. Input: 3x56x56, Output: 2 classes."""
     def __init__(self):
         super().__init__()
         self.cnn = nn.Sequential(
-            nn.Conv2d(3, 32, 3, padding=1),   # 0
-            nn.ReLU(),                          # 1
-            nn.MaxPool2d(2, 2),                 # 2
-            nn.Conv2d(32, 64, 3, padding=1),   # 3
-            nn.ReLU(),                          # 4
-            nn.MaxPool2d(2, 2),                 # 5
-            nn.Conv2d(64, 128, 3, padding=1),  # 6
-            nn.ReLU(),                          # 7
-            nn.MaxPool2d(2, 2),                 # 8
-            nn.Flatten(),                       # 9
-            nn.ReLU(),                          # 10
-            nn.Linear(128 * 7 * 7, 512),       # 11
+            nn.Conv2d(3, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2, 2),
+            nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2, 2),
+            nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2, 2),
+            nn.Flatten(), nn.ReLU(), nn.Linear(128 * 7 * 7, 512)
         )
         self.rnn = nn.GRU(512, 256, num_layers=2, batch_first=True)
-        self.fc = nn.Sequential(
-            nn.Linear(256, 128),  # 0
-            nn.ReLU(),            # 1
-            nn.Dropout(0.3),      # 2
-            nn.Linear(128, 2),    # 3
-        )
+        self.fc = nn.Sequential(nn.Linear(256, 128), nn.ReLU(), nn.Dropout(0.3), nn.Linear(128, 2))
 
     def forward(self, x):
-        # x: (batch, channels, H, W) for single frame
         if x.dim() == 4:
-            features = self.cnn(x)           # (batch, 512)
-            features = features.unsqueeze(1) # (batch, 1, 512)
+            features = self.cnn(x)
+            features = features.unsqueeze(1)
         else:
             features = x
-        rnn_out, _ = self.rnn(features)      # (batch, seq, 256)
-        out = rnn_out[:, -1, :]              # (batch, 256)
-        out = self.fc(out)                   # (batch, 2)
+        rnn_out, _ = self.rnn(features)
+        out = rnn_out[:, -1, :]
+        out = self.fc(out)
         return out
 
-
-class PhoBERTHateSpeech(nn.Module):
-    """PhoBERT + linear classifier for hate speech (3 classes)."""
-    def __init__(self, device):
+class TokenClassificationModel(nn.Module):
+    def __init__(self, model_name='vinai/phobert-base', num_labels=3, dropout_prob=0.15):
         super().__init__()
-        self.device = device
-        self.phobert = AutoModel.from_pretrained("vinai/phobert-base")
-        self.classifier = nn.Linear(768, 3)
+        self.num_labels = num_labels
+        self.phobert = AutoModel.from_pretrained(model_name)
+        self.config = self.phobert.config
+        self.dropout = nn.Dropout(dropout_prob)
+        self.classifier = nn.Linear(self.config.hidden_size, num_labels)
 
     def forward(self, input_ids, attention_mask=None):
-        outputs = self.phobert(input_ids=input_ids, attention_mask=attention_mask)
-        pooled = outputs.pooler_output  # (batch, 768)
-        logits = self.classifier(pooled) # (batch, 3)
+        outputs = self.phobert(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            output_hidden_states=False
+        )
+        sequence_output = outputs.last_hidden_state
+        sequence_output = self.dropout(sequence_output)
+        logits = self.classifier(sequence_output)
         return logits
 
+# --- MODERATION LOGIC ---
 
-@dataclass
-class MediaModerationScores:
-    nsfw_score: float = 0.0
-    violence_score: float = 0.0
-    hatespeech_score: float = 0.0
-    detected_text: str = ""
-    media_type: str = "text"
-    nsfw_box: dict[str, int] | None = None
-    violen_box: dict[str, int] | None = None
-    hate_speech_word: list[str] = field(default_factory=list)
-    highest_score_frame_second: int | None = None
-    total_frames_analyzed: int = 0
-
-    @property
-    def best_score(self) -> float:
-        return max(self.nsfw_score, self.violence_score, self.hatespeech_score)
-
-
-class ContentModerationModel:
+class ContentModerationSystem:
     def __init__(self):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.models_loaded = False
-        self.nsfw_model = None
-        self.violence_model = None
-        self.hatespeech_model = None
-        self.hatespeech_tokenizer = None
-        self.tesseract_langs = "eng"
-        if pytesseract is not None:
-            try:
-                langs = pytesseract.get_languages()
-                if "vie" in langs:
-                    self.tesseract_langs = "vie"
-                logger.info("[OCR] Available languages: %s. Using lang='%s'", langs, self.tesseract_langs)
-            except Exception as e:
-                logger.warning("[OCR] Could not detect languages: %s", e)
-        self.load_models()
-
-    def load_models(self) -> None:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        self.nsfw_model = NSFWModel().to(device)
+        self.violence_model = ViolenceModel().to(device)
+        self.hatespeech_model = TokenClassificationModel(num_labels=3).to(device)
+        self.tokenizer = AutoTokenizer.from_pretrained('vinai/phobert-base')
+        
+        # Load weights carefully
         try:
-            self.nsfw_model = self._load_nsfw_model()
-            self.violence_model = self._load_violence_model()
-            self.hatespeech_model, self.hatespeech_tokenizer = self._load_hatespeech_model()
-            self.models_loaded = True
-            logger.info(
-                "=== MODEL LOAD SUMMARY === nsfw=%s | violence=%s | hatespeech=%s",
-                self.nsfw_model is not None,
-                self.violence_model is not None,
-                self.hatespeech_model is not None,
-            )
-        except Exception as exc:
-            logger.exception("Error initializing models: %s", exc)
-            self.models_loaded = False
-
-    def _load_nsfw_model(self):
-        path = os.path.join(MODEL_DIR, "best_NSFW.pt")
-        if not os.path.exists(path):
-            logger.warning("NSFW model file not found: %s", path)
-            return None
+            d_nsfw = torch.load(os.path.join(base_dir, 'best_NSFW.pt'), map_location=device, weights_only=False)
+            self.nsfw_model.load_state_dict(d_nsfw)
+            logger.info("Successfully loaded NSFW model")
+            append_debug_line("[INIT] Successfully loaded NSFW model")
+        except Exception as e:
+            logger.error(f"Error loading NSFW model: {e}")
+            
         try:
-            state_dict = torch.load(path, map_location=self.device, weights_only=False)
-            model = NSFWModel().to(self.device)
-            model.load_state_dict(state_dict)
-            model.eval()
-            logger.info("✅ NSFW model loaded successfully from %s", path)
-            return model
-        except Exception as exc:
-            logger.error("❌ Failed to load NSFW model: %s", exc)
-            return None
-
-    def _load_violence_model(self):
-        path = os.path.join(MODEL_DIR, "best_violence.pth")
-        if not os.path.exists(path):
-            logger.warning("Violence model file not found: %s", path)
-            return None
+            d_viol = torch.load(os.path.join(base_dir, 'best_violence.pth'), map_location=device, weights_only=False)
+            self.violence_model.load_state_dict(d_viol)
+            logger.info("Successfully loaded Violence model")
+            append_debug_line("[INIT] Successfully loaded Violence model")
+        except Exception as e:
+            logger.error(f"Error loading Violence model: {e}")
+            
         try:
-            state_dict = torch.load(path, map_location=self.device, weights_only=False)
-            model = ViolenceModel().to(self.device)
-            model.load_state_dict(state_dict)
-            model.eval()
-            logger.info("✅ Violence model loaded successfully from %s", path)
-            return model
-        except Exception as exc:
-            logger.error("❌ Failed to load Violence model: %s", exc)
-            return None
+            d_hate = torch.load(os.path.join(base_dir, 'phobert_hatespeech_best.pt'), map_location=device, weights_only=False)
+            d_hate = {k: v for k, v in d_hate.items() if not k.startswith('loss_fn')}
+            self.hatespeech_model.load_state_dict(d_hate, strict=False)
+            logger.info("Successfully loaded PhoBERT Hate Speech model")
+            append_debug_line("[INIT] Successfully loaded PhoBERT Hate Speech model")
+        except Exception as e:
+            logger.error(f"==========================Error loading PhoBERT model: {e}")
+            
+        self.nsfw_model.eval()
+        self.violence_model.eval()
+        self.hatespeech_model.eval()
 
-    def _load_hatespeech_model(self):
-        path = os.path.join(MODEL_DIR, "phobert_hatespeech_best.pt")
-        if not os.path.exists(path):
-            logger.warning("HateSpeech model file not found: %s", path)
-            return None, None
-        if AutoTokenizer is None or AutoModel is None:
-            logger.error("❌ transformers library not available for PhoBERT")
-            return None, None
-        try:
-            tokenizer = AutoTokenizer.from_pretrained("vinai/phobert-base")
-            model = PhoBERTHateSpeech(self.device).to(self.device)
-            state_dict = torch.load(path, map_location=self.device, weights_only=False)
-            # Remove loss_fn weights from state_dict (not part of model)
-            state_dict = {k: v for k, v in state_dict.items() if not k.startswith("loss_fn")}
-            model.load_state_dict(state_dict)
-            model.eval()
-            logger.info("✅ HateSpeech (PhoBERT) model loaded successfully from %s", path)
-            return model, tokenizer
-        except Exception as exc:
-            logger.error("❌ Failed to load HateSpeech model: %s", exc)
-            return None, None
+        self.toxic_keywords = []
 
-    # ── Image preprocessing ──────────────────────────────────────────
-
-    def _frame_to_nsfw_tensor(self, frame_bgr: np.ndarray) -> torch.Tensor:
-        frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        frame_rgb = cv2.resize(frame_rgb, (224, 224), interpolation=cv2.INTER_AREA)
-        tensor = torch.from_numpy(frame_rgb).float() / 255.0
-        tensor = tensor.permute(2, 0, 1).unsqueeze(0).to(self.device)
-        return tensor
-
-    def _frame_to_violence_tensor(self, frame_bgr: np.ndarray) -> torch.Tensor:
-        frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        frame_rgb = cv2.resize(frame_rgb, (56, 56), interpolation=cv2.INTER_AREA)
-        tensor = torch.from_numpy(frame_rgb).float() / 255.0
-        tensor = tensor.permute(2, 0, 1).unsqueeze(0).to(self.device)
-        return tensor
-
-    # ── Predictions ──────────────────────────────────────────────────
-
-    def predict_nsfw_frame(self, frame_bgr: np.ndarray) -> float:
-        if self.nsfw_model is None:
-            logger.warning("[PREDICT] NSFW model unavailable, returning 0.0")
-            return 0.0
-        try:
-            tensor = self._frame_to_nsfw_tensor(frame_bgr)
-            with torch.no_grad():
-                logits = self.nsfw_model(tensor)  # (1, 2)
-            probs = torch.softmax(logits, dim=1)
-            nsfw_prob = probs[0, 1].item()  # class 1 = nsfw
-            logger.info("[PREDICT] NSFW raw logits=%s probs=%s => score=%.4f",
-                        logits.cpu().numpy().tolist(), probs.cpu().numpy().tolist(), nsfw_prob)
-            return float(nsfw_prob)
-        except Exception as exc:
-            logger.error("[PREDICT] NSFW inference failed: %s", exc)
-            return 0.0
-
-    def predict_violence_frame(self, frame_bgr: np.ndarray) -> float:
-        if self.violence_model is None:
-            logger.warning("[PREDICT] Violence model unavailable, returning 0.0")
-            return 0.0
-        try:
-            tensor = self._frame_to_violence_tensor(frame_bgr)
-            with torch.no_grad():
-                logits = self.violence_model(tensor)  # (1, 2)
-            probs = torch.softmax(logits, dim=1)
-            violence_prob = probs[0, 1].item()  # class 1 = violence
-            logger.info("[PREDICT] Violence raw logits=%s probs=%s => score=%.4f",
-                        logits.cpu().numpy().tolist(), probs.cpu().numpy().tolist(), violence_prob)
-            return float(violence_prob)
-        except Exception as exc:
-            logger.error("[PREDICT] Violence inference failed: %s", exc)
-            return 0.0
-
-    def predict_hatespeech_text(self, text: str) -> float:
-        if not text or not text.strip():
-            return 0.0
-
-        normalized = re.sub(r"\s+", " ", text).strip().lower()
-        if not normalized:
-            return 0.0
-
-        # Keyword fallback
-        toxic_keywords = [
-            "địt", "đụ", "đéo", "ngu", "chết", "giết", "súc vật", "xúc vật", "mày", "tao",
-            "cút", "chó", "đấm", "đánh", "nigger", "faggot", "kill", "hate",
-            "đồ chó", "con chó", "thằng ngu", "con ngu", "đồ ngu", "chó má",
-            "khốn nạn", "đồ khốn", "mẹ mày", "bố mày", "lồn", "buồi", "cặc",
-            "đĩ", "cave", "phò", "thằng chó", "con đĩ", "đồ đĩ",
-        ]
-        hits = sum(1 for key in toxic_keywords if key in normalized)
-        keyword_score = min(1.0, hits * 0.18)
-
-        if self.hatespeech_model is None or self.hatespeech_tokenizer is None:
-            logger.warning("[PREDICT] HateSpeech model unavailable, using keyword fallback=%.4f", keyword_score)
-            return keyword_score
-
-        try:
-            encoding = self.hatespeech_tokenizer(
-                normalized,
-                return_tensors="pt",
-                max_length=256,
-                truncation=True,
-                padding="max_length",
-            )
-            input_ids = encoding["input_ids"].to(self.device)
-            attention_mask = encoding["attention_mask"].to(self.device)
-
-            with torch.no_grad():
-                logits = self.hatespeech_model(input_ids, attention_mask)  # (1, 3)
-
-            probs = torch.softmax(logits, dim=1)
-            # class 0 = clean, class 1 = offensive, class 2 = hate
-            offensive_prob = probs[0, 1].item()
-            hate_prob = probs[0, 2].item()
-            model_score = offensive_prob + hate_prob  # combined violation probability
-
-            logger.info(
-                "[PREDICT] HateSpeech text='%s' logits=%s probs=%s "
-                "clean=%.4f offensive=%.4f hate=%.4f => model_score=%.4f keyword_score=%.4f",
-                normalized[:80], logits.cpu().numpy().tolist(), probs.cpu().numpy().tolist(),
-                probs[0, 0].item(), offensive_prob, hate_prob,
-                model_score, keyword_score
-            )
-            return max(keyword_score, float(min(1.0, model_score)))
-        except Exception as exc:
-            logger.error("[PREDICT] HateSpeech inference failed: %s", exc)
-            return keyword_score
-
-    # ── OCR ──────────────────────────────────────────────────────────
-
-    def _extract_text_from_frame(self, frame_bgr: np.ndarray) -> str:
-        if pytesseract is None:
+    def clean_vietnamese_ocr_text(self, text: str):
+        if not text:
             return ""
+        
+        # Tiền xử lý giống 100% với hàm clean_word_deep trong khi train (đã fix typo)
+        text = str(text).lower().strip()
+        text = unicodedata.normalize('NFC', text)
+        # Chỉ xóa dấu chấm và gạch ngang giữa chữ (v.l -> vl)
+        text = re.sub(r'([a-z])[\.\-]([a-z])', r'\1\2', text)
+        # Giữ lại chữ, số, các dấu câu cơ bản và dấu gạch dưới
+        text = re.sub(r'[^\s\w\d.,!?:)_]', '', text)
+        
+        # Phân mảnh và loại bỏ các khoảng trắng thừa
+        tokens = text.split()
+        return " ".join(tokens)
+
+    def evaluate_text(self, text: str):
+        if not text.strip():
+            return 0.0, [], []
+        
+        # Lọc bỏ nhiễu OCR
+        clean_text = self.clean_vietnamese_ocr_text(text)
+        
+        if not clean_text:
+            return 0.0, [], []
+        
+        final_hate_score = 0.0
+        violating_words = []
+        detailed_tags = [] # Chứa định dạng [{"word": "...", "tag": "..."}]
+        
+        try:
+            tokens = clean_text.split()
+            if not tokens:
+                return 0.0, [], []
+
+            # Mã hoá và ánh xạ từ ban đầu
+            input_ids = [self.tokenizer.cls_token_id]
+            word_starts = []
+            
+            for w in tokens:
+                word_starts.append(len(input_ids)) # Vị trí token đầu tiên của từ W
+                w_toks = self.tokenizer.encode(w, add_special_tokens=False)
+                if not w_toks:
+                    input_ids.append(self.tokenizer.unk_token_id)
+                else:
+                    input_ids.extend(w_toks)
+                    
+            input_ids.append(self.tokenizer.sep_token_id)
+            
+            # Giới hạn độ dài tránh vượt quá 256 của max_length pre-train
+            if len(input_ids) > 256:
+                input_ids = input_ids[:255] + [self.tokenizer.sep_token_id]
+                word_starts = [idx for idx in word_starts if idx < 255]
+                tokens = tokens[:len(word_starts)]
+
+            input_tensor = torch.tensor([input_ids], dtype=torch.long).to(device)
+            mask_tensor = torch.ones_like(input_tensor).to(device)
+            
+            with torch.no_grad():
+                logits = self.hatespeech_model(input_ids=input_tensor, attention_mask=mask_tensor)
+                # Dạng trả ra là NER [batch_size, sequence_length, num_labels=3]
+                probs = torch.softmax(logits, dim=-1)[0]
+                preds = torch.argmax(probs, dim=-1).cpu().numpy()
+                
+            # TAG mapping bạn dùng: 0: O, 1: B-T, 2: I-T
+            id2tag = {0: "O", 1: "B-T", 2: "I-T"}
+            max_prob = 0.0
+            
+            for i, word_idx in enumerate(word_starts):
+                pred_tag = preds[word_idx]
+                tag_prob = probs[word_idx][pred_tag].item()
+                str_tag = id2tag.get(pred_tag, "O")
+                
+                # Lưu toàn bộ cấu trúc câu cùng với Tag để nhét vào Database
+                detailed_tags.append({"word": tokens[i], "tag": str_tag})
+                
+                # Lưu lại những từ mang nhãn B-T, I-T vào violating_words
+                if str_tag in ["B-T", "I-T"]:
+                    violating_words.append(tokens[i])
+                    max_prob = max(max_prob, tag_prob)
+                    
+            if violating_words:
+                final_hate_score = max_prob
+                
+        except Exception as e:
+            logger.error(f"Text NER eval error: {e}")
+
+        return float(final_hate_score), violating_words, detailed_tags
+
+    def evaluate_image(self, frame_bgr, frame_idx=None, second=None):
+        h, w = frame_bgr.shape[:2]
+
+        # ===== OCR FIRST =====
+        ocr_text = ""
+        try:
+            append_debug_line(f"[OCR] START frame={frame_idx} second={second}")
+
+            # 1. Lưu ảnh full frame để kiểm tra
+            debug_img = os.path.join(SCRIPT_DIR, f"frame_{frame_idx}.png")
+            cv2.imwrite(debug_img, frame_bgr)
+
+            # 2. Sử dụng thư viện gốc EasyOCR (mô hình CRAFT) để detector tìm vị trí khung chữ
+            # Tắt detail=0 (vì muốn lấy box, set detail=1)
+            # Khử bỏ text_threshold cao, dùng ngưỡng mặc định để không sót chữ
+            detected_boxes = reader.readtext(frame_bgr, detail=1)
+
+            valid_texts = []
+            
+            # Tạo thư mục crop cho mỗi frame để tiện debug
+            crop_dir = os.path.join(SCRIPT_DIR, f"crops_frame_{frame_idx}")
+            if not os.path.exists(crop_dir):
+                os.makedirs(crop_dir)
+
+            for idx, (bbox, _, prob) in enumerate(detected_boxes):
+                # QUAN TRỌNG: Không dùng prob của EasyOCR để bỏ box nữa.
+                # Vì prob này là điểm tự tin "nhận diện" của EasyOCR chứ không phải điểm "phát hiện" vùng chữ.
+                # Nếu EasyOCR không dịch được tiếng Việt tốt -> prob sẽ thấp -> box sẽ bị skip oan uổng!
+
+                # Lấy tọa độ
+                (tl, tr, br, bl) = bbox
+                tl = (max(0, int(tl[0])), max(0, int(tl[1])))
+                br = (min(w-1, int(br[0])), min(h-1, int(br[1])))
+                
+                # Tránh các khung hình nhiễu méo mó làm sâp crop
+                if br[1] - tl[1] <= 2 or br[0] - tl[0] <= 2:
+                    continue
+
+                # 3. Cắt (crop) vùng chữ tìm được từ ảnh gốc bgr (rgb color)
+                crop_img = frame_bgr[tl[1]:br[1], tl[0]:br[0]]
+
+                # 4. Lưu ảnh text đã được cut (để bạn có thể kiểm tra xem công cụ cắt đúng không bằng mắt)
+                crop_debug_path = os.path.join(crop_dir, f"crop_{idx}.png")
+                cv2.imwrite(crop_debug_path, crop_img)
+
+                # Chuyển CV2 (BGR) sang PIL Image (RGB) cho Cỗ máy đọc VietOCR
+                crop_img_rgb = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+                pil_img = Image.fromarray(crop_img_rgb)
+
+                # 5. Dùng VietOCR để đọc ảnh mảnh vừa crop
+                text_predicted = vietocr_predictor.predict(pil_img)
+                
+                # Bỏ qua rác kí tự như @, ., s, v.v
+                if text_predicted and len(text_predicted.strip()) > 1:
+                    valid_texts.append(text_predicted)
+
+            raw_text = " ".join(valid_texts)
+            raw_text = unicodedata.normalize('NFC', raw_text)
+
+            # 6. Làm sạch sơ bộ (loại bỏ khoảng trắng thừa)
+            ocr_text = raw_text.strip()
+
+            append_debug_line(
+                f"[OCR] frame={frame_idx} sec={second} "
+                f"raw={repr(raw_text)} clean={repr(ocr_text)} len={len(ocr_text)}"
+            )
+
+        except Exception as e:
+            append_debug_line(f"[OCR ERROR] frame={frame_idx} error={str(e)}")
+
+        # ===== NSFW =====
         try:
             rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-            text = pytesseract.image_to_string(rgb, lang=self.tesseract_langs, config="--psm 11")
-            
-            if not text.strip():
-                gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
-                text = pytesseract.image_to_string(gray, lang=self.tesseract_langs, config="--psm 11")
-                
-            if text.strip():
-                logger.info("[OCR] Extracted text from frame: '%s'", text.strip()[:200])
-            return text.strip()
-        except Exception as e:
-            logger.error("OCR extraction failed: %s", e)
-            return ""
+            resized_nsfw = cv2.resize(rgb, (224, 224))
+            tensor_nsfw = torch.from_numpy(resized_nsfw).permute(2, 0, 1).float() / 255.0
+            tensor_nsfw = tensor_nsfw.unsqueeze(0).to(device)
 
-    def _extract_toxic_words(self, text: str) -> list[str]:
-        if not text:
-            return []
-        normalized = re.sub(r"\s+", " ", text).strip().lower()
-        if not normalized:
-            return []
-        toxic_keywords = [
-            "địt", "đụ", "đéo", "ngu", "chết", "giết", "súc vật", "xúc vật", "mày", "tao",
-            "cút", "chó", "đấm", "đánh", "nigger", "faggot", "kill", "hate",
-            "đồ chó", "con chó", "thằng ngu", "con ngu", "đồ ngu", "chó má",
-            "khốn nạn", "đồ khốn", "mẹ mày", "bố mày", "lồn", "buồi", "cặc",
-            "đĩ", "cave", "phò", "thằng chó", "con đĩ", "đồ đĩ",
-        ]
-        return sorted(set(key for key in toxic_keywords if key in normalized))
+            with torch.no_grad():
+                logits = self.nsfw_model(tensor_nsfw)
+                nsfw_prob = torch.softmax(logits, dim=1)[0][1].item()
+        except:
+            nsfw_prob = 0.0
 
-    # ── Bounding box helper ──────────────────────────────────────────
+        # ===== VIOLENCE =====
+        try:
+            resized_viol = cv2.resize(rgb, (56, 56))
+            tensor_viol = torch.from_numpy(resized_viol).permute(2, 0, 1).float() / 255.0
+            tensor_viol = tensor_viol.unsqueeze(0).to(device)
 
-    def _build_box(self, frame_bgr: np.ndarray, score: float, source: str) -> dict[str, int] | None:
-        if score < 0.25:
-            return None
-        height, width = frame_bgr.shape[:2]
-        return {"x1": 0, "y1": 0, "x2": int(width), "y2": int(height),
-                "source": source, "score": round(float(score), 4)}
+            with torch.no_grad():
+                logits = self.violence_model(tensor_viol)
+                viol_prob = torch.softmax(logits, dim=1)[0][1].item()
+        except:
+            viol_prob = 0.0
 
-    # ── Media scoring ────────────────────────────────────────────────
+        nsfw_box = {"x1": 0, "y1": 0, "x2": w, "y2": h} if nsfw_prob > 0 else None
+        viol_box = {"x1": 0, "y1": 0, "x2": w, "y2": h} if viol_prob > 0 else None
 
-    def _extract_media_scores(self, frame_bgr: np.ndarray, media_type: str) -> MediaModerationScores:
-        scores = MediaModerationScores(media_type=media_type)
+        return nsfw_prob, nsfw_box, viol_prob, viol_box, ocr_text
 
-        scores.nsfw_score = self.predict_nsfw_frame(frame_bgr)
-        scores.violence_score = self.predict_violence_frame(frame_bgr)
-
-        scores.nsfw_box = self._build_box(frame_bgr, scores.nsfw_score, "nsfw")
-        scores.violen_box = self._build_box(frame_bgr, scores.violence_score, "violen")
-
-        extracted = self._extract_text_from_frame(frame_bgr)
-        scores.hatespeech_score = self.predict_hatespeech_text(extracted)
-        scores.detected_text = extracted
-        scores.hate_speech_word = self._extract_toxic_words(extracted)
-
-        logger.info(
-            "[MEDIA SCORES] type=%s nsfw=%.4f violence=%.4f hatespeech=%.4f best=%.4f",
-            media_type, scores.nsfw_score, scores.violence_score,
-            scores.hatespeech_score, scores.best_score
-        )
-        return scores
-
-    # ── Download helpers ─────────────────────────────────────────────
-
-    def _download_media(self, url: str) -> str | None:
+    def _download_file(self, url):
         if not url:
             return None
-        logger.info("[DOWNLOAD] Downloading media from: %s", url[:200])
-        response = requests.get(url, timeout=DOWNLOAD_TIMEOUT_SECONDS, stream=True)
-        response.raise_for_status()
-        suffix = ".bin"
-        path_lower = url.lower()
-        for ext in [".mp4", ".mov", ".avi", ".mkv", ".webm", ".jpg", ".jpeg", ".png", ".webp"]:
-            if ext in path_lower:
-                suffix = ext
-                break
-        # Fallback: detect from Content-Type header
-        if suffix == ".bin":
-            ct = (response.headers.get("Content-Type") or "").lower()
-            if "video/mp4" in ct:
+
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                              "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+            }
+            response = requests.get(url, headers=headers, timeout=30, stream=True)
+            response.raise_for_status()
+
+            path_lower = url.lower()
+            suffix = ".jpg"
+            if any(ext in path_lower for ext in [".mp4", ".mov", ".avi", ".mkv", ".webm"]) or "video" in path_lower:
                 suffix = ".mp4"
-            elif "video/webm" in ct:
-                suffix = ".webm"
-            elif "image/jpeg" in ct:
-                suffix = ".jpg"
-            elif "image/png" in ct:
+            elif ".png" in path_lower:
                 suffix = ".png"
-            elif "image/webp" in ct:
+            elif ".webp" in path_lower:
                 suffix = ".webp"
-            elif "video" in ct:
-                suffix = ".mp4"  # default video format
-        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-        total_bytes = 0
-        try:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    tmp.write(chunk)
-                    total_bytes += len(chunk)
-            logger.info("[DOWNLOAD] Downloaded %d bytes to %s (suffix=%s)", total_bytes, tmp.name, suffix)
-            return tmp.name
-        finally:
-            tmp.close()
 
-    def _moderate_image_from_url(self, image_url: str) -> MediaModerationScores:
-        scores = MediaModerationScores()
-        local_path = None
-        try:
-            local_path = self._download_media(image_url)
-            if not local_path:
-                logger.warning("[IMAGE] Download returned None for URL: %s", image_url[:200])
-                return scores
-            frame = cv2.imread(local_path)
-            if frame is None:
-                logger.warning("[IMAGE] cv2.imread returned None for: %s", local_path)
-                return scores
-            logger.info("[IMAGE] Loaded image %s shape=%s", local_path, frame.shape)
-            scores = self._extract_media_scores(frame, "image")
-            return scores
-        except Exception as exc:
-            logger.error("Image moderation failed: %s", exc)
-            return scores
-        finally:
-            if local_path and os.path.exists(local_path):
-                os.unlink(local_path)
+            content_type = (response.headers.get("Content-Type") or "").lower()
+            if "video/" in content_type:
+                suffix = ".mp4"
+            elif "image/png" in content_type:
+                suffix = ".png"
+            elif "image/webp" in content_type:
+                suffix = ".webp"
+            elif "image/jpeg" in content_type:
+                suffix = ".jpg"
 
-    def _moderate_video_from_url(self, video_url: str) -> MediaModerationScores:
-        scores = MediaModerationScores()
-        local_path = None
-        try:
-            local_path = self._download_media(video_url)
-            if not local_path:
-                logger.warning("[VIDEO] Download returned None for URL: %s", video_url[:200])
-                return scores
-            cap = cv2.VideoCapture(local_path)
-            if not cap.isOpened():
-                logger.warning("[VIDEO] cv2.VideoCapture could not open: %s", local_path)
-                return scores
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            if fps is None or fps <= 0:
-                fps = 25.0
-            frame_step = max(1, int(round(fps)))  # 1 frame per second
-            max_frames = int(MAX_VIDEO_SECONDS * fps)
-            logger.info(
-                "[VIDEO] fps=%.1f total_frames=%d frame_step=%d max_frames=%d",
-                fps, total_frames, frame_step, max_frames
-            )
-            frame_index = 0
-            sampled_count = 0
-            sampled_texts: list[str] = []
-            best_frame: MediaModerationScores | None = None
-            best_frame_score = 0.0
-            best_frame_index = 0
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        tmp.write(chunk)
+                return tmp.name
+        except Exception as e:
+            logger.error(f"Download media failed for URL {url[:200]}: {e}")
+            return None
 
-            while cap.isOpened():
-                ok, frame = cap.read()
-                if not ok or frame_index > max_frames:
-                    break
-                if frame_index % frame_step == 0:
-                    sampled_count += 1
-                    frame_scores = self._extract_media_scores(frame, "video")
-                    logger.info(
-                        "[VIDEO] Frame %d (sample #%d): nsfw=%.4f violence=%.4f hatespeech=%.4f best=%.4f",
-                        frame_index, sampled_count,
-                        frame_scores.nsfw_score, frame_scores.violence_score,
-                        frame_scores.hatespeech_score, frame_scores.best_score
-                    )
-                    scores.nsfw_score = max(scores.nsfw_score, frame_scores.nsfw_score)
-                    scores.violence_score = max(scores.violence_score, frame_scores.violence_score)
-                    frame_best = frame_scores.best_score
-                    if frame_best > best_frame_score:
-                        best_frame_score = frame_best
-                        best_frame = frame_scores
-                        best_frame_index = frame_index
-                    if frame_scores.detected_text:
-                        sampled_texts.append(frame_scores.detected_text)
-                    if frame_scores.hate_speech_word:
-                        scores.hate_speech_word = sorted(set(
-                            scores.hate_speech_word + frame_scores.hate_speech_word))
-                frame_index += 1
-
-            cap.release()
-            logger.info("[VIDEO] Sampled %d frames from %d total", sampled_count, frame_index)
-
-            # Use scores from the best (worst-violating) frame for boxes
-            if best_frame is not None:
-                scores.nsfw_box = best_frame.nsfw_box
-                scores.violen_box = best_frame.violen_box
-                scores.nsfw_score = max(scores.nsfw_score, best_frame.nsfw_score)
-                scores.violence_score = max(scores.violence_score, best_frame.violence_score)
-                scores.highest_score_frame_second = int(best_frame_index // fps)
-                
-            scores.total_frames_analyzed = sampled_count
-
-            combined_text = " ".join(sampled_texts)
-            scores.hatespeech_score = self.predict_hatespeech_text(combined_text)
-            scores.detected_text = combined_text
-            scores.media_type = "video"
-            scores.hate_speech_word = sorted(set(
-                scores.hate_speech_word + self._extract_toxic_words(combined_text)))
-
-            logger.info(
-                "[VIDEO] FINAL: nsfw=%.4f violence=%.4f hatespeech=%.4f best=%.4f nsfw_box=%s violen_box=%s",
-                scores.nsfw_score, scores.violence_score, scores.hatespeech_score,
-                scores.best_score, scores.nsfw_box, scores.violen_box
-            )
-            return scores
-        except Exception as exc:
-            logger.error("Video moderation failed: %s", exc)
-            return scores
-        finally:
-            if local_path and os.path.exists(local_path):
-                os.unlink(local_path)
-
-    # ── Main moderation entry point ──────────────────────────────────
-
-    def moderate(self, content: str, image_url: str | None, video_url: str | None) -> dict[str, Any]:
-        logger.info("=" * 70)
-        logger.info("[MODERATE] START content='%s' image=%s video=%s",
-                    (content or "")[:100], bool(image_url), bool(video_url))
-
-        image_scores = self._moderate_image_from_url(image_url) if image_url else MediaModerationScores()
-        video_scores = self._moderate_video_from_url(video_url) if video_url else MediaModerationScores()
-
-        detected_text_parts = []
-        if content and content.strip():
-            detected_text_parts.append(content.strip())
-        if image_scores.detected_text:
-            detected_text_parts.append(image_scores.detected_text)
-        if video_scores.detected_text:
-            detected_text_parts.append(video_scores.detected_text)
-
-        combined_all_text = " ".join(part for part in detected_text_parts if part).strip()
+    def moderate_request(self, content, image_url, video_url):
+        # Result initialization
+        print(f"\n[MODERATE_REQUEST] START")
+        # Bỏ qua in content, image, video trực tiếp ra console để tránh lỗi Unicode
+        # print(f"  Content: {content[:50] if content else 'None'}")
+        # print(f"  Image URL: {image_url[:50] if image_url else 'None'}")
+        # print(f"  Video URL: {video_url[:50] if video_url else 'None'}")
+        append_debug_line("[REQUEST] /api/moderate called")
+        append_debug_line(f"[REQUEST] has_content={bool(content)} has_image={bool(image_url)} has_video={bool(video_url)}")
         
-        logger.info("[MODERATE] COMBINED TEXT (Post + Image OCR + Video OCR) for PhoBERT: '%s'", combined_all_text)
-        
-        # Pass the COMBINED text back into the hatespeech model
-        combined_hatespeech_score = self.predict_hatespeech_text(combined_all_text)
+        final_nsfw_score = 0.0
+        final_viol_score = 0.0
+        final_hate_score = 0.0
+        final_nsfw_box = None
+        final_viol_box = None
+        final_hate_words = []
+        all_detected_texts = []
+        highest_score_frame_second = None
+        total_frames_analyzed = 0
 
-        nsfw_score = max(image_scores.nsfw_score, video_scores.nsfw_score)
-        violence_score = max(image_scores.violence_score, video_scores.violence_score)
-        
-        # We take the max of the individual hatespeech scores and the combined one
-        hatespeech_score = max(combined_hatespeech_score, image_scores.hatespeech_score, video_scores.hatespeech_score)
-        best_score = max(nsfw_score, violence_score, hatespeech_score)
-        
-        hate_speech_words = sorted(set(
-            self._extract_toxic_words(combined_all_text)
-            + image_scores.hate_speech_word 
-            + video_scores.hate_speech_word
-        ))
+        # 1. Evaluate Text Content
+        if content:
+            append_debug_line(f"[CONTENT] len={len(content)} text={repr(content)}")
+            all_detected_texts.append(content)
+            print(f"[MODERATE_REQUEST] Added content text")
 
-        nsfw_box = image_scores.nsfw_box if image_scores.nsfw_score >= video_scores.nsfw_score else video_scores.nsfw_box
-        violen_box = image_scores.violen_box if image_scores.violence_score >= video_scores.violence_score else video_scores.violen_box
+        # 2. Evaluate Image
+        if image_url:
+            print(f"[MODERATE_REQUEST] Processing image...")
+            append_debug_line("[IMAGE] Start processing image_url")
+            local_img = self._download_file(image_url)
+            if local_img and os.path.exists(local_img):
+                img = cv2.imread(local_img)
+                if img is not None:
+                    print(f"[MODERATE_REQUEST] Image loaded, running evaluate_image")
+                    n_prob, n_box, v_prob, v_box, ocr_text = self.evaluate_image(img)
+                    final_nsfw_score = max(final_nsfw_score, n_prob)
+                    final_viol_score = max(final_viol_score, v_prob)
+                    if n_prob > 0: final_nsfw_box = n_box
+                    if v_prob > 0: final_viol_box = v_box
+                    if ocr_text:
+                        all_detected_texts.append(ocr_text)
+                os.remove(local_img)
+            else:
+                append_debug_line("[IMAGE] Download/read failed, skip OCR")
 
-        if image_url and video_url:
-            media_type = "mixed"
-        elif image_url:
-            media_type = image_scores.media_type or "image"
-        elif video_url:
-            media_type = video_scores.media_type or "video"
-        else:
-            media_type = "text"
+        # 3. Evaluate Video (Requirement 3: 1 frame/sec, highest score frame represents video)
+        if video_url:
+            print(f"[MODERATE_REQUEST] Processing video...")
+            append_debug_line("[VIDEO] Start processing video_url")
+            local_vid = self._download_file(video_url)
+            if local_vid and os.path.exists(local_vid):
+                cap = cv2.VideoCapture(local_vid)
+                if cap.isOpened():
+                    fps = cap.get(cv2.CAP_PROP_FPS)
+                    print(f"[MODERATE_REQUEST] Video FPS: {fps}")
+                    append_debug_line(f"[VIDEO] Opened successfully, fps={fps}")
+                    if fps <= 0: fps = 30
+                    
+                    best_vid_nsfw = 0.0
+                    best_vid_viol = 0.0
+                    best_vid_hate = 0.0
+                    best_vid_nsfw_box = None
+                    best_vid_viol_box = None
+                    best_vid_ocr = ""
+                    best_vid_hate_words = []
+                    best_overall_score = -1.0
+                    
+                    frame_idx = 0
+                    ocr_frame_count = 0
+                    while True:
+                        ret, frame = cap.read()
+                        if not ret:
+                            break
+                        
+                        # 1 frame per second
+                        if frame_idx % max(1, int(fps)) == 0:
+                            total_frames_analyzed += 1
+                            print(f"[MODERATE_REQUEST] Analyzing frame {total_frames_analyzed}")
+                            append_debug_line(f"[VIDEO] Analyze frame_index={frame_idx} sampled_index={total_frames_analyzed}")
+                            current_second = int(frame_idx // fps)
 
-        logger.info(
-            "[MODERATE] FINAL RESULT: nsfw=%.4f violence=%.4f hatespeech=%.4f best=%.4f media=%s words=%s",
-            nsfw_score, violence_score, hatespeech_score, best_score, media_type, hate_speech_words
+                            n_prob, n_box, v_prob, v_box, ocr_text = self.evaluate_image(
+                                frame,
+                                frame_idx=frame_idx,
+                                second=current_second
+                            )
+                            if ocr_text:
+                                ocr_frame_count += 1
+                            # temporary evaluate OCR to find if this frame is worst in hate speech
+                            h_prob, frame_hate_words, _ = self.evaluate_text(ocr_text) if ocr_text else (0.0, [], [])
+                            
+                            frame_max_score = max(n_prob, v_prob, h_prob)
+                            
+                            if frame_max_score > best_overall_score:
+                                best_overall_score = frame_max_score
+                                best_vid_nsfw = n_prob
+                                best_vid_viol = v_prob
+                                best_vid_hate = h_prob
+                                best_vid_nsfw_box = n_box
+                                best_vid_viol_box = v_box
+                                best_vid_ocr = ocr_text
+                                best_vid_hate_words = frame_hate_words
+                                highest_score_frame_second = int(frame_idx // fps)
+                                
+                        frame_idx += 1
+                    cap.release()
+                    append_debug_line(f"[OCR SUMMARY] frames_with_text={ocr_frame_count}")
+                    print(f"[MODERATE_REQUEST] Total frames analyzed: {total_frames_analyzed}")
+                    append_debug_line(f"[VIDEO] Total frames analyzed: {total_frames_analyzed}")
+                    
+                    final_nsfw_score = max(final_nsfw_score, best_vid_nsfw)
+                    final_viol_score = max(final_viol_score, best_vid_viol)
+                    if best_vid_nsfw > 0: final_nsfw_box = best_vid_nsfw_box
+                    if best_vid_viol > 0: final_viol_box = best_vid_viol_box
+                    if best_vid_ocr:
+                        all_detected_texts.append(best_vid_ocr)
+                    if best_vid_hate_words:
+                        final_hate_words.extend(best_vid_hate_words)
+                else:
+                    append_debug_line("[VIDEO] cv2.VideoCapture could not open file")
+                os.remove(local_vid)
+            else:
+                append_debug_line("[VIDEO] Download failed or temp file missing")
+
+        # Aggregate texts and check hate speech
+        combined_text = " ".join(all_detected_texts)
+        append_debug_line(
+            f"[FINAL TEXT] len={len(combined_text)} text={repr(combined_text[:200])}"
         )
-        logger.info("=" * 70)
+        hate_score, hate_words, detailed_tags = self.evaluate_text(combined_text)
+        final_hate_score = max(final_hate_score, hate_score)
+        final_hate_words = list(set(final_hate_words + hate_words))
+
+        best_score = max(final_nsfw_score, final_viol_score, final_hate_score)
+        
+        # Tạo chuỗi phản hồi các tags (VD: con[O] chó[B-T] ...)
+        # Hoặc dùng json.dumps(detailed_tags) nếu cần. Ở đây nối thành chuỗi cho dễ đọc trên CSDL
+        detailed_tags_str = " ".join([f"{item['word']}[{item['tag']}]" for item in detailed_tags]) if detailed_tags else ""
+        
+        # Thay vì chỉ lưu các từ vi phạm (VD: "chó"), ta lưu thẳng toàn bộ kết quả phân tích BIO của câu vào chung
+        # biến mà Java backend đang đọc ('hate_speech_word') để Java lưu thẳng lên CSDL
+        violating_words_str = detailed_tags_str if final_hate_words else ""
+
+        print(f"[MODERATE_REQUEST] COMPLETE - best_score={best_score:.4f}\n")
+        append_debug_line(f"[REQUEST] Complete best_score={best_score:.4f} frames={total_frames_analyzed} violating_words={violating_words_str} detailed_tags={detailed_tags_str}")
 
         return {
-            "nsfw_score": float(max(0.0, min(1.0, nsfw_score))),
-            "violence_score": float(max(0.0, min(1.0, violence_score))),
-            "hatespeech_score": float(max(0.0, min(1.0, hatespeech_score))),
-            "best_score": float(max(0.0, min(1.0, best_score))),
-            "detected_text": " ".join(part for part in detected_text_parts if part).strip(),
-            "media_type": media_type,
-            "nsfw_box": nsfw_box,
-            "violen_box": violen_box,
-            "hate_speech_word": hate_speech_words,
-            "highest_score_frame_second": video_scores.highest_score_frame_second if video_url else None,
-            "total_frames_analyzed": video_scores.total_frames_analyzed if video_url else 0,
+            "nsfw_score": float(final_nsfw_score),
+            "violence_score": float(final_viol_score),
+            "hatespeech_score": float(final_hate_score),
+            "best_score": float(best_score),
+            "detected_text": combined_text,
+            "nsfw_box": final_nsfw_box,
+            "violen_box": final_viol_box,
+            "hate_speech_word": violating_words_str,
+            "hate_speech_details": detailed_tags_str, # Trả về API chuỗi phân tích chi tiết (B-T, I-T, O)
+            "highest_score_frame_second": highest_score_frame_second,
+            "total_frames_analyzed": total_frames_analyzed
         }
 
-
-moderator = ContentModerationModel()
-
-
-@app.route("/api/moderate", methods=["POST"])
-def moderate_content() -> Any:
-    try:
-        data = request.get_json(silent=True) or {}
-        content = (data.get("content") or "").strip()
-        image_url = data.get("imageUrl") or data.get("image_url") or ""
-        image_url = image_url.strip() if isinstance(image_url, str) else ""
-        video_url = data.get("videoUrl") or data.get("video_url") or ""
-        video_url = video_url.strip() if isinstance(video_url, str) else ""
-
-        logger.info(
-            "[API] /api/moderate received: content='%s' image_url='%s' video_url='%s'",
-            content[:200] if content else "(empty)",
-            image_url[:100] if image_url else "(empty)",
-            video_url[:100] if video_url else "(empty)",
-        )
-
-        if not content and not image_url and not video_url:
-            logger.info("[API] All inputs empty, returning zeros")
-            return jsonify({
-                "nsfw_score": 0.0, "violence_score": 0.0, "hatespeech_score": 0.0,
-                "best_score": 0.0, "detected_text": "", "media_type": "text",
-                "nsfw_box": None, "violen_box": None, "hate_speech_word": [],
-                "highest_score_frame_second": None,
-                "total_frames_analyzed": 0,
-            }), 200
-
-        result = moderator.moderate(content=content, image_url=image_url, video_url=video_url)
-        logger.info("[API] /api/moderate response: %s", result)
-        return jsonify(result), 200
-    except Exception as exc:
-        logger.exception("Error in /api/moderate: %s", exc)
-        return jsonify({"error": str(exc)}), 500
-
+sys_mod = ContentModerationSystem()
 
 @app.route("/health", methods=["GET"])
-def health() -> Any:
-    return jsonify({"status": "healthy", "models_loaded": moderator.models_loaded}), 200
+def health_endpoint():
+    return jsonify({"status": "ok"}), 200
 
+@app.route("/api/moderate", methods=["POST"])
+def moderate_endpoint():
+    # print(f"[API] Nhận được request moderation")
+    data = request.json or {}
+    content = data.get("content", "")
+    img = data.get("imageUrl", "")
+    vid = data.get("videoUrl", "")
+    
+    # Bỏ qua in content ra console
+    # print(f"[API] Content: {content[:100] if content else 'None'}")
+    # print(f"[API] Image URL: {img[:100] if img else 'None'}")
+    # print(f"[API] Video URL: {vid[:100] if vid else 'None'}")
+    
+    res = sys_mod.moderate_request(content, img, vid)
+    
+    print(f"[API] Moderation complete, returning result")
+    return jsonify(res)
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)
+    # print(f"[MAIN] Khởi động Flask app tại http://127.0.0.1:5000")
+    # print(f"[MAIN] Debug file sẽ được tạo tại: {DEBUG_FILE}")
+    append_debug_line("[MAIN] Flask startup")
+    app.run(host="127.0.0.1", port=5000, debug=False)

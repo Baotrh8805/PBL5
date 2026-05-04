@@ -250,14 +250,13 @@
 
                     <div id="modal-image-preview-container" style="display: none; position: relative; margin: 10px 0;">
                         <img id="modal-image-preview" src="" style="width: 100%; border-radius: 8px; max-height: 300px; object-fit: contain; background: #000;">
-                        <video id="modal-video-preview" controls style="width: 100%; border-radius: 8px; max-height: 300px; display: none; background: #000;"></video>
-                        <button onclick="removeModalMedia()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+                        <button onclick="removeModalImage()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
                     </div>
 
                     <div class="modal-add-to-post">
                         <span>Thêm vào bài viết của bạn</span>
                         <div class="modal-add-icons">
-                            <input type="file" id="modal-image-input" accept="image/*,video/*" style="display: none;" onchange="previewModalMedia(event)">
+                            <input type="file" id="modal-image-input" accept="image/*" style="display: none;" onchange="previewModalImage(event)">
                             <button class="add-icon-btn tooltip" onclick="document.getElementById('modal-image-input').click()"><i class="fa-solid fa-images" style="color: #45bd62;"></i> Ảnh/Video</button>
                         </div>
                     </div>
@@ -344,7 +343,6 @@
         </div>
     </div>
 
-    <script src="/js/post-creation.js"></script>
     <script src="/js/home.js"></script>
     <script src="/js/chat.js"></script>
 </body>

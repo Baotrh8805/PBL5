@@ -258,6 +258,8 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         localStorage.setItem('token', data.token);
         if (data.role === 'ADMIN') {
             window.location.href = '/html/admin.html';
+        } else if (data.role === 'MODERATOR') {
+            window.location.href = '/html/moderator.html';
         } else {
             window.location.href = '/html/home.html';
         }
@@ -352,7 +354,7 @@ async function redirectByRole(token) {
         if (role === 'ADMIN') {
             window.location.href = '/html/admin.html';
         } else if (role === 'MODERATOR') {
-            window.location.href = '/html/home.html';
+            window.location.href = '/html/moderator.html';
         } else {
             window.location.href = '/html/home.html';
         }

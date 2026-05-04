@@ -6,6 +6,7 @@ public class PostResponse {
     private Long id;
     private String content;
     private String imageUrl;
+    private String videoUrl;
     private LocalDateTime createdAt;
     private Long authorId;
     private String authorName;
@@ -16,10 +17,13 @@ public class PostResponse {
     private boolean isMine;
     private String visibility;
 
-    public PostResponse(Long id, String content, String imageUrl, LocalDateTime createdAt, Long authorId, String authorName, String authorAvatar, long likeCount, long commentCount, boolean isLikedByCurrentUser, boolean isMine, String visibility) {
+    public PostResponse(Long id, String content, String imageUrl, String videoUrl, LocalDateTime createdAt,
+            Long authorId, String authorName, String authorAvatar, long likeCount, long commentCount,
+            boolean isLikedByCurrentUser, boolean isMine, String visibility) {
         this.id = id;
         this.content = content;
         this.imageUrl = imageUrl;
+        this.videoUrl = videoUrl;
         this.createdAt = createdAt;
         this.authorId = authorId;
         this.authorName = authorName;
@@ -31,16 +35,55 @@ public class PostResponse {
         this.visibility = visibility;
     }
 
-    public Long getId() { return id; }
-    public String getContent() { return content; }
-    public String getImageUrl() { return imageUrl; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public Long getAuthorId() { return authorId; }
-    public String getAuthorName() { return authorName; }
-    public String getAuthorAvatar() { return authorAvatar; }
-    public long getLikeCount() { return likeCount; }
-    public long getCommentCount() { return commentCount; }
-    public boolean isLikedByCurrentUser() { return isLikedByCurrentUser; }
-    public boolean isMine() { return isMine; }
-    public String getVisibility() { return visibility; }
+    public Long getId() {
+        return id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public String getVideoUrl() {
+        return videoUrl;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public Long getAuthorId() {
+        return authorId;
+    }
+
+    public String getAuthorName() {
+        return authorName;
+    }
+
+    public String getAuthorAvatar() {
+        return authorAvatar;
+    }
+
+    public long getLikeCount() {
+        return likeCount;
+    }
+
+    public long getCommentCount() {
+        return commentCount;
+    }
+
+    public boolean isLikedByCurrentUser() {
+        return isLikedByCurrentUser;
+    }
+
+    public boolean isMine() {
+        return isMine;
+    }
+
+    public String getVisibility() {
+        return visibility;
+    }
 }

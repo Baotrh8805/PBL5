@@ -35,6 +35,15 @@ async function fetchUserProfile(token) {
         if (res.ok) {
             const data = await res.json();
             
+            // Redirect MODERATOR out of home feed
+            if (data.role === 'MODERATOR') {
+                window.location.href = '/html/moderator.html';
+                return;
+            } else if (data.role === 'ADMIN') {
+                window.location.href = '/html/admin.html';
+                return;
+            }
+            
             // Cập nhật tên của tài khoản đăng nhập trên màn hình (sidebar)
             document.querySelectorAll('.user-name').forEach(el => {
                 el.textContent = data.fullName || 'Người dùng';
@@ -164,250 +173,143 @@ async function submitOnboarding() {
 }
 // -------------------------
 
-let selectedImageFile = null;
-
-function previewImage(event) {
-    const file = event.target.files[0];
-    if (file) {
-        selectedImageFile = file;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('image-preview').src = e.target.result;
-            document.getElementById('image-preview-container').style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-function removeImage() {
-    selectedImageFile = null;
-    document.getElementById('post-image-input').value = '';
-    document.getElementById('image-preview-container').style.display = 'none';
-    document.getElementById('image-preview').src = '';
-}
-
-async function submitPost() {
-    const token = localStorage.getItem('token');
-    const content = document.getElementById('post-content-input').value;
-    const visibilitySelect = document.getElementById('post-visibility');
-    let visibility = 'PUBLIC';
-    if(visibilitySelect) visibility = visibilitySelect.value;
-    
-    if (!content && !selectedImageFile) {
-        alert("Vui lòng nhập nội dung hoặc thêm ảnh!");
-        return;
-    }
-
-    let imageUrl = null;
-
-    // Nếu có file ảnh được chọn, upload ảnh trước lên server
-    if (selectedImageFile) {
-        const formData = new FormData();
-        formData.append('file', selectedImageFile);
-
-        try {
-            const uploadRes = await fetch('/api/upload/image', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
-            });
-            if (uploadRes.ok) {
-                const uploadData = await uploadRes.json();
-                imageUrl = uploadData.imageUrl;
-            } else {
-                alert("Lỗi upload ảnh.");
-                return;
-            }
-        } catch (error) {
-            console.error(error);
-            alert("Lỗi kết nối khi upload ảnh.");
-            return;
-        }
-    }
-
-    // Sau khi upload ảnh / có text, gửi thông tin tạo Post
-    const postData = {
-        content: content,
-        imageUrl: imageUrl,
-        visibility: visibility
-    };
-
-    try {
-        const res = await fetch('/api/posts', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(postData)
-        });
-
-        if (res.ok) {
-            // Reset form
-            document.getElementById('post-content-input').value = '';
-            removeImage();
-            // Lấy lại danh sách bài post để hiển thị bài mới
-            fetchPosts(token);
-        } else {
-            const errText = await res.text();
-            alert("Lỗi đăng bài: " + errText);
-        }
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-// --- Modal Functions ---
-function openPostModal() {
-    document.getElementById('create-post-modal').style.display = 'flex';
-    document.getElementById('modal-post-content').focus();
-}
-
-function closePostModal() {
-    document.getElementById('create-post-modal').style.display = 'none';
-}
-
-function checkModalPostContent() {
-    const text = document.getElementById('modal-post-content').value.trim();
-    const btn = document.getElementById('modal-submit-btn');
-    if (text.length > 0 || selectedImageFile) {
-        btn.disabled = false;
-        btn.classList.add('active');
-    } else {
-        btn.disabled = true;
-        btn.classList.remove('active');
-    }
-}
-
-function previewModalImage(event) {
-    const file = event.target.files[0];
-    if (file) {
-        selectedImageFile = file;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('modal-image-preview').src = e.target.result;
-            document.getElementById('modal-image-preview-container').style.display = 'block';
-            checkModalPostContent();
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-function removeModalImage() {
-    selectedImageFile = null;
-    document.getElementById('modal-image-input').value = '';
-    document.getElementById('modal-image-preview-container').style.display = 'none';
-    document.getElementById('modal-image-preview').src = '';
-    checkModalPostContent();
-}
-
-function updateModalVisibility(val) {
-    const btn = document.querySelector('.modal-visibility-btn');
-    let text = 'Cài đặt';
-    let icon = 'fa-globe';
-    if(val === 'PUBLIC') { text = 'Công khai'; icon = 'fa-earth-americas'; }
-    if(val === 'FRIENDS') { text = 'Chỉ bạn bè'; icon = 'fa-user-group'; }
-    if(val === 'PRIVATE') { text = 'Mình tôi'; icon = 'fa-lock'; }
-    if (btn) {
-        btn.innerHTML = `<i class="fa-solid ${icon}"></i> ${text} <i class="fa-solid fa-caret-down" style="font-size: 12px; margin-left: 4px;"></i>`;
-    }
-}
-
-async function submitModalPost() {
-    const token = localStorage.getItem('token');
-    const content = document.getElementById('modal-post-content').value.trim();
-    const visibilitySelect = document.getElementById('modal-post-visibility');
-    let visibility = 'PUBLIC';
-    if(visibilitySelect) visibility = visibilitySelect.value;
-    
-    if (!content && !selectedImageFile) {
-        return;
-    }
-
-    const btn = document.getElementById('modal-submit-btn');
-    btn.innerText = 'Đang đăng...';
-    btn.disabled = true;
-
-    let imageUrl = null;
-
-    if (selectedImageFile) {
-        const formData = new FormData();
-        formData.append('file', selectedImageFile);
-        try {
-            const uploadRes = await fetch('/api/upload/image', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
-            if (uploadRes.ok) {
-                const uploadData = await uploadRes.json();
-                imageUrl = uploadData.imageUrl;
-            } else {
-                alert("Lỗi upload ảnh.");
-                btn.innerText = 'Đăng';
-                btn.disabled = false;
-                return;
-            }
-        } catch (error) {
-            console.error(error);
-            alert("Lỗi kết nối khi upload ảnh.");
-            btn.innerText = 'Đăng';
-            btn.disabled = false;
-            return;
-        }
-    }
-
-    const postData = {
-        content: content,
-        imageUrl: imageUrl,
-        visibility: visibility
-    };
-
-    try {
-        const res = await fetch('/api/posts', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(postData)
-        });
-
-        if (res.ok) {
-            document.getElementById('modal-post-content').value = '';
-            removeModalImage();
-            closePostModal();
-            fetchPosts(token);
-        } else {
-            const errText = await res.text();
-            alert("Lỗi đăng bài: " + errText);
-        }
-    } catch (error) {
-        console.error(error);
-    } finally {
-        btn.innerText = 'Đăng';
-        checkModalPostContent();
-    }
-}
+// ============ CÁC HÀM LIÊN QUAN ĐẾN ĐĂNG BÀI ĐÃ ĐƯỢC CHUYỂN SANG post-creation.js ============
+// - openPostModal()
+// - closePostModal()
+// - checkModalPostContent()
+// - previewModalMedia()
+// - removeModalMedia()
+// - updateModalVisibility()
+// - submitModalPost()
 
 async function fetchPosts(token) {
+    const container = document.getElementById('posts-container');
+    if (container) {
+        container.innerHTML = '<div class="card" style="padding:16px; text-align:center; color:#65676B;">Đang tải bài đăng...</div>';
+    }
+
     try {
         const res = await fetch('/api/posts', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (res.ok) {
-            const posts = await res.json();
-            renderPosts(posts, token);
+        if (!res.ok) {
+            const message = res.status === 401
+                ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
+                : 'Không thể tải bài đăng. Vui lòng thử lại.';
+            if (container) {
+                container.innerHTML = `<div class="card" style="padding:16px; text-align:center; color:#d93025;">${message}</div>`;
+            }
+            return;
         }
+
+        const posts = await res.json();
+        if (!Array.isArray(posts)) {
+            throw new Error('Dữ liệu bài đăng không hợp lệ');
+        }
+        renderPosts(posts, token);
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching posts:', err);
+        if (container) {
+            container.innerHTML = '<div class="card" style="padding:16px; text-align:center; color:#d93025;">Đã xảy ra lỗi khi tải bài đăng.</div>';
+        }
     }
+}
+
+function prependCreatedPostToFeed(post) {
+    const container = document.getElementById('posts-container');
+    if (!container || !post || !post.id) {
+        return false;
+    }
+
+    let visibilityIcon = '';
+    if (post.visibility === 'PUBLIC') visibilityIcon = '<i class="fa-solid fa-earth-americas" style="margin-left: 5px; font-size: 11px;"></i>';
+    else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
+    else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
+    const isMine = post.mine ?? post.isMine ?? false;
+
+    let postHtml = `
+        <article class="card post" id="post-${post.id}">
+            <div class="post-header">
+                <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                <div class="post-meta">
+                    <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
+                    <span class="post-time">Vừa xong ${visibilityIcon}</span>
+                </div>
+            </div>
+
+            <div class="post-options">
+                <button class="options-btn" onclick="toggleDropdown(${post.id})">
+                    <i class="fa-solid fa-ellipsis"></i>
+                </button>
+                <div id="dropdown-${post.id}" class="dropdown-content">
+                    ${isMine ? `
+                        <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
+                        <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
+                        <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
+                        <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
+                        <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                    ` : `
+                        <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
+                        <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
+                    `}
+                </div>
+            </div>
+
+            <div class="post-content">
+                <p>${escapeHtml(post.content || '')}</p>
+            </div>
+    `;
+
+    if (post.imageUrl) {
+        postHtml += `
+            <div class="post-image-placeholder text-center">
+                <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+            </div>
+        `;
+    }
+
+    if (post.videoUrl) {
+        postHtml += `
+            <div class="post-video-placeholder text-center">
+                <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;" controls></video>
+            </div>
+        `;
+    }
+
+    const likeIcon = post.likedByCurrentUser ? 'fa-solid text-red' : 'fa-regular';
+    const likeStyle = post.likedByCurrentUser ? 'color: var(--red-icon);' : '';
+
+    postHtml += `
+            <div class="post-actions-bar">
+                <button class="interaction-btn" onclick="toggleLike(${post.id})" style="${likeStyle}">
+                    <i class="${likeIcon} fa-heart"></i> Mọi người (${post.likeCount || 0})
+                </button>
+                <button class="interaction-btn" onclick="toggleComments(${post.id})">
+                    <i class="fa-regular fa-comment"></i> Bình luận (${post.commentCount || 0})
+                </button>
+                <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
+            </div>
+
+            <div id="comments-${post.id}" class="comments-section" style="display: none; padding: 15px; border-top: 1px solid #ced0d4;">
+                <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <img src="${document.getElementById('header-avatar') && document.getElementById('header-avatar').src ? document.getElementById('header-avatar').src : '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
+                    <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." onkeypress="handleCommentKeyPress(event, ${post.id})">
+                    <button class="btn btn-primary" onclick="submitComment(${post.id})"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+                <div id="comment-list-${post.id}" class="comment-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+        </article>
+    `;
+
+    container.insertAdjacentHTML('afterbegin', postHtml);
+    return true;
 }
 
 function timeSince(dateString) {
     const postDate = new Date(dateString);
+    if (Number.isNaN(postDate.getTime())) {
+        return 'Vừa xong';
+    }
     const seconds = Math.floor((new Date() - postDate) / 1000);
     
     let interval = seconds / 31536000;
@@ -433,6 +335,7 @@ function renderPosts(posts, token) {
         if (post.visibility === 'PUBLIC') visibilityIcon = '<i class="fa-solid fa-earth-americas" style="margin-left: 5px; font-size: 11px;"></i>';
         else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
         else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
+        const isMine = post.mine ?? post.isMine ?? false;
 
         let postHtml = `
         <article class="card post" id="post-${post.id}">
@@ -449,7 +352,7 @@ function renderPosts(posts, token) {
                     <i class="fa-solid fa-ellipsis"></i>
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
-                    ${post.mine ? `
+                    ${isMine ? `
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
@@ -471,6 +374,14 @@ function renderPosts(posts, token) {
             postHtml += `
             <div class="post-image-placeholder text-center">
                 <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+            </div>
+            `;
+        }
+
+        if (post.videoUrl) {
+            postHtml += `
+            <div class="post-video-placeholder text-center">
+                <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;" controls></video>
             </div>
             `;
         }

@@ -205,6 +205,7 @@ function renderProfilePosts(posts) {
         if (post.visibility === 'PUBLIC') visibilityIcon = '<i class="fa-solid fa-earth-americas" style="margin-left: 5px; font-size: 11px;"></i>';
         else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
         else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
+        const isMine = post.mine ?? post.isMine ?? false;
 
         let postHtml = `
         <article class="card post" id="post-${post.id}">
@@ -221,7 +222,7 @@ function renderProfilePosts(posts) {
                     <i class="fa-solid fa-ellipsis"></i>
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
-                    ${post.mine ? `
+                    ${isMine ? `
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
@@ -243,6 +244,14 @@ function renderProfilePosts(posts) {
             postHtml += `
             <div class="post-image-placeholder text-center">
                 <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+            </div>
+            `;
+        }
+
+        if (post.videoUrl) {
+            postHtml += `
+            <div class="post-video-placeholder text-center">
+                <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;" controls></video>
             </div>
             `;
         }

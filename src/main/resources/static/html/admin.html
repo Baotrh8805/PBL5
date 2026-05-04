@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LC Network - Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i>
+        <span>LC Network</span>
+    </div>
+    <div class="sidebar-label">QUẢN TRỊ</div>
+    <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="users">
+            <i class="fa-solid fa-users"></i> Người dùng
+        </a>
+        <a href="#" class="nav-item" data-page="posts">
+            <i class="fa-solid fa-newspaper"></i> Bài viết
+        </a>
+        <a href="#" class="nav-item" data-page="moderators">
+            <i class="fa-solid fa-shield-halved"></i> Kiểm duyệt viên
+        </a>
+        <a href="#" class="nav-item" data-page="stats">
+            <i class="fa-solid fa-chart-bar"></i> Thống kê
+        </a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="admin-info" style="cursor:pointer;" onclick="openAdminProfile()" title="Xem thông tin cá nhân">
+            <div class="admin-avatar" id="sidebar-avatar">A</div>
+            <div>
+                <div class="admin-name" id="sidebar-name">Admin</div>
+                <div class="admin-role">Quản trị viên</div>
+            </div>
+        </div>
+        <button class="logout-btn" onclick="logout()">
+            <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+    </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main-content">
+
+    <!-- Page: Users -->
+    <div class="page" id="page-users">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Người dùng</h1>
+                <p class="page-subtitle">Quản lý tất cả tài khoản trong hệ thống</p>
+            </div>
+            <div class="header-actions">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="search-input" placeholder="Tìm kiếm theo tên..." oninput="filterUsers()">
+                </div>
+                <select class="filter-select" id="filter-role" onchange="filterUsers()">
+                    <option value="">Tất cả role</option>
+                    <option value="USER">User</option>
+                </select>
+                <select class="filter-select" id="filter-status" onchange="filterUsers()">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="ACTIVE">Hoạt động</option>
+                    <option value="BANNED">Bị khoá</option>
+                    <option value="WARNING">Cảnh báo</option>
+                    <option value="INACTIVE">Chưa kích hoạt</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-row" id="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="stat-total">--</div>
+                    <div class="stat-label">Tổng người dùng</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="stat-active">--</div>
+                    <div class="stat-label">Đang hoạt động</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="fa-solid fa-ban"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="stat-banned">--</div>
+                    <div class="stat-label">Bị khoá</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <span id="table-count">Đang tải...</span>
+                <button class="btn-refresh" onclick="loadUsers()">
+                    <i class="fa-solid fa-rotate-right"></i> Làm mới
+                </button>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Người dùng</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Trạng thái</th>
+                            <th>Đăng nhập qua</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                        <tr><td colspan="7" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page: Posts -->
+    <div class="page hidden" id="page-posts">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Bài viết</h1>
+                <p class="page-subtitle">Kiểm duyệt tất cả bài viết trong hệ thống</p>
+            </div>
+            <div class="header-actions">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="post-search-input" placeholder="Tìm theo tác giả, nội dung..." oninput="filterPosts()">
+                </div>
+                <select class="filter-select" id="post-filter-visibility" onchange="filterPosts()">
+                    <option value="">Tất cả chế độ</option>
+                    <option value="PUBLIC">Công khai</option>
+                    <option value="FRIENDS">Bạn bè</option>
+                    <option value="PRIVATE">Riêng tư</option>
+                </select>
+                <button class="btn-refresh" onclick="loadPosts()">
+                    <i class="fa-solid fa-rotate-right"></i> Làm mới
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-newspaper"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="post-stat-total">--</div>
+                    <div class="stat-label">Tổng bài viết</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-earth-asia"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="post-stat-public">--</div>
+                    <div class="stat-label">Công khai</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon yellow"><i class="fa-solid fa-user-group"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="post-stat-friends">--</div>
+                    <div class="stat-label">Bạn bè</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fa-solid fa-lock"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="post-stat-private">--</div>
+                    <div class="stat-label">Riêng tư</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <span id="post-table-count">Đang tải...</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tác giả</th>
+                            <th>Nội dung</th>
+                            <th>Chế độ</th>
+                            <th>Lượt thích</th>
+                            <th>Bình luận</th>
+                            <th>Thời gian</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="posts-tbody">
+                        <tr><td colspan="8" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page: Moderators -->
+    <div class="page hidden" id="page-moderators">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Kiểm duyệt viên</h1>
+                <p class="page-subtitle">Quản lý tài khoản kiểm duyệt viên trong hệ thống</p>
+            </div>
+            <div class="header-actions">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="mod-search-input" placeholder="Tìm kiếm theo tên..." oninput="filterModerators()">
+                </div>
+                <select class="filter-select" id="mod-filter-status" onchange="filterModerators()">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="ACTIVE">Hoạt động</option>
+                    <option value="BANNED">Bị khoá</option>
+                </select>
+                <button class="btn-add-mod" onclick="openCreateModeratorModal()">
+                    <i class="fa-solid fa-plus"></i> Thêm kiểm duyệt viên
+                </button>
+                <button class="btn-refresh" onclick="loadModerators()">
+                    <i class="fa-solid fa-rotate-right"></i> Làm mới
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-row" id="mod-stats-row">
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="mod-stat-total">--</div>
+                    <div class="stat-label">Tổng kiểm duyệt viên</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="mod-stat-active">--</div>
+                    <div class="stat-label">Đang hoạt động</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="fa-solid fa-ban"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="mod-stat-locked">--</div>
+                    <div class="stat-label">Bị khoá</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <span id="mod-table-count">Đang tải...</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Kiểm duyệt viên</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Trạng thái</th>
+                            <th>Đăng nhập qua</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="moderators-tbody">
+                        <tr><td colspan="7" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page: Stats -->
+    <div class="page hidden" id="page-stats">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Thống kê</h1>
+                <p class="page-subtitle">Tổng quan hệ thống</p>
+            </div>
+        </div>
+        <div class="stats-grid">
+            <div class="big-stat-card">
+                <i class="fa-solid fa-users"></i>
+                <div class="big-stat-value" id="big-total-users">--</div>
+                <div class="big-stat-label">Tổng người dùng</div>
+            </div>
+            <div class="big-stat-card">
+                <i class="fa-solid fa-newspaper"></i>
+                <div class="big-stat-value" id="big-total-posts">--</div>
+                <div class="big-stat-label">Tổng bài viết</div>
+            </div>
+            <div class="big-stat-card">
+                <i class="fa-solid fa-ban"></i>
+                <div class="big-stat-value" id="big-banned">--</div>
+                <div class="big-stat-label">Tài khoản bị khoá</div>
+            </div>
+            <div class="big-stat-card">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div class="big-stat-value" id="big-moderators">--</div>
+                <div class="big-stat-label">Moderator</div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Modal chi tiết bài viết -->
+<div class="modal-overlay hidden" id="post-detail-modal">
+    <div class="modal modal-post">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-newspaper" style="color:var(--primary);margin-right:8px;"></i>Chi tiết bài viết <span id="post-detail-id" style="color:var(--text-muted);font-weight:400;"></span></h3>
+            <button class="modal-close" onclick="closeModal('post-detail-modal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding:0;">
+            <!-- Tác giả -->
+            <div class="post-author-bar">
+                <div class="user-avatar-sm" id="post-detail-avatar" style="flex-shrink:0;"></div>
+                <div>
+                    <div class="user-fullname" id="post-detail-author"></div>
+                    <div style="font-size:12px;color:var(--text-muted);" id="post-detail-meta"></div>
+                </div>
+                <div style="margin-left:auto;" id="post-detail-visibility-badge"></div>
+            </div>
+            <!-- Nội dung -->
+            <div class="post-content-box" id="post-detail-content"></div>
+            <!-- Hình ảnh -->
+            <div id="post-detail-image-wrap"></div>
+            <!-- Thống kê -->
+            <div class="post-stats-bar">
+                <span><i class="fa-solid fa-heart" style="color:var(--red);"></i> <span id="post-detail-likes">0</span> lượt thích</span>
+                <span><i class="fa-solid fa-comment" style="color:var(--blue);"></i> <span id="post-detail-comment-count">0</span> bình luận</span>
+            </div>
+            <!-- Danh sách bình luận -->
+            <div class="post-comments-box" id="post-detail-comments"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('post-detail-modal')">Đóng</button>
+            <button class="btn-confirm" style="background:var(--red);" id="post-detail-delete-btn"><i class="fa-solid fa-trash"></i> Xoá bài viết</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chi tiết người dùng -->
+<div class="modal-overlay hidden" id="user-detail-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h3>Thông tin người dùng</h3>
+            <button class="modal-close" onclick="closeModal('user-detail-modal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="user-detail-top">
+                <div class="user-detail-avatar" id="detail-avatar-wrap"></div>
+                <div class="user-detail-main">
+                    <div class="user-detail-name" id="detail-fullname"></div>
+                    <div class="user-detail-badges" id="detail-badges"></div>
+                    <div class="user-detail-bio" id="detail-bio"></div>
+                </div>
+            </div>
+            <div class="user-detail-grid" id="detail-grid"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('user-detail-modal')">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal lịch sử đăng nhập -->
+<div class="modal-overlay hidden" id="login-history-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);margin-right:8px;"></i>Lịch sử đăng nhập — <span id="history-username"></span></h3>
+            <button class="modal-close" onclick="closeModal('login-history-modal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding:0;">
+            <table class="data-table" id="history-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Thời gian</th>
+                        <th>Địa chỉ IP</th>
+                        <th>Đăng nhập qua</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody">
+                    <tr><td colspan="4" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('login-history-modal')">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal đổi role -->
+<div class="modal-overlay hidden" id="role-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Thay đổi Role</h3>
+            <button class="modal-close" onclick="closeModal('role-modal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <p>Người dùng: <strong id="modal-username"></strong></p>
+            <div class="input-group" style="margin-top: 16px;">
+                <label>Chọn role mới</label>
+                <select class="filter-select full-width" id="modal-role-select">
+                    <option value="USER">User</option>
+                    <option value="MODERATOR">Moderator</option>
+                    <option value="ADMIN">Admin</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('role-modal')">Huỷ</button>
+            <button class="btn-confirm" onclick="confirmChangeRole()">Xác nhận</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chi tiết kiểm duyệt viên -->
+<div class="modal-overlay hidden" id="mod-detail-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-shield-halved" style="color:var(--purple);margin-right:8px;"></i>Thông tin kiểm duyệt viên</h3>
+            <button class="modal-close" onclick="closeModal('mod-detail-modal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="user-detail-top">
+                <div class="user-detail-avatar" id="mod-detail-avatar-wrap"></div>
+                <div class="user-detail-main">
+                    <div class="user-detail-name" id="mod-detail-fullname"></div>
+                    <div class="user-detail-badges" id="mod-detail-badges"></div>
+                    <div class="user-detail-bio" id="mod-detail-bio"></div>
+                </div>
+            </div>
+            <div class="user-detail-grid" id="mod-detail-grid"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('mod-detail-modal')">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal cập nhật thông tin kiểm duyệt viên -->
+<div class="modal-overlay hidden" id="edit-mod-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-pen" style="color:var(--primary);margin-right:8px;"></i>Cập nhật thông tin kiểm duyệt viên</h3>
+            <button class="modal-close" onclick="closeModal('edit-mod-modal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom:16px;font-size:13px;color:var(--text-muted);">Đang cập nhật: <strong id="edit-mod-name"></strong></p>
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>Email <span class="required">*</span></label>
+                    <input type="email" id="edit-mod-email" class="form-input" placeholder="example@email.com">
+                </div>
+                <div class="input-group">
+                    <label>Số điện thoại</label>
+                    <input type="text" id="edit-mod-phone" class="form-input" placeholder="Số điện thoại">
+                </div>
+                <div class="input-group">
+                    <label>Giới tính</label>
+                    <select id="edit-mod-gender" class="form-input">
+                        <option value="">-- Chọn --</option>
+                        <option value="male">Nam</option>
+                        <option value="female">Nữ</option>
+                        <option value="other">Khác</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Ngày sinh</label>
+                    <input type="date" id="edit-mod-dob" class="form-input">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('edit-mod-modal')">Huỷ</button>
+            <button class="btn-confirm" onclick="saveModeratorInfo()"><i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tạo kiểm duyệt viên -->
+<div class="modal-overlay hidden" id="create-mod-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-user-plus" style="color:var(--primary);margin-right:8px;"></i>Tạo tài khoản kiểm duyệt viên</h3>
+            <button class="modal-close" onclick="closeModal('create-mod-modal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>Tên hiển thị <span class="required">*</span></label>
+                    <input type="text" id="new-mod-fullname" class="form-input" placeholder="Nguyễn Văn A">
+                </div>
+                <div class="input-group">
+                    <label>Email <span class="required">*</span></label>
+                    <input type="email" id="new-mod-email" class="form-input" placeholder="example@email.com">
+                </div>
+                <div class="input-group">
+                    <label>Tên đăng nhập</label>
+                    <input type="text" id="new-mod-username" class="form-input" placeholder="username (tuỳ chọn)">
+                </div>
+                <div class="input-group">
+                    <label>Mật khẩu <span class="required">*</span></label>
+                    <input type="password" id="new-mod-password" class="form-input" placeholder="Ít nhất 6 ký tự">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('create-mod-modal')">Huỷ</button>
+            <button class="btn-confirm" onclick="createModerator()"><i class="fa-solid fa-user-plus"></i> Tạo tài khoản</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thông tin Admin -->
+<div class="modal-overlay hidden" id="admin-profile-modal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-crown" style="color:#ea580c;margin-right:8px;"></i>Thông tin Admin</h3>
+            <button class="modal-close" onclick="closeModal('admin-profile-modal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" id="admin-profile-view">
+            <div class="user-detail-top">
+                <div class="user-detail-avatar" id="admin-profile-avatar"></div>
+                <div class="user-detail-main">
+                    <div class="user-detail-name" id="admin-profile-name"></div>
+                    <div class="user-detail-badges" id="admin-profile-badges"></div>
+                    <div class="user-detail-bio" id="admin-profile-bio"></div>
+                </div>
+            </div>
+            <div class="user-detail-grid" id="admin-profile-grid"></div>
+        </div>
+        <div class="modal-body hidden" id="admin-edit-view">
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>Tên hiển thị <span class="required">*</span></label>
+                    <input type="text" id="edit-admin-fullname" class="form-input">
+                </div>
+                <div class="input-group">
+                    <label>Số điện thoại</label>
+                    <input type="text" id="edit-admin-phone" class="form-input" placeholder="Số điện thoại">
+                </div>
+                <div class="input-group">
+                    <label>Giới tính</label>
+                    <select id="edit-admin-gender" class="form-input">
+                        <option value="">-- Chọn --</option>
+                        <option value="male">Nam</option>
+                        <option value="female">Nữ</option>
+                        <option value="other">Khác</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Ngày sinh</label>
+                    <input type="date" id="edit-admin-dob" class="form-input">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" id="admin-profile-footer">
+            <button class="btn-cancel" onclick="closeModal('admin-profile-modal')">Đóng</button>
+            <button class="btn-confirm" onclick="switchToEditAdmin()"><i class="fa-solid fa-pen"></i> Cập nhật thông tin</button>
+        </div>
+        <div class="modal-footer hidden" id="admin-edit-footer">
+            <button class="btn-cancel" onclick="switchToViewAdmin()">Huỷ</button>
+            <button class="btn-confirm" onclick="saveAdminProfile()"><i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast hidden" id="toast"></div>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

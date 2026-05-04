@@ -233,7 +233,7 @@ function prependCreatedPostToFeed(post) {
                 <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
-                    <span class="post-time">Vừa xong ${visibilityIcon}</span>
+                    <span class="post-time">Vừa xong <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
                 </div>
             </div>
 
@@ -281,11 +281,11 @@ function prependCreatedPostToFeed(post) {
 
     postHtml += `
             <div class="post-actions-bar">
-                <button class="interaction-btn" onclick="toggleLike(${post.id})" style="${likeStyle}">
-                    <i class="${likeIcon} fa-heart"></i> Mọi người (${post.likeCount || 0})
+                <button id="like-btn-${post.id}" class="interaction-btn" onclick="toggleLike(${post.id})" style="${likeStyle}">
+                    <i id="like-icon-${post.id}" class="${likeIcon} fa-heart"></i> <span id="like-count-${post.id}">Mọi người (${post.likeCount || 0})</span>
                 </button>
                 <button class="interaction-btn" onclick="toggleComments(${post.id})">
-                    <i class="fa-regular fa-comment"></i> Bình luận (${post.commentCount || 0})
+                    <i class="fa-regular fa-comment"></i> <span id="comment-count-${post.id}">Bình luận (${post.commentCount || 0})</span>
                 </button>
                 <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
             </div>
@@ -343,7 +343,7 @@ function renderPosts(posts, token) {
                 <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
-                    <span class="post-time">${timeSince(post.createdAt)} ${visibilityIcon}</span>
+                    <span class="post-time">${timeSince(post.createdAt)} <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
                 </div>
             </div>
             
@@ -392,11 +392,11 @@ function renderPosts(posts, token) {
 
         postHtml += `
             <div class="post-actions-bar">
-                <button class="interaction-btn" onclick="toggleLike(${post.id})" style="${likeStyle}">
-                    <i class="${likeIcon} fa-heart"></i> Mọi người (${post.likeCount})
+                <button id="like-btn-${post.id}" class="interaction-btn" onclick="toggleLike(${post.id})" style="${likeStyle}">
+                    <i id="like-icon-${post.id}" class="${likeIcon} fa-heart"></i> <span id="like-count-${post.id}">Mọi người (${post.likeCount})</span>
                 </button>
                 <button class="interaction-btn" onclick="toggleComments(${post.id})">
-                    <i class="fa-regular fa-comment"></i> Bình luận (${post.commentCount})
+                    <i class="fa-regular fa-comment"></i> <span id="comment-count-${post.id}">Bình luận (${post.commentCount})</span>
                 </button>
                 <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
             </div>
@@ -431,13 +431,44 @@ function escapeHtml(unsafe) {
 
 async function toggleLike(postId) {
     const token = localStorage.getItem('token');
+    
+    // UI Cập nhật tức thì (Optimistic UI)
+    const likeBtn = document.getElementById(`like-btn-${postId}`);
+    const likeIcon = document.getElementById(`like-icon-${postId}`);
+    const likeCountSpan = document.getElementById(`like-count-${postId}`);
+    
+    if (likeBtn && likeIcon && likeCountSpan) {
+        const isLiked = likeIcon.classList.contains('fa-solid');
+        
+        let currentCount = 0;
+        const countMatch = likeCountSpan.innerText.match(/\d+/);
+        if (countMatch) {
+            currentCount = parseInt(countMatch[0], 10);
+        }
+
+        if (isLiked) {
+            // Đổi thành chưa like
+            likeIcon.classList.remove('fa-solid', 'text-red');
+            likeIcon.classList.add('fa-regular');
+            likeBtn.style.color = '';
+            likeCountSpan.innerText = `Mọi người (${Math.max(0, currentCount - 1)})`;
+        } else {
+            // Đổi thành đã like
+            likeIcon.classList.remove('fa-regular');
+            likeIcon.classList.add('fa-solid', 'text-red');
+            likeBtn.style.color = 'var(--red-icon)';
+            likeCountSpan.innerText = `Mọi người (${currentCount + 1})`;
+        }
+    }
+
     try {
         const res = await fetch(`/api/posts/${postId}/like`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (res.ok) {
-            fetchPosts(token); // Load lại để update số like
+        
+        if (!res.ok) {
+            console.error("Lỗi khi cập nhật like trên server");
         }
     } catch (err) {
         console.error(err);
@@ -487,6 +518,20 @@ async function deletePost(postId) {
 
 async function changeVisibility(postId, level) {
     const token = localStorage.getItem('token');
+    
+    // Optimistic UI update: thay đổi icon hiển thị ngay lập tức
+    const visibilityIconSpan = document.getElementById(`visibility-icon-${postId}`);
+    if (visibilityIconSpan) {
+        if (level === 'PUBLIC') visibilityIconSpan.innerHTML = '<i class="fa-solid fa-earth-americas" title="Công khai"></i>';
+        else if (level === 'FRIENDS') visibilityIconSpan.innerHTML = '<i class="fa-solid fa-user-group" title="Bạn bè"></i>';
+        else visibilityIconSpan.innerHTML = '<i class="fa-solid fa-lock" title="Chỉ mình tôi"></i>';
+    }
+
+    const dropdown = document.getElementById(`dropdown-${postId}`);
+    if (dropdown) {
+        dropdown.classList.remove('show');
+    }
+
     try {
         // level: PUBLIC, FRIENDS, PRIVATE
         const res = await fetch(`/api/posts/${postId}/visibility?level=${level}`, {
@@ -494,9 +539,7 @@ async function changeVisibility(postId, level) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (res.ok) {
-            fetchPosts(token); // Load lại ds bài viết để hiện chế độ mới
-        } else {
+        if (!res.ok) {
             const txt = await res.text();
             alert("Lỗi: " + txt);
         }
@@ -574,6 +617,15 @@ async function submitComment(postId) {
     if (!content) return;
 
     const token = localStorage.getItem('token');
+    
+    // Optimistic UI update: cộng số bình luận
+    const commentCountSpan = document.getElementById(`comment-count-${postId}`);
+    if (commentCountSpan) {
+        const countMatch = commentCountSpan.innerText.match(/\d+/);
+        let currentCount = countMatch ? parseInt(countMatch[0], 10) : 0;
+        commentCountSpan.innerText = `Bình luận (${currentCount + 1})`;
+    }
+
     try {
         const res = await fetch(`/api/posts/${postId}/comments`, {
             method: 'POST',
@@ -586,8 +638,7 @@ async function submitComment(postId) {
         
         if (res.ok) {
             input.value = '';
-            fetchComments(postId);
-            fetchPosts(token); // Reload để udpate số lượng bình luận
+            fetchComments(postId); // Chỉ tải lại đúng danh sách bình luận của bài này
         } else {
             alert('Lỗi gửi bình luận');
         }

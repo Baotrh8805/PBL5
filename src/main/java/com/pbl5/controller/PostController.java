@@ -31,6 +31,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Optional;
 
 @RestController
@@ -135,20 +140,7 @@ public class PostController {
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
         List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
-        List<PostResponse> responses = new ArrayList<>();
-        for (Post p : posts) {
-            try {
-                if (canViewPost(p, currentUser)) {
-                    PostResponse response = convertToResponse(p, currentUser);
-                    if (response != null) {
-                        responses.add(response);
-                    }
-                }
-            } catch (Exception e) {
-                // Bỏ qua bài lỗi dữ liệu để không làm sập toàn bộ feed.
-                continue;
-            }
-        }
+        List<PostResponse> responses = convertToResponses(posts, currentUser);
 
         return ResponseEntity.ok(responses);
     }
@@ -161,19 +153,7 @@ public class PostController {
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
         List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
-        List<PostResponse> responses = new ArrayList<>();
-        for (Post p : posts) {
-            try {
-                if (canViewPost(p, currentUser)) {
-                    PostResponse response = convertToResponse(p, currentUser);
-                    if (response != null) {
-                        responses.add(response);
-                    }
-                }
-            } catch (Exception e) {
-                continue;
-            }
-        }
+        List<PostResponse> responses = convertToResponses(posts, currentUser);
         return ResponseEntity.ok(responses);
     }
 
@@ -190,19 +170,7 @@ public class PostController {
         // For now, let's return all posts or just public/friends if we don't have
         // friendship check easily available here.
         List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        List<PostResponse> responses = new ArrayList<>();
-        for (Post p : posts) {
-            try {
-                if (canViewPost(p, currentUser)) {
-                    PostResponse response = convertToResponse(p, currentUser);
-                    if (response != null) {
-                        responses.add(response);
-                    }
-                }
-            } catch (Exception e) {
-                continue;
-            }
-        }
+        List<PostResponse> responses = convertToResponses(posts, currentUser);
         return ResponseEntity.ok(responses);
     }
 
@@ -385,6 +353,65 @@ public class PostController {
                 true);
 
         return ResponseEntity.ok(response);
+    }
+
+    
+    private List<PostResponse> convertToResponses(List<Post> posts, User currentUser) {
+        if (posts == null || posts.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+
+        Map<Long, Long> likeCountsMap = new HashMap<>();
+        for (Object[] result : likeRepository.countLikesByPostIds(postIds)) {
+            likeCountsMap.put((Long) result[0], (Long) result[1]);
+        }
+
+        Map<Long, Long> commentCountsMap = new HashMap<>();
+        for (Object[] result : commentRepository.countCommentsByPostIds(postIds)) {
+            commentCountsMap.put((Long) result[0], (Long) result[1]);
+        }
+
+        Set<Long> likedPostIdsSet = new HashSet<>();
+        if (currentUser != null) {
+            likedPostIdsSet.addAll(likeRepository.findLikedPostIdsByUser(postIds, currentUser.getId()));
+        }
+
+        List<PostResponse> responses = new ArrayList<>();
+        for (Post post : posts) {
+            try {
+                if (canViewPost(post, currentUser)) {
+                    long likeCount = likeCountsMap.getOrDefault(post.getId(), 0L);
+                    long commentCount = commentCountsMap.getOrDefault(post.getId(), 0L);
+                    boolean isLiked = likedPostIdsSet.contains(post.getId());
+                    boolean isMine = currentUser != null && post.getUser().getId().equals(currentUser.getId());
+
+                    String authorName = post.getUser().getFullName() != null ? post.getUser().getFullName() : "Người dùng";
+                    String authorAvatar = post.getUser().getAvatar() != null ? post.getUser().getAvatar()
+                            : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
+
+                    responses.add(new PostResponse(
+                            post.getId(),
+                            post.getContent(),
+                            post.getImageUrl(),
+                            post.getVideoUrl(),
+                            post.getCreatedAt(),
+                            post.getUser().getId(),
+                            authorName,
+                            authorAvatar,
+                            likeCount,
+                            commentCount,
+                            isLiked,
+                            isMine,
+                            post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC"
+                    ));
+                }
+            } catch (Exception e) {
+                // skip broken post
+            }
+        }
+        return responses;
     }
 
     private PostResponse convertToResponse(Post post, User currentUser) {

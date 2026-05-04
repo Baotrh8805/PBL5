@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LC Network - Xác thực</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Top Navigation (Absolute Positioned) -->
+    <div class="top-nav">
+        <div class="logo">
+            <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i> LC Network
+        </div>
+        <div class="nav-right" id="nav-right-actions">
+            <span>Bạn là người mới?</span>
+            <button class="btn btn-outline" onclick="showSection('register-section')">Đăng ký</button>
+        </div>
+    </div>
+
+    <div class="main-split-container">
+        <!-- Left Panel: Branding & Info -->
+        <div class="left-panel">
+            <div class="left-content">
+                <span class="badge"><i class="fa-solid fa-shield-halved"></i> CỘNG ĐỒNG ĐƯỢC GIÁM SÁT BỞI AI</span>
+                <h1>Không gian an toàn<br><span class="highlight">để kết nối.</span></h1>
+                <p>Tham gia cộng đồng nơi trí tuệ kết hợp với sự đồng cảm. AI tiên tiến của chúng tôi đảm bảo mọi tương tác đều lịch sự, an toàn và có ý nghĩa.</p>
+                <div class="stats">
+                    <div class="stat-item">
+                        <h3>24/7</h3>
+                        <p>Giám sát</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>99.9%</h3>
+                        <p>Tỷ lệ an toàn</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>1M+</h3>
+                        <p>Người dùng</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Auth Forms -->
+        <div class="right-panel">
+            <div class="form-container">
+                <div id="notification" class="hidden"></div>
+                
+                <!-- LOGIN SECTION -->
+                <div id="login-section" class="form-section">
+                    <h2>Chào mừng trở lại</h2>
+                    <p class="subtitle">Vui lòng nhập thông tin để đăng nhập.</p>
+
+                    <form id="login-form">
+                        <div class="input-group">
+                            <label for="login-email">Email hoặc Tên đăng nhập</label>
+                            <input type="text" id="login-email" placeholder="name@gmail.com hoặc duybao123" required>
+                        </div>
+                        
+                        <div class="input-group">
+                            <div class="label-row">
+                                <label for="login-password">Mật khẩu</label>
+                                <a href="javascript:void(0)" class="forgot-link" onclick="showSection('forgot-password-section')">Quên mật khẩu?</a>
+                            </div>
+                            <div class="password-wrapper">
+                                <input type="password" id="login-password" placeholder="••••••••" required>
+                                <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('login-password', this)"></i>
+                            </div>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="remember-me">
+                            <label for="remember-me">Ghi nhớ đăng nhập trong 30 ngày</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary full-width mb-25">Đăng nhập</button>
+
+                        <div class="divider">
+                            <span>HOẶC TIẾP TỤC VỚI</span>
+                        </div>
+
+                        <div class="social-login">
+                            <a href="/oauth2/authorization/google" class="btn btn-social" style="text-decoration: none; ">
+                                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="width: 20px; height: 20px;">
+                                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                                    <path fill="none" d="M0 0h48v48H0z"></path>
+                                </svg>
+                                <span>Google</span>
+                            </a>
+                            
+                        </div>
+
+                        <p class="switch-form-text">
+                            Chưa có tài khoản? <a href="javascript:void(0)" onclick="showSection('register-section')" class="bold-link">Đăng ký ngay</a>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- REGISTER SECTION -->
+                <div id="register-section" class="form-section hidden">
+                    <h2>Tạo tài khoản mới</h2>
+                    <p class="subtitle" id="reg-subtitle">Bước 1: Thông tin cơ bản</p>
+
+                    <form id="register-form">
+                        <!-- BƯỚC 1 -->
+                        <div id="reg-step-1">
+                            <div class="input-group">
+                                <label for="reg-username">Tên đăng nhập</label>
+                                <div class="input-with-icon">
+                                    <input type="text" id="reg-username" placeholder="Ví dụ: duybao123">
+                                    <i class="fa-solid fa-circle-check auth-icon success-icon hidden"></i>
+                                </div>
+                                <small class="error-msg"></small>
+                            </div>
+                            <div class="input-group">
+                                <label for="reg-email">Địa chỉ Email (Gmail)</label>
+                                <div class="input-with-icon">
+                                    <input type="email" id="reg-email" placeholder="name@gmail.com">
+                                    <i class="fa-solid fa-circle-check auth-icon success-icon hidden"></i>
+                                </div>
+                                <small class="error-msg"></small>
+                            </div>
+                            <div class="input-group">
+                                <label for="reg-password">Mật khẩu</label>
+                                <div class="password-wrapper input-with-icon">
+                                    <input type="password" id="reg-password" placeholder="••••••••">
+                                    <i class="fa-solid fa-circle-check auth-icon success-icon hidden" style="right: 35px;"></i>
+                                    <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('reg-password', this)"></i>
+                                </div>
+                                <small class="error-msg"></small>
+                            </div>
+                            <div class="input-group">
+                                <label for="reg-confirm-password">Xác nhận mật khẩu</label>
+                                <div class="password-wrapper input-with-icon">
+                                    <input type="password" id="reg-confirm-password" placeholder="••••••••">
+                                    <i class="fa-solid fa-circle-check auth-icon success-icon hidden" style="right: 35px;"></i>
+                                    <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('reg-confirm-password', this)"></i>
+                                </div>
+                                <small class="error-msg"></small>
+                            </div>
+                            
+                            <button type="button" class="btn btn-primary full-width" onclick="nextStep(1)">Tiếp tục</button>
+                            <p class="switch-form-text" style="margin-top:20px;">
+                                Đã có tài khoản? <a href="javascript:void(0)" onclick="showSection('login-section')" class="bold-link">Đăng nhập</a>
+                            </p>
+                        </div>
+
+                        <!-- BƯỚC 2 -->
+                        <div id="reg-step-2" class="hidden">
+                            <div class="input-group">
+                                <label for="reg-name">Tên hiển thị</label>
+                                <div class="input-with-icon">
+                                    <input type="text" id="reg-name" placeholder="Ví dụ: Lê LC">
+                                    <i class="fa-solid fa-circle-check auth-icon success-icon hidden"></i>
+                                </div>
+                                <small class="error-msg"></small>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="reg-phone">Số điện thoại</label>
+                                <div class="input-with-icon">
+                                    <input type="tel" id="reg-phone" placeholder="03XXXXXXXX hoặc 09XXXXXXXX">
+                                    <i class="fa-solid fa-circle-check auth-icon success-icon hidden"></i>
+                                </div>
+                                <small class="error-msg"></small>
+                            </div>
+                            
+                            <div style="display: flex; gap: 15px;">
+                                <div class="input-group" style="flex: 1; min-width: 0;">
+                                    <label for="reg-dob">Ngày sinh</label>
+                                    <div class="input-with-icon">
+                                        <input type="date" id="reg-dob" max="2015-12-31" style="font-family: inherit;">
+                                        <i class="fa-solid fa-circle-check auth-icon success-icon hidden" style="right: 35px;"></i>
+                                    </div>
+                                    <small class="error-msg"></small>
+                                </div>
+                                <div class="input-group" style="flex: 1; min-width: 0;">
+                                    <label for="reg-gender">Giới tính</label>
+                                    <div class="input-with-icon">
+                                        <select id="reg-gender" class="form-select custom-select">
+                                            <option value="">-- Chọn --</option>
+                                            <option value="Nam">Nam</option>
+                                            <option value="Nữ">Nữ</option>
+                                            <option value="Khác">Khác</option>
+                                        </select>
+                                        <i class="fa-solid fa-circle-check auth-icon success-icon hidden" style="right: 35px;"></i>
+                                    </div>
+                                    <small class="error-msg"></small>
+                                </div>
+                            </div>
+                            
+                            <div style="display:flex; gap:10px; margin-top: 15px;">
+                                <button type="button" class="btn btn-outline full-width" onclick="prevStep(2)" style="flex: 1;">Quay lại</button>
+                                <button type="button" class="btn btn-primary full-width" onclick="nextStep(2)" style="flex: 1;">Tiếp tục</button>
+                            </div>
+                            <p class="switch-form-text" style="margin-top:20px;">
+                                Đã có tài khoản? <a href="javascript:void(0)" onclick="showSection('login-section')" class="bold-link">Đăng nhập</a>
+                            </p>
+                        </div>
+
+                        <!-- BƯỚC 3 -->
+                        <div id="reg-step-3" class="hidden">
+                            <div class="terms-box" style="height:150px; overflow-y:auto; border:1px solid #ccc; border-radius:5px; padding:10px; font-size:13px; margin-bottom:15px; background:#f9f9f9; color:#333;">
+                                <strong>ĐIỀU KHOẢN VÀ CHÍNH SÁCH LC NETWORK</strong><br><br>
+                                1. Người dùng cam kết cung cấp thông tin chính xác khi đăng ký, chịu trách nhiệm hoàn toàn về các nội dung đăng tải.<br>
+                                2. Không chia sẻ nội dung vi phạm pháp luật, văn hóa thuần phong mỹ tục.<br>
+                                3. Hệ thống có quyền khóa tài khoản mà không cần báo trước nếu phát hiện vi phạm nghiêm trọng.<br>
+                                4. Mọi dữ liệu người dùng được xử lý theo chính sách quyền riêng tư của hệ thống và tuân thủ các quy định bảo mật.<br>
+                                5. Ứng dụng tích hợp AI để giám sát tự động 24/7 nhằm bảo đảm môi trường trực tuyến an toàn.
+                            </div>
+                            
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="reg-terms">
+                                <label for="reg-terms">Tôi đã đọc và đồng ý với điều khoản sử dụng</label>
+                            </div>
+                            <small class="error-msg" style="display:block; margin-bottom:10px;"></small>
+                            
+                            <div style="display:flex; gap:10px; margin-top: 15px;">
+                                <button type="button" class="btn btn-outline full-width" onclick="prevStep(3)" style="flex: 1;">Quay lại</button>
+                                <button type="submit" class="btn btn-primary full-width" id="btn-submit-reg" style="flex: 1;">Tạo tài khoản</button>
+                            </div>
+                            <p class="switch-form-text" style="margin-top:20px;">
+                                Đã có tài khoản? <a href="javascript:void(0)" onclick="showSection('login-section')" class="bold-link">Đăng nhập</a>
+                            </p>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- VERIFY PIN SECTION -->
+                <div id="verify-pin-section" class="form-section hidden">
+                    <h2>Xác thực mã PIN</h2>
+                    <p class="subtitle">Chúng tôi vừa gửi mã PIN gồm 6 số đến email <b id="verify-email-display"></b>. Vui lòng kiểm tra và nhập mã bên dưới.</p>
+
+                    <form id="verify-pin-form">
+                        <div class="input-group">
+                            <input type="text" id="pin-code" placeholder="1 2 3 4 5 6" maxlength="6" pattern="\d{6}" style="text-align:center; font-size:24px; letter-spacing: 12px; font-weight: bold; border: 2px solid #ccc; height: 60px;" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary full-width" style="margin-top:20px;">Xác nhận mã</button>
+                        <button type="button" id="btn-resend-pin" class="btn btn-outline full-width" style="margin-top:10px;" onclick="handleResendPin()" disabled>Gửi lại mã (60s)</button>
+                        <p class="switch-form-text" style="margin-top:20px;">
+                            <a href="javascript:void(0)" onclick="showSection('register-section')" class="bold-link"><i class="fa-solid fa-arrow-left"></i> Quay lại Đăng ký</a>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- FORGOT PASSWORD SECTION -->
+                <div id="forgot-password-section" class="form-section hidden">
+                    <h2>Khôi phục mật khẩu</h2>
+                    <p class="subtitle">Nhập email của bạn, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.</p>
+                    <form id="forgot-password-form">
+                        <div class="input-group">
+                            <label for="forgot-email">Địa chỉ Email</label>
+                            <input type="email" id="forgot-email" placeholder="name@gmail.com" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary full-width">Gửi yêu cầu</button>
+                        <p class="switch-form-text" style="margin-top:20px;">
+                            <a href="javascript:void(0)" onclick="showSection('login-section')" class="bold-link"><i class="fa-solid fa-arrow-left"></i> Quay lại đăng nhập</a>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- RESET PASSWORD SECTION -->
+                <div id="reset-password-section" class="form-section hidden">
+                    <h2>Đặt lại mật khẩu</h2>
+                    <p class="subtitle">Vui lòng nhập mã PIN vừa nhận được vào email và mật khẩu mới.</p>
+                    <form id="reset-password-form">
+                        <div class="input-group">
+                            <label for="reset-pin">Mã xác nhận (PIN)</label>
+                            <input type="text" id="reset-pin" placeholder="Ví dụ: 123456" maxlength="6" pattern="\d{6}" required autocomplete="off">
+                        </div>
+                        <div class="input-group">
+                            <label for="new-password">Mật khẩu mới</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="new-password" placeholder="••••••••" required>
+                                <i class="fa-regular fa-eye toggle-password" onclick="togglePassword('new-password', this)"></i>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary full-width">Xác nhận thay đổi</button>
+                        <p class="switch-form-text" style="margin-top:20px;">
+                            <a href="javascript:void(0)" onclick="showSection('forgot-password-section')" class="bold-link"><i class="fa-solid fa-arrow-left"></i> Quay lại</a>
+                        </p>
+                    </form>
+                </div>
+                
+                <!-- DASHBOARD SECTION -->
+                <div id="dashboard-section" class="form-section hidden" style="text-align:center;">
+                    <h2>Chào mừng quay trở lại!</h2>
+                    <p class="subtitle">Bạn đã đăng nhập thành công.</p>
+                    <button onclick="logout()" class="btn btn-outline" style="color:#e74c3c; border-color:#e74c3c; width:150px;">Đăng xuất</button>
+                </div>
+
+                <!-- Form Footer -->
+                <div class="form-footer">
+                    <span><i class="fa-solid fa-lock"></i> BẢO MẬT SSL</span>
+                    <span class="dot">•</span>
+                    <span><i class="fa-solid fa-shield"></i> GIÁM SÁT AI</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>

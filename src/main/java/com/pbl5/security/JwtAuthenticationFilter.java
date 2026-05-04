@@ -1,5 +1,6 @@
 package com.pbl5.security;
 
+import com.pbl5.enums.UserStatus;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,6 +40,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (jwtTokenProvider.validateToken(token)) {
                 String email = jwtTokenProvider.getEmailFromJWT(token);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                // Kiểm tra tài khoản có bị khóa không — nếu bị ban thì từ chối ngay lập tức
+                if (userDetails instanceof CustomUserDetails customUser
+                        && customUser.getUser().getStatus() == UserStatus.BANNED) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"message\":\"Tài khoản của bạn đã bị khóa.\",\"reason\":\"BANNED\"}");
+                    return;
+                }
 
                 UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

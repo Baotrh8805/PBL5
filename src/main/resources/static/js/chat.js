@@ -113,7 +113,10 @@ async function loadInboxDropdown() {
         }
 
         contacts.forEach(f => {
-            let avatarUrl = f.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff`;
+            let avatarUrl = f.avatar;
+            if (!avatarUrl || avatarUrl.trim() === '') {
+                 avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff`;
+            }
             let msgStr = f.lastMessage || 'Bạn bè';
 
             const item = document.createElement('div');
@@ -127,12 +130,11 @@ async function loadInboxDropdown() {
             };
 
             item.innerHTML = `
-                <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff'">
+                <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff'">
                 <div class="notification-content">
                     <div style="font-weight: 600; font-size: 15px; color: #050505;">${f.fullName}</div>
                     <div class="notification-msg" style="color: #65676b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
                 </div>
-                <!-- Optional unread dot here -->
             `;
             inboxList.appendChild(item);
         });
@@ -235,21 +237,19 @@ async function markAllNotificationsAsRead() {
 document.addEventListener('DOMContentLoaded', () => {
     // Close dropdowns when clicking outside.
     document.addEventListener('click', (e) => {
-        const notiContainer = document.querySelector('.notification-container:last-child'); // approx
-        const inboxBtnDropdownContainer = document.querySelector('.notification-container:first-child');
-        
         const notiDropdown = document.getElementById('notification-dropdown');
         const inboxDropdown = document.getElementById('inbox-dropdown');
         
         if (notiDropdown && notificationDropdownOpen) {
-            // Very brute force check if click is outside any notification container
             if (!e.target.closest('.notification-container')) {
                 notiDropdown.style.display = 'none';
                 notificationDropdownOpen = false;
             }
         }
         if (inboxDropdown && inboxDropdownOpen) {
-            if (!e.target.closest('.notification-container')) {
+            // Also note the inbox icon's container can just be the wrapper 
+            // but clicking outside .notification-container and .icon-btn should hide it
+            if (!e.target.closest('.notification-container') && !e.target.closest('#nav-message-btn') && !e.target.closest('#inbox-dropdown')) {
                 inboxDropdown.style.display = 'none';
                 inboxDropdownOpen = false;
             }

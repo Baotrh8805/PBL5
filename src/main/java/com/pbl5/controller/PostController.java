@@ -2,6 +2,7 @@ package com.pbl5.controller;
 
 import com.pbl5.dto.CommentRequest;
 import com.pbl5.dto.CommentResponse;
+import com.pbl5.dto.CreatePostRequest;
 import com.pbl5.dto.PostRequest;
 import com.pbl5.dto.PostResponse;
 import com.pbl5.enums.PostVisibility;
@@ -17,6 +18,7 @@ import com.pbl5.repository.FriendshipRepository;
 import com.pbl5.repository.PostRepository;
 import com.pbl5.repository.UserRepository;
 import com.pbl5.security.JwtTokenProvider;
+import com.pbl5.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -25,9 +27,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Optional;
 
 @RestController
@@ -58,82 +66,121 @@ public class PostController {
     @Autowired
     private JwtTokenProvider tokenProvider;
 
+    @Autowired
+    private PostService postService;
 
     private boolean canViewPost(Post p, User currentUser) {
-        if (p.getUser().getId().equals(currentUser.getId())) return true;
-        if (p.getVisibility() == PostVisibility.PUBLIC || p.getVisibility() == null) return true;
-        if (p.getVisibility() == PostVisibility.PRIVATE) return false;
+        if (p == null || p.getUser() == null || currentUser == null) {
+            return false;
+        }
+
+        // Author can always see their own posts
+        if (p.getUser().getId().equals(currentUser.getId()))
+            return true;
+
+        // Admins and moderators can see all posts
+        if ("ADMIN".equals(currentUser.getRole()) || "MODERATOR".equals(currentUser.getRole()))
+            return true;
+
+        // Other users cannot see rejected or pending review posts
+        if (p.getStatus() == com.pbl5.enums.PostStatus.AUTO_REJECTED
+                || p.getStatus() == com.pbl5.enums.PostStatus.PENDING_REVIEW) {
+            return false;
+        }
+
+        if (p.getVisibility() == PostVisibility.PUBLIC || p.getVisibility() == null)
+            return true;
+        if (p.getVisibility() == PostVisibility.PRIVATE)
+            return false;
         if (p.getVisibility() == PostVisibility.FRIENDS) {
             return friendshipRepository.findByUsers(currentUser, p.getUser())
-                .map(f -> f.getStatus() == FriendshipStatus.ACCEPTED)
-                .orElse(false);
+                    .map(f -> f.getStatus() == FriendshipStatus.ACCEPTED)
+                    .orElse(false);
         }
         return false;
     }
 
     private User getAuthenticatedUser(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
+        if (authHeader == null || !authHeader.startsWith("Bearer "))
+            return null;
         String token = authHeader.substring(7);
-        if (!tokenProvider.validateToken(token)) return null;
+        if (!tokenProvider.validateToken(token))
+            return null;
         String email = tokenProvider.getEmailFromJWT(token);
         return userRepository.findByEmail(email).orElse(null);
     }
 
     @PostMapping
-    public ResponseEntity<?> createPost(@RequestHeader("Authorization") String authHeader, @RequestBody PostRequest request) {
+    public ResponseEntity<?> createPost(@RequestHeader("Authorization") String authHeader,
+            @RequestBody PostRequest request) {
         User user = getAuthenticatedUser(authHeader);
-        if (user == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        Post post = new Post();
-        post.setContent(request.getContent());
-        post.setImageUrl(request.getImageUrl());
-        if (request.getVisibility() != null) {
-            try {
-                post.setVisibility(PostVisibility.valueOf(request.getVisibility().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                post.setVisibility(PostVisibility.PUBLIC);
-            }
+        if ((request.getContent() == null || request.getContent().trim().isEmpty())
+                && (request.getImageUrl() == null || request.getImageUrl().trim().isEmpty())
+                && (request.getVideoUrl() == null || request.getVideoUrl().trim().isEmpty())) {
+            return ResponseEntity.badRequest().body("Nội dung bài đăng không được trống.");
         }
-        post.setUser(user);
 
-        Post savedPost = postRepository.save(post);
-        return ResponseEntity.ok(convertToResponse(savedPost, user));
+        CreatePostRequest createPostRequest = new CreatePostRequest(
+                request.getContent(),
+                request.getImageUrl(),
+                request.getVideoUrl(),
+                request.getVisibility());
+
+        PostResponse created = postService.createPost(user, createPostRequest);
+        return ResponseEntity.ok(created);
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getAllPosts(@RequestHeader("Authorization") String authHeader) {
         User currentUser = getAuthenticatedUser(authHeader);
-        if (currentUser == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
+        if (currentUser == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        // Optimized query to fetch friends' posts, own posts, and public posts
-        List<Post> posts = postRepository.findHomeFeed(currentUser.getId());
+        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
         List<PostResponse> responses = new ArrayList<>();
         for (Post p : posts) {
-            responses.add(convertToResponse(p, currentUser));
+            if (canViewPost(p, currentUser)) {
+                responses.add(convertToResponse(p, currentUser));
+            }
         }
 
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/me")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getMyPosts(@RequestHeader("Authorization") String authHeader) {
         User currentUser = getAuthenticatedUser(authHeader);
-        if (currentUser == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
+        if (currentUser == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        List<Post> posts = postRepository.findByUserIdAndStatusOrderByCreatedAtDesc(currentUser.getId(), com.pbl5.enums.PostStatus.ACTIVE);
+        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
         List<PostResponse> responses = new ArrayList<>();
         for (Post p : posts) {
-            responses.add(convertToResponse(p, currentUser));
+            if (canViewPost(p, currentUser)) {
+                responses.add(convertToResponse(p, currentUser));
+            }
         }
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserPosts(@RequestHeader("Authorization") String authHeader, @PathVariable Long userId) {
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getUserPosts(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long userId) {
         User currentUser = getAuthenticatedUser(authHeader);
-        if (currentUser == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
+        if (currentUser == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        List<Post> posts = postRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, com.pbl5.enums.PostStatus.ACTIVE);
+        // NOTE: Later we should filter posts based on visibility: PUBLIC for everyone,
+        // FRIENDS if they are friends, etc.
+        // For now, let's return all posts or just public/friends if we don't have
+        // friendship check easily available here.
+        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId);
         List<PostResponse> responses = new ArrayList<>();
         for (Post p : posts) {
             if (canViewPost(p, currentUser)) {
@@ -147,10 +194,12 @@ public class PostController {
     @PostMapping("/{postId}/like")
     public ResponseEntity<?> toggleLike(@RequestHeader("Authorization") String authHeader, @PathVariable Long postId) {
         User user = getAuthenticatedUser(authHeader);
-        if (user == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
         Optional<Post> postOpt = postRepository.findById(postId);
-        if (postOpt.isEmpty()) return ResponseEntity.notFound().build();
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
 
         Post post = postOpt.get();
         Optional<Like> existingLike = likeRepository.findByPostAndUser(post, user);
@@ -182,7 +231,7 @@ public class PostController {
                 notification.put("senderName", user.getFullName());
                 notification.put("senderAvatar", user.getAvatar());
                 notification.put("link", notifEntity.getLink());
-                
+
                 messagingTemplate.convertAndSend("/topic/notifications/" + post.getUser().getId(), notification);
             }
 
@@ -193,10 +242,12 @@ public class PostController {
     @DeleteMapping("/{postId}")
     public ResponseEntity<?> deletePost(@RequestHeader("Authorization") String authHeader, @PathVariable Long postId) {
         User user = getAuthenticatedUser(authHeader);
-        if (user == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
         Optional<Post> postOpt = postRepository.findById(postId);
-        if (postOpt.isEmpty()) return ResponseEntity.notFound().build();
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
 
         Post post = postOpt.get();
         // Kiểm tra quyền xóa bài
@@ -209,12 +260,15 @@ public class PostController {
     }
 
     @PatchMapping("/{postId}/visibility")
-    public ResponseEntity<?> changeVisibility(@RequestHeader("Authorization") String authHeader, @PathVariable Long postId, @RequestParam String level) {
+    public ResponseEntity<?> changeVisibility(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long postId, @RequestParam String level) {
         User user = getAuthenticatedUser(authHeader);
-        if (user == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
         Optional<Post> postOpt = postRepository.findById(postId);
-        if (postOpt.isEmpty()) return ResponseEntity.notFound().build();
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
 
         Post post = postOpt.get();
         if (!post.getUser().getId().equals(user.getId())) {
@@ -231,38 +285,42 @@ public class PostController {
     }
 
     @GetMapping("/{postId}/comments")
-    public ResponseEntity<?> getComments(@PathVariable Long postId, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    public ResponseEntity<?> getComments(@PathVariable Long postId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         User currentUser = getAuthenticatedUser(authHeader);
-        
+
         List<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(postId);
         List<CommentResponse> responses = new ArrayList<>();
-        
+
         for (Comment c : comments) {
             String authorName = c.getUser().getFullName() != null ? c.getUser().getFullName() : "Người dùng";
-            String authorAvatar = c.getUser().getAvatar() != null ? c.getUser().getAvatar() : 
-                "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
+            String authorAvatar = c.getUser().getAvatar() != null ? c.getUser().getAvatar()
+                    : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+")
+                            + "&background=00d1b2&color=fff";
             boolean isMine = currentUser != null && c.getUser().getId().equals(currentUser.getId());
-            
+
             responses.add(new CommentResponse(
-                c.getId(),
-                c.getContent(),
-                c.getUser().getId(),
-                authorName,
-                authorAvatar,
-                c.getCreatedAt(),
-                isMine
-            ));
+                    c.getId(),
+                    c.getContent(),
+                    c.getUser().getId(),
+                    authorName,
+                    authorAvatar,
+                    c.getCreatedAt(),
+                    isMine));
         }
         return ResponseEntity.ok(responses);
     }
 
     @PostMapping("/{postId}/comments")
-    public ResponseEntity<?> addComment(@PathVariable Long postId, @RequestBody CommentRequest request, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> addComment(@PathVariable Long postId, @RequestBody CommentRequest request,
+            @RequestHeader("Authorization") String authHeader) {
         User user = getAuthenticatedUser(authHeader);
-        if (user == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
         Optional<Post> postOpt = postRepository.findById(postId);
-        if (postOpt.isEmpty()) return ResponseEntity.notFound().build();
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
 
         if (request.getContent() == null || request.getContent().trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Nội dung không được để trống");
@@ -272,7 +330,7 @@ public class PostController {
         comment.setContent(request.getContent().trim());
         comment.setPost(postOpt.get());
         comment.setUser(user);
-        
+
         comment = commentRepository.save(comment);
 
         // Gửi thông báo cho chủ bài viết (nếu không tự comment)
@@ -293,55 +351,131 @@ public class PostController {
             notification.put("senderName", user.getFullName());
             notification.put("senderAvatar", user.getAvatar());
             notification.put("link", notifEntity.getLink());
-            
+
             messagingTemplate.convertAndSend("/topic/notifications/" + postOpt.get().getUser().getId(), notification);
         }
-        
+
         String authorName = user.getFullName() != null ? user.getFullName() : "Người dùng";
-        String authorAvatar = user.getAvatar() != null ? user.getAvatar() : 
-            "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
+        String authorAvatar = user.getAvatar() != null ? user.getAvatar()
+                : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
 
         CommentResponse response = new CommentResponse(
-            comment.getId(),
-            comment.getContent(),
-            user.getId(),
-            authorName,
-            authorAvatar,
-            comment.getCreatedAt(),
-            true
-        );
-        
+                comment.getId(),
+                comment.getContent(),
+                user.getId(),
+                authorName,
+                authorAvatar,
+                comment.getCreatedAt(),
+                true);
+
         return ResponseEntity.ok(response);
     }
 
+    private List<PostResponse> convertToResponses(List<Post> posts, User currentUser) {
+        if (posts == null || posts.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+
+        Map<Long, Long> likeCountsMap = new HashMap<>();
+        for (Object[] result : likeRepository.countLikesByPostIds(postIds)) {
+            likeCountsMap.put((Long) result[0], (Long) result[1]);
+        }
+
+        Map<Long, Long> commentCountsMap = new HashMap<>();
+        for (Object[] result : commentRepository.countCommentsByPostIds(postIds)) {
+            commentCountsMap.put((Long) result[0], (Long) result[1]);
+        }
+
+        Set<Long> likedPostIdsSet = new HashSet<>();
+        if (currentUser != null) {
+            likedPostIdsSet.addAll(likeRepository.findLikedPostIdsByUser(postIds, currentUser.getId()));
+        }
+
+        List<PostResponse> responses = new ArrayList<>();
+        for (Post post : posts) {
+            try {
+                if (canViewPost(post, currentUser)) {
+                    long likeCount = likeCountsMap.getOrDefault(post.getId(), 0L);
+                    long commentCount = commentCountsMap.getOrDefault(post.getId(), 0L);
+                    boolean isLiked = likedPostIdsSet.contains(post.getId());
+                    boolean isMine = currentUser != null && post.getUser().getId().equals(currentUser.getId());
+
+                    String authorName = post.getUser().getFullName() != null ? post.getUser().getFullName()
+                            : "Người dùng";
+                    String authorAvatar = post.getUser().getAvatar() != null ? post.getUser().getAvatar()
+                            : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+")
+                                    + "&background=00d1b2&color=fff";
+
+                    responses.add(new PostResponse(
+                            post.getId(),
+                            post.getContent(),
+                            post.getImageUrl(),
+                            post.getVideoUrl(),
+                            post.getCreatedAt(),
+                            post.getUser().getId(),
+                            authorName,
+                            authorAvatar,
+                            likeCount,
+                            commentCount,
+                            isLiked,
+                            isMine,
+                            post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC"));
+                }
+            } catch (Exception e) {
+                // skip broken post
+            }
+        }
+        return responses;
+    }
+
     private PostResponse convertToResponse(Post post, User currentUser) {
-        long likeCount = likeRepository.countByPostId(post.getId());
-        long commentCount = commentRepository.countByPostId(post.getId());
-        
+        if (post == null || post.getUser() == null) {
+            return null;
+        }
+
+        long likeCount;
+        long commentCount;
+        try {
+            likeCount = likeRepository.countByPostId(post.getId());
+        } catch (Exception e) {
+            likeCount = 0;
+        }
+        try {
+            commentCount = commentRepository.countByPostId(post.getId());
+        } catch (Exception e) {
+            commentCount = 0;
+        }
+
         boolean isLiked = false;
         boolean isMine = false;
         if (currentUser != null) {
-            isLiked = likeRepository.findByPostAndUser(post, currentUser).isPresent();
+            try {
+                isLiked = likeRepository.findByPostAndUser(post, currentUser).isPresent();
+            } catch (Exception e) {
+                isLiked = false;
+            }
             isMine = post.getUser().getId().equals(currentUser.getId());
         }
 
         String authorName = post.getUser().getFullName() != null ? post.getUser().getFullName() : "Người dùng";
-        String authorAvatar = post.getUser().getAvatar() != null ? post.getUser().getAvatar() : 
-            "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
+        String authorAvatar = post.getUser().getAvatar() != null ? post.getUser().getAvatar()
+                : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
 
         return new PostResponse(
-            post.getId(),
-            post.getContent(),
-            post.getImageUrl(),
-            post.getCreatedAt(),
-            post.getUser().getId(),
-            authorName,
-            authorAvatar,
-            likeCount,
-            commentCount,
-            isLiked,
-            isMine,
-            post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC"
-        );
+                post.getId(),
+                post.getContent(),
+                post.getImageUrl(),
+                post.getVideoUrl(),
+                post.getCreatedAt(),
+                post.getUser().getId(),
+                authorName,
+                authorAvatar,
+                likeCount,
+                commentCount,
+                isLiked,
+                isMine,
+                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC");
     }
 }

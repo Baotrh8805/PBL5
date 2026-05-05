@@ -44,26 +44,4 @@ public class Friendship {
     public FriendshipStatus getStatus() { return status; }
     public void setStatus(FriendshipStatus status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-
-    // ==================== Domain Business Logic Methods ====================
-
-    /**
-     * Chấp nhận lời mời kết bạn
-     */
-    public void chapNhan() {
-        if (this.status != FriendshipStatus.PENDING) {
-            throw new IllegalStateException("Chỉ có thể chấp nhận khi lời mời ở trạng thái PENDING");
-        }
-        this.status = FriendshipStatus.ACCEPTED;
-    }
-
-    /**
-     * Từ chối lời mời kết bạn
-     */
-    public void tuChoi() {
-        if (this.status != FriendshipStatus.PENDING) {
-            throw new IllegalStateException("Chỉ có thể từ chối khi lời mời ở trạng thái PENDING");
-        }
-        this.status = FriendshipStatus.REJECTED;
-    }
 }

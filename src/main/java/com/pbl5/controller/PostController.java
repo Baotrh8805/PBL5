@@ -105,12 +105,11 @@ public class PostController {
         User currentUser = getAuthenticatedUser(authHeader);
         if (currentUser == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+        // Optimized query to fetch friends' posts, own posts, and public posts
+        List<Post> posts = postRepository.findHomeFeed(currentUser.getId());
         List<PostResponse> responses = new ArrayList<>();
         for (Post p : posts) {
-            if (canViewPost(p, currentUser)) {
-                responses.add(convertToResponse(p, currentUser));
-            }
+            responses.add(convertToResponse(p, currentUser));
         }
 
         return ResponseEntity.ok(responses);
@@ -121,12 +120,10 @@ public class PostController {
         User currentUser = getAuthenticatedUser(authHeader);
         if (currentUser == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
+        List<Post> posts = postRepository.findByUserIdAndStatusOrderByCreatedAtDesc(currentUser.getId(), com.pbl5.enums.PostStatus.ACTIVE);
         List<PostResponse> responses = new ArrayList<>();
         for (Post p : posts) {
-            if (canViewPost(p, currentUser)) {
-                responses.add(convertToResponse(p, currentUser));
-            }
+            responses.add(convertToResponse(p, currentUser));
         }
         return ResponseEntity.ok(responses);
     }
@@ -136,9 +133,7 @@ public class PostController {
         User currentUser = getAuthenticatedUser(authHeader);
         if (currentUser == null) return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        // NOTE: Later we should filter posts based on visibility: PUBLIC for everyone, FRIENDS if they are friends, etc.
-        // For now, let's return all posts or just public/friends if we don't have friendship check easily available here.
-        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        List<Post> posts = postRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, com.pbl5.enums.PostStatus.ACTIVE);
         List<PostResponse> responses = new ArrayList<>();
         for (Post p : posts) {
             if (canViewPost(p, currentUser)) {

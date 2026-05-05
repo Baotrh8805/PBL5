@@ -56,18 +56,14 @@ async function fetchUserProfile(token) {
             
             // Hiện nút Admin/Moderator trong sidebar nếu có quyền
             if (data.role === 'ADMIN' || data.role === 'MODERATOR') {
-                const sidebarNav = document.querySelector('.sidebar-nav');
-                if (sidebarNav && !document.getElementById('admin-menu-item')) {
-                    const adminLink = document.createElement('a');
-                    adminLink.id = 'admin-menu-item';
-                    adminLink.href = '/html/admin.html';
-                    adminLink.className = 'menu-item admin-menu-item';
-                    adminLink.innerHTML = data.role === 'ADMIN'
-                        ? '<i class="fa-solid fa-shield-halved"></i> Quản trị hệ thống'
-                        : '<i class="fa-solid fa-user-shield"></i> Kiểm duyệt';
-                    // Chèn trước nút Đăng xuất
-                    const logoutItem = sidebarNav.querySelector('[onclick="logout()"]');
-                    sidebarNav.insertBefore(adminLink, logoutItem);
+                const adminContainer = document.getElementById('admin-menu-container');
+                if (adminContainer) {
+                    adminContainer.innerHTML = `
+                        <a href="/html/admin.html" id="admin-menu-item" class="menu-item admin-menu-item">
+                            <i class="fa-solid ${data.role === 'ADMIN' ? 'fa-shield-halved' : 'fa-user-shield'}"></i>
+                            <span>${data.role === 'ADMIN' ? 'Quản trị hệ thống' : 'Kiểm duyệt'}</span>
+                        </a>
+                    `;
                 }
             }
 

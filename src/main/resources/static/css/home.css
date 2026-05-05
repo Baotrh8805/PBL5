@@ -452,9 +452,12 @@ button {
 .menu-item.active {
     background-color: var(--primary-light);
     color: var(--primary-color);
+    border-left: 4px solid var(--primary-color);
+    padding-left: 10px; /* Adjust for border */
 }
 .menu-item.active i {
     color: var(--primary-color);
+    transform: scale(1.1);
 }
 
 .menu-item.logout-btn {

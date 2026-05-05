@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function fetchUserProfile() {
     const token = localStorage.getItem('token');
     
-    // First fetch current user logic to populate header and compare IDs
     fetch('/api/users/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -31,11 +30,33 @@ function fetchUserProfile() {
     .then(currentUser => {
         currentUserId = currentUser.id;
         
-        // Update header for current user
-        const headerAvatar = document.getElementById('header-avatar');
-        if (headerAvatar && currentUser.avatar) {
-            headerAvatar.src = currentUser.avatar;
+        // --- Populate Global Sidebars and Header ---
+        document.querySelectorAll('.user-name').forEach(el => {
+            el.textContent = currentUser.fullName || 'Người dùng';
+        });
+        
+        let avatarUrl = currentUser.avatar;
+        if (!avatarUrl && currentUser.fullName) {
+            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=00d1b2&color=fff`;
         }
+
+        document.querySelectorAll('#header-avatar, .avatar-large, .avatar-small, #modal-avatar').forEach(img => {
+            img.src = avatarUrl;
+        });
+
+        // Admin/Moderator Menu
+        if (currentUser.role === 'ADMIN' || currentUser.role === 'MODERATOR') {
+            const adminContainer = document.getElementById('admin-menu-container');
+            if (adminContainer) {
+                adminContainer.innerHTML = `
+                    <a href="/html/admin.html" id="admin-menu-item" class="menu-item admin-menu-item">
+                        <i class="fa-solid ${currentUser.role === 'ADMIN' ? 'fa-shield-halved' : 'fa-user-shield'}"></i>
+                        <span>${currentUser.role === 'ADMIN' ? 'Quản trị hệ thống' : 'Kiểm duyệt'}</span>
+                    </a>
+                `;
+            }
+        }
+        // --- End Sidebar Population ---
 
         if (targetUserId && targetUserId !== currentUserId) {
             // Xem trang của người khác

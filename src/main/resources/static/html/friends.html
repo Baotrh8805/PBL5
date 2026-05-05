@@ -127,28 +127,121 @@
         </div>
     </header>
 
-    <div class="friends-container">
-        <div class="nav-links-friends">
-            <div id="tab-suggestions" class="active" onclick="switchTab('suggestions')">Gợi ý kết bạn</div>
-            <div id="tab-requests" onclick="switchTab('requests')">Lời mời kết bạn</div>
-            <div id="tab-friends" onclick="switchTab('friends')">Bạn bè của tôi</div>
-        </div>
+    <!-- Main Content Area -->
+    <main class="main-layout container">
+        
+        <!-- Left Sidebar -->
+        <aside class="left-sidebar">
+            <div class="card profile-card" onclick="window.location.href='profile.html'" style="cursor: pointer; transition: 0.2s;">
+                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <div class="profile-info">
+                    <h3 class="user-name">Người dùng</h3>
+                    <p class="status"><span class="status-dot"></span> Đang trực truyến</p>
+                </div>
+            </div>
 
-        <div id="section-suggestions" class="friend-section">
-            <h2 class="friends-header">Những người bạn có thể biết</h2>
-            <div id="suggestions-list" class="friend-list">Đang tải...</div>
-        </div>
+            <nav class="card sidebar-nav dashboard-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Khám Phá</div>
+                    <a href="home.html" class="menu-item">
+                        <i class="fa-solid fa-pager"></i> <span>Bảng tin</span>
+                    </a>
+                    <a href="/html/friends.html" class="menu-item active">
+                        <i class="fa-solid fa-user-group"></i> <span>Bạn bè & Cộng đồng</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <i class="fa-solid fa-fire text-yellow"></i> <span>Thịnh hành</span>
+                    </a>
+                </div>
 
-        <div id="section-requests" class="friend-section" style="display: none;">
-            <h2 class="friends-header">Lời mời đã nhận</h2>
-            <div id="requests-list" class="friend-list">Đang tải...</div>
-        </div>
+                <div class="nav-separator"></div>
 
-        <div id="section-friends" class="friend-section" style="display: none;">
-            <h2 class="friends-header">Danh sách bạn bè</h2>
-            <div id="my-friends-list" class="friend-list">Đang tải...</div>
-        </div>
-    </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Cá Nhân</div>
+                    <a href="profile.html" class="menu-item">
+                        <i class="fa-regular fa-user"></i> <span>Hồ sơ của tôi</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <i class="fa-regular fa-bookmark"></i> <span>Đã lưu</span>
+                    </a>
+                    <div id="admin-menu-container"></div>
+                </div>
+
+                <div class="nav-separator"></div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Tài Khoản</div>
+                    <a href="#" class="menu-item">
+                        <i class="fa-solid fa-gear"></i> <span>Cài đặt & Quyền riêng tư</span>
+                    </a>
+                    <a href="#" class="menu-item logout-btn" onclick="logout()">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Đăng xuất</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="card ai-banner modern-ai-banner">
+                <div class="ai-banner-content">
+                    <div class="ai-badge">
+                        <i class="fa-solid fa-shield-halved"></i> AI Khang Trang
+                    </div>
+                    <p>Hệ thống giám sát bảo mật nội dung chủ động.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Content (Friends) -->
+        <section class="feed-section">
+            <div class="friends-container" style="max-width: 100%; margin: 0; padding: 0;">
+                <div class="nav-links-friends">
+                    <div id="tab-suggestions" class="active" onclick="switchTab('suggestions')">Gợi ý kết bạn</div>
+                    <div id="tab-requests" onclick="switchTab('requests')">Lời mời kết bạn</div>
+                    <div id="tab-friends" onclick="switchTab('friends')">Bạn bè của tôi</div>
+                </div>
+
+                <div id="section-suggestions" class="friend-section">
+                    <h2 class="friends-header">Những người bạn có thể biết</h2>
+                    <div id="suggestions-list" class="friend-list">Đang tải...</div>
+                </div>
+
+                <div id="section-requests" class="friend-section" style="display: none;">
+                    <h2 class="friends-header">Lời mời đã nhận</h2>
+                    <div id="requests-list" class="friend-list">Đang tải...</div>
+                </div>
+
+                <div id="section-friends" class="friend-section" style="display: none;">
+                    <h2 class="friends-header">Danh sách bạn bè</h2>
+                    <div id="my-friends-list" class="friend-list">Đang tải...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Sidebar -->
+        <aside class="right-sidebar">
+            <div class="card suggestions-card">
+                <h3>Gợi ý cho bạn</h3>
+                <div class="empty-state">Chưa có gợi ý</div>
+            </div>
+
+            <div class="card trending-card">
+                <h3>Chủ đề thịnh hành</h3>
+                <div class="empty-state">Chưa có chủ đề nào</div>
+            </div>
+
+            <footer class="sidebar-footer">
+                <div class="footer-links">
+                    <a href="#">Chính sách bảo mật</a>
+                    <a href="#">Điều khoản dịch vụ</a>
+                    <a href="#">Cookies</a>
+                </div>
+                <div class="footer-links">
+                    <a href="#">Trung tâm hỗ trợ</a>
+                    <span>&copy; 2026 LC Network</span>
+                </div>
+            </footer>
+        </aside>
+
+    </main>
 
     <!-- Chat Sidebar -->
     <div id="chat-sidebar" class="chat-sidebar">

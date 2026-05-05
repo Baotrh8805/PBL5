@@ -5,19 +5,49 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     
-    // Quick fetch user avatar for header
-    fetch('/api/users/profile', { headers: { 'Authorization': `Bearer ${token}` } })
-        .then(res => res.json())
-        .then(data => {
+    fetchUserProfile(token);
+    loadData();
+});
+
+// Fetch User Profile and Populate Sidebar
+async function fetchUserProfile(token) {
+    try {
+        const res = await fetch('/api/users/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            
+            document.querySelectorAll('.user-name').forEach(el => {
+                el.textContent = data.fullName || 'Người dùng';
+            });
+            
             let avatarUrl = data.avatar;
             if (!avatarUrl && data.fullName) {
                 avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=00d1b2&color=fff`;
             }
-            if(avatarUrl) document.getElementById('header-avatar').src = avatarUrl;
-        });
 
-    loadData();
-});
+            document.querySelectorAll('#header-avatar, .avatar-large, .avatar-small, #modal-avatar').forEach(img => {
+                img.src = avatarUrl;
+            });
+
+            // Admin/Moderator Menu
+            if (data.role === 'ADMIN' || data.role === 'MODERATOR') {
+                const adminContainer = document.getElementById('admin-menu-container');
+                if (adminContainer) {
+                    adminContainer.innerHTML = `
+                        <a href="/html/admin.html" id="admin-menu-item" class="menu-item admin-menu-item">
+                            <i class="fa-solid ${data.role === 'ADMIN' ? 'fa-shield-halved' : 'fa-user-shield'}"></i>
+                            <span>${data.role === 'ADMIN' ? 'Quản trị hệ thống' : 'Kiểm duyệt'}</span>
+                        </a>
+                    `;
+                }
+            }
+        }
+    } catch (err) {
+        console.error("Error fetching profile", err);
+    }
+}
 
 function switchTab(tab) {
     document.querySelectorAll('.nav-links-friends div').forEach(el => el.classList.remove('active'));

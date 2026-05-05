@@ -108,9 +108,9 @@
     </header>
 
     <!-- Profile Container -->
-    <div class="profile-container container">
-        <!-- Profile Header Card (Cover, Avatar, Name) -->
-        <div class="card profile-header-card">
+    <!-- Profile Header (Full Width) -->
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        <div class="card profile-header-card" style="margin-top: 20px;">
             <div class="cover-photo">
                 <img src="https://images.unsplash.com/photo-1707343843437-caacff5cfa74?q=80&w=2000&auto=format&fit=crop" alt="Cover Photo" id="profile-cover">
                 <input type="file" id="cover-upload-input" accept="image/*" style="display:none;" onchange="uploadImage('cover', event)"><button class="edit-cover-btn" onclick="document.getElementById('cover-upload-input').click()"><i class="fa-solid fa-camera"></i> Thêm ảnh bìa</button>
@@ -137,43 +137,135 @@
                 <a href="#" class="active">Bài viết</a>
             </div>
         </div>
-
-        <!-- Profile Body (Left: Intro, Right: Feed) -->
-        <div class="profile-body">
-            <!-- Left Sidebar -->
-            <div class="profile-left">
-                <div class="card intro-card">
-                    <h3>Giới thiệu</h3>
-                    <div class="bio-section">
-                        <p class="bio-text" id="profile-bio">Chưa có tiểu sử.</p>
-                    </div>
-                    <ul class="intro-list">
-                        <li><i class="fa-solid fa-heart"></i> Mối quan hệ: <span id="profile-relationship">---</span></li>
-                        <li><i class="fa-solid fa-envelope"></i> <span id="profile-email">---</span></li>
-                        <li><i class="fa-solid fa-phone"></i> SĐT: <span id="profile-phone">---</span></li>
-                        <li><i class="fa-solid fa-cake-candles"></i> Sinh ngày: <span id="profile-dob">---</span></li>
-                        <li><i class="fa-solid fa-mars-and-venus"></i> Giới tính: <span id="profile-gender">---</span></li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Right Content (Feed) -->
-            <div class="profile-right">
-                <!-- Create Post Box -->
-                <div class="card create-post-box">
-                    <div class="create-post-top">
-                        <img src="/uploads/default-avatar.png" id="create-post-avatar" alt="Avatar" class="avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
-                        <input type="text" id="post-content-input" placeholder="Bạn đang nghĩ gì?" class="post-input" readonly onclick="openPostModal()">
-                    </div>
-                </div>
-
-                <!-- Posts Feed -->
-                <div class="posts-container" id="profile-posts-container">
-                    <p style="text-align: center; color: #65676B; padding: 20px;">Đang tải bài viết...</p>
-                </div>
-            </div>
-        </div>
     </div>
+
+    <!-- Main Content Area with Sidebars -->
+    <main class="main-layout container" style="margin-top: 0;">
+        
+        <!-- Left Sidebar (Global) -->
+        <aside class="left-sidebar">
+            <div class="card profile-card" onclick="window.location.href='profile.html'" style="cursor: pointer; transition: 0.2s;">
+                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <div class="profile-info">
+                    <h3 class="user-name">Người dùng</h3>
+                    <p class="status"><span class="status-dot"></span> Đang trực truyến</p>
+                </div>
+            </div>
+
+            <nav class="card sidebar-nav dashboard-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Khám Phá</div>
+                    <a href="home.html" class="menu-item">
+                        <i class="fa-solid fa-pager"></i> <span>Bảng tin</span>
+                    </a>
+                    <a href="/html/friends.html" class="menu-item">
+                        <i class="fa-solid fa-user-group"></i> <span>Bạn bè & Cộng đồng</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <i class="fa-solid fa-fire text-yellow"></i> <span>Thịnh hành</span>
+                    </a>
+                </div>
+
+                <div class="nav-separator"></div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Cá Nhân</div>
+                    <a href="profile.html" class="menu-item active">
+                        <i class="fa-regular fa-user"></i> <span>Hồ sơ của tôi</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <i class="fa-regular fa-bookmark"></i> <span>Đã lưu</span>
+                    </a>
+                    <div id="admin-menu-container"></div>
+                </div>
+
+                <div class="nav-separator"></div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Tài Khoản</div>
+                    <a href="#" class="menu-item">
+                        <i class="fa-solid fa-gear"></i> <span>Cài đặt & Quyền riêng tư</span>
+                    </a>
+                    <a href="#" class="menu-item logout-btn" onclick="logout()">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Đăng xuất</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="card ai-banner modern-ai-banner">
+                <div class="ai-banner-content">
+                    <div class="ai-badge">
+                        <i class="fa-solid fa-shield-halved"></i> AI Khang Trang
+                    </div>
+                    <p>Hệ thống giám sát bảo mật nội dung chủ động.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Content (Profile Body) -->
+        <section class="feed-section">
+            <div class="profile-body">
+                <!-- Left: Intro -->
+                <div class="profile-left">
+                    <div class="card intro-card">
+                        <h3>Giới thiệu</h3>
+                        <div class="bio-section">
+                            <p class="bio-text" id="profile-bio">Chưa có tiểu sử.</p>
+                        </div>
+                        <ul class="intro-list">
+                            <li><i class="fa-solid fa-heart"></i> Mối quan hệ: <span id="profile-relationship">---</span></li>
+                            <li><i class="fa-solid fa-envelope"></i> <span id="profile-email">---</span></li>
+                            <li><i class="fa-solid fa-phone"></i> SĐT: <span id="profile-phone">---</span></li>
+                            <li><i class="fa-solid fa-cake-candles"></i> Sinh ngày: <span id="profile-dob">---</span></li>
+                            <li><i class="fa-solid fa-mars-and-venus"></i> Giới tính: <span id="profile-gender">---</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Right: Feed -->
+                <div class="profile-right">
+                    <!-- Create Post Box -->
+                    <div class="card create-post-box">
+                        <div class="create-post-top">
+                            <img src="/uploads/default-avatar.png" id="create-post-avatar-feed" alt="Avatar" class="avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                            <input type="text" id="post-content-input" placeholder="Bạn đang nghĩ gì?" class="post-input" readonly onclick="openPostModal()">
+                        </div>
+                    </div>
+
+                    <!-- Posts Feed -->
+                    <div class="posts-container" id="profile-posts-container">
+                        <p style="text-align: center; color: #65676B; padding: 20px;">Đang tải bài viết...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Sidebar (Global) -->
+        <aside class="right-sidebar">
+            <div class="card suggestions-card">
+                <h3>Gợi ý cho bạn</h3>
+                <div class="empty-state">Chưa có gợi ý</div>
+            </div>
+
+            <div class="card trending-card">
+                <h3>Chủ đề thịnh hành</h3>
+                <div class="empty-state">Chưa có chủ đề nào</div>
+            </div>
+
+            <footer class="sidebar-footer">
+                <div class="footer-links">
+                    <a href="#">Chính sách bảo mật</a>
+                    <a href="#">Điều khoản dịch vụ</a>
+                    <a href="#">Cookies</a>
+                </div>
+                <div class="footer-links">
+                    <a href="#">Trung tâm hỗ trợ</a>
+                    <span>&copy; 2026 LC Network</span>
+                </div>
+            </footer>
+        </aside>
+
+    </main>
 
     <!-- Create Post Modal (Reused) -->
     <div id="create-post-modal" class="modal-overlay" style="display: none;">

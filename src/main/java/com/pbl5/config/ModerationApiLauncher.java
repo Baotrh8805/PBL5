@@ -30,7 +30,8 @@ public class ModerationApiLauncher {
         }
 
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("python", "moderate.py");
+            String pythonExe = MODEL_DIR.resolve("venv/Scripts/python.exe").toString();
+            ProcessBuilder processBuilder = new ProcessBuilder(pythonExe, "moderate.py");
             processBuilder.directory(MODEL_DIR.toFile());
             processBuilder.redirectErrorStream(true);
             processBuilder.inheritIO();

@@ -4,6 +4,7 @@ import com.pbl5.enums.PostStatus;
 import com.pbl5.enums.UserStatus;
 import com.pbl5.model.Post;
 import com.pbl5.model.User;
+import com.pbl5.repository.LikeRepository;
 import com.pbl5.repository.CommentRepository;
 import com.pbl5.repository.PostRepository;
 import com.pbl5.repository.UserRepository;
@@ -34,6 +35,9 @@ public class ModeratorController {
 
     @Autowired
     private CommentRepository commentRepository;
+
+    @Autowired
+    private LikeRepository likeRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -68,15 +72,15 @@ public class ModeratorController {
                     map.put("hateSpeechWord", p.getHateSpeechWord());
                     map.put("violationEvidence", buildViolationEvidence(p));
                     map.put("violationRate", p.getViolationRate());
-                    map.put("authorId", p.getUser().getId());
-                    map.put("authorName", p.getUser().getFullName());
+                    map.put("authorId", p.getUser() != null ? p.getUser().getId() : null);
+                    map.put("authorName", p.getUser() != null ? p.getUser().getFullName() : "Ẩn danh");
                     map.put("moderationStartedAt", p.getModerationStartedAt());
                     map.put("processingModeratorId",
                             p.getProcessingModerator() != null ? p.getProcessingModerator().getId() : null);
                     map.put("processingModeratorName",
                             p.getProcessingModerator() != null ? p.getProcessingModerator().getFullName() : null);
-                    map.put("likeCount", p.getLikes().size());
-                    map.put("commentCount", p.getComments().size());
+                    map.put("likeCount", likeRepository.countByPostId(p.getId()));
+                    map.put("commentCount", commentRepository.countByPostId(p.getId()));
                     return map;
                 }).collect(Collectors.toList());
         return ResponseEntity.ok(result);
@@ -206,8 +210,8 @@ public class ModeratorController {
             map.put("imageUrl", p.getImageUrl());
             map.put("visibility", p.getVisibility());
             map.put("createdAt", p.getCreatedAt());
-            map.put("likeCount", p.getLikes().size());
-            map.put("commentCount", p.getComments().size());
+            map.put("likeCount", likeRepository.countByPostId(p.getId()));
+            map.put("commentCount", commentRepository.countByPostId(p.getId()));
             return map;
         }).collect(Collectors.toList());
         return ResponseEntity.ok(result);

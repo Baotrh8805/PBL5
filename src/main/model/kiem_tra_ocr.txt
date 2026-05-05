@@ -553,3 +553,339 @@
 [VIDEO] Total frames analyzed: 11
 [FINAL TEXT] len=10 text='cái lồn má'
 [REQUEST] Complete best_score=0.9864 frames=11 violating_words=cái[O] lồn[B-T] má[I-T] detailed_tags=cái[O] lồn[B-T] má[I-T]
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='Tháng một lôn' clean='Tháng một lôn' len=13
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='Tháng một lòn' clean='Tháng một lòn' len=13
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='Tháng một lin' clean='Tháng một lin' len=13
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='Tháng một lòn' clean='Tháng một lòn' len=13
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='sống như súc vật' clean='sống như súc vật' len=16
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='sống như súc Đột' clean='sống như súc Đột' len=16
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='sống như súc vật' clean='sống như súc vật' len=16
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='cái lồn má' clean='cái lồn má' len=10
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=10
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=10 text='cái lồn má'
+[REQUEST] Complete best_score=0.9864 frames=11 violating_words=cái[O] lồn[B-T] má[I-T] detailed_tags=cái[O] lồn[B-T] má[I-T]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=0
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=0 text=''
+[REQUEST] Complete best_score=0.6590 frames=11 violating_words= detailed_tags=
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=0
+[VIDEO] Total frames analyzed: 11
+[FINAL TEXT] len=0 text=''
+[REQUEST] Complete best_score=0.6590 frames=11 violating_words= detailed_tags=
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=25.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='FRA 20 KOR Set4' clean='FRA 20 KOR Set4' len=15
+[VIDEO] Analyze frame_index=25 sampled_index=2
+[OCR] START frame=25 second=1
+[OCR] frame=25 sec=1 raw='FRA 20 KOR Set4' clean='FRA 20 KOR Set4' len=15
+[VIDEO] Analyze frame_index=50 sampled_index=3
+[OCR] START frame=50 second=2
+[OCR] frame=50 sec=2 raw='FRA 20 KOR Set4' clean='FRA 20 KOR Set4' len=15
+[VIDEO] Analyze frame_index=75 sampled_index=4
+[OCR] START frame=75 second=3
+[OCR] frame=75 sec=3 raw='FRA 20 KOR Set4 2.0m/s' clean='FRA 20 KOR Set4 2.0m/s' len=22
+[OCR SUMMARY] frames_with_text=4
+[VIDEO] Total frames analyzed: 4
+[FINAL TEXT] len=15 text='FRA 20 KOR Set4'
+[REQUEST] Complete best_score=0.1752 frames=4 violating_words= detailed_tags=fra[O] 20[O] kor[O] set4[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=29.97002997002997
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='BEST VIDEOS' clean='BEST VIDEOS' len=11
+[VIDEO] Analyze frame_index=29 sampled_index=2
+[OCR] START frame=29 second=0
+[OCR] frame=29 sec=0 raw='BESTVIDEOS' clean='BESTVIDEOS' len=10
+[VIDEO] Analyze frame_index=58 sampled_index=3
+[OCR] START frame=58 second=1
+[OCR] frame=58 sec=1 raw='BESTVIDEOS' clean='BESTVIDEOS' len=10
+[VIDEO] Analyze frame_index=87 sampled_index=4
+[OCR] START frame=87 second=2
+[OCR] frame=87 sec=2 raw='BEST VIDEOS' clean='BEST VIDEOS' len=11
+[VIDEO] Analyze frame_index=116 sampled_index=5
+[OCR] START frame=116 second=3
+[OCR] frame=116 sec=3 raw='BEST VIDEOS' clean='BEST VIDEOS' len=11
+[VIDEO] Analyze frame_index=145 sampled_index=6
+[OCR] START frame=145 second=4
+[OCR] frame=145 sec=4 raw='BESTVIDEOS' clean='BESTVIDEOS' len=10
+[VIDEO] Analyze frame_index=174 sampled_index=7
+[OCR] START frame=174 second=5
+[OCR] frame=174 sec=5 raw='BEST VIDEOS' clean='BEST VIDEOS' len=11
+[VIDEO] Analyze frame_index=203 sampled_index=8
+[OCR] START frame=203 second=6
+[OCR] frame=203 sec=6 raw='BESTUIDEOS' clean='BESTUIDEOS' len=10
+[OCR SUMMARY] frames_with_text=8
+[VIDEO] Total frames analyzed: 8
+[FINAL TEXT] len=11 text='BEST VIDEOS'
+[REQUEST] Complete best_score=0.7301 frames=8 violating_words= detailed_tags=best[O] videos[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='Misterfilofficial' clean='Misterfilofficial' len=17
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='Misterfilofficial Uller UKER' clean='Misterfilofficial Uller UKER' len=28
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='Misterfilofficial KER' clean='Misterfilofficial KER' len=21
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='Misterfilofficial' clean='Misterfilofficial' len=17
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='Misterfilofficial rester DISCONTIONS BAKER' clean='Misterfilofficial rester DISCONTIONS BAKER' len=42
+[OCR SUMMARY] frames_with_text=5
+[VIDEO] Total frames analyzed: 5
+[FINAL TEXT] len=42 text='Misterfilofficial rester DISCONTIONS BAKER'
+[REQUEST] Complete best_score=0.6731 frames=5 violating_words=misterfilofficial[O] rester[O] discontions[O] baker[B-T] detailed_tags=misterfilofficial[O] rester[O] discontions[O] baker[B-T]
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=120 sampled_index=5
+[OCR] START frame=120 second=4
+[OCR] frame=120 sec=4 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=150 sampled_index=6
+[OCR] START frame=150 second=5
+[OCR] frame=150 sec=5 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=180 sampled_index=7
+[OCR] START frame=180 second=6
+[OCR] frame=180 sec=6 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=210 sampled_index=8
+[OCR] START frame=210 second=7
+[OCR] frame=210 sec=7 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=240 sampled_index=9
+[OCR] START frame=240 second=8
+[OCR] frame=240 sec=8 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=270 sampled_index=10
+[OCR] START frame=270 second=9
+[OCR] frame=270 sec=9 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=300 sampled_index=11
+[OCR] START frame=300 second=10
+[OCR] frame=300 sec=10 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=330 sampled_index=12
+[OCR] START frame=330 second=11
+[OCR] frame=330 sec=11 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=360 sampled_index=13
+[OCR] START frame=360 second=12
+[OCR] frame=360 sec=12 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=390 sampled_index=14
+[OCR] START frame=390 second=13
+[OCR] frame=390 sec=13 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=420 sampled_index=15
+[OCR] START frame=420 second=14
+[OCR] frame=420 sec=14 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=450 sampled_index=16
+[OCR] START frame=450 second=15
+[OCR] frame=450 sec=15 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=480 sampled_index=17
+[OCR] START frame=480 second=16
+[OCR] frame=480 sec=16 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=510 sampled_index=18
+[OCR] START frame=510 second=17
+[OCR] frame=510 sec=17 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=540 sampled_index=19
+[OCR] START frame=540 second=18
+[OCR] frame=540 sec=18 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=570 sampled_index=20
+[OCR] START frame=570 second=19
+[OCR] frame=570 sec=19 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=600 sampled_index=21
+[OCR] START frame=600 second=20
+[OCR] frame=600 sec=20 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=630 sampled_index=22
+[OCR] START frame=630 second=21
+[OCR] frame=630 sec=21 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=660 sampled_index=23
+[OCR] START frame=660 second=22
+[OCR] frame=660 sec=22 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=690 sampled_index=24
+[OCR] START frame=690 second=23
+[OCR] frame=690 sec=23 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=720 sampled_index=25
+[OCR] START frame=720 second=24
+[OCR] frame=720 sec=24 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=750 sampled_index=26
+[OCR] START frame=750 second=25
+[OCR] frame=750 sec=25 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=780 sampled_index=27
+[OCR] START frame=780 second=26
+[OCR] frame=780 sec=26 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=810 sampled_index=28
+[OCR] START frame=810 second=27
+[OCR] frame=810 sec=27 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=840 sampled_index=29
+[OCR] START frame=840 second=28
+[OCR] frame=840 sec=28 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=870 sampled_index=30
+[OCR] START frame=870 second=29
+[OCR] frame=870 sec=29 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=900 sampled_index=31
+[OCR] START frame=900 second=30
+[OCR] frame=900 sec=30 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=930 sampled_index=32
+[OCR] START frame=930 second=31
+[OCR] frame=930 sec=31 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=960 sampled_index=33
+[OCR] START frame=960 second=32
+[OCR] frame=960 sec=32 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=990 sampled_index=34
+[OCR] START frame=990 second=33
+[OCR] frame=990 sec=33 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=0
+[VIDEO] Total frames analyzed: 34
+[FINAL TEXT] len=0 text=''
+[REQUEST] Complete best_score=0.3894 frames=34 violating_words= detailed_tags=

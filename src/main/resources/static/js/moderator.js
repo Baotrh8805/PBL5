@@ -435,10 +435,10 @@ async function loadDashboardData() {
         if (res.ok) {
             const posts = await res.json();
             cache.posts = Array.isArray(posts) ? posts : [];
-            renderPostsTable(posts, 'dashboard-posts-list');
-            renderReportsTable(posts);
-            renderReviewPostsTable(posts);
-            renderManagePostsTable(posts);
+            renderPostsTable(cache.posts, 'dashboard-posts-list');
+            renderReportsTable(cache.posts);
+            renderReviewPostsTable(cache.posts);
+            renderManagePostsTable(cache.posts);
 
             dashboardState.pending = cache.posts.filter(p => String(p.status).toUpperCase() === 'PENDING_REVIEW').length;
             syncDashboardStats();
@@ -476,7 +476,7 @@ async function loadFlaggedUsers() {
         if (res.ok) {
             const users = await res.json();
             cache.users = Array.isArray(users) ? users : [];
-            renderUsersTable(users);
+            renderUsersTable(cache.users);
 
             dashboardState.banned = cache.users.filter(u => String(u.status).toUpperCase() === 'BANNED').length;
             syncDashboardStats();

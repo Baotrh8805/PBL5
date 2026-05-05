@@ -263,73 +263,6 @@ class ContentModerationSystem:
     def evaluate_image(self, frame_bgr, frame_idx=None, second=None):
         h, w = frame_bgr.shape[:2]
 
-        # ===== OCR FIRST =====
-        ocr_text = ""
-        try:
-            append_debug_line(f"[OCR] START frame={frame_idx} second={second}")
-
-            # 1. Lưu ảnh full frame để kiểm tra
-            debug_img = os.path.join(SCRIPT_DIR, f"frame_{frame_idx}.png")
-            cv2.imwrite(debug_img, frame_bgr)
-
-            # 2. Sử dụng thư viện gốc EasyOCR (mô hình CRAFT) để detector tìm vị trí khung chữ
-            # Tắt detail=0 (vì muốn lấy box, set detail=1)
-            # Khử bỏ text_threshold cao, dùng ngưỡng mặc định để không sót chữ
-            detected_boxes = reader.readtext(frame_bgr, detail=1)
-
-            valid_texts = []
-            
-            # Tạo thư mục crop cho mỗi frame để tiện debug
-            crop_dir = os.path.join(SCRIPT_DIR, f"crops_frame_{frame_idx}")
-            if not os.path.exists(crop_dir):
-                os.makedirs(crop_dir)
-
-            for idx, (bbox, _, prob) in enumerate(detected_boxes):
-                # QUAN TRỌNG: Không dùng prob của EasyOCR để bỏ box nữa.
-                # Vì prob này là điểm tự tin "nhận diện" của EasyOCR chứ không phải điểm "phát hiện" vùng chữ.
-                # Nếu EasyOCR không dịch được tiếng Việt tốt -> prob sẽ thấp -> box sẽ bị skip oan uổng!
-
-                # Lấy tọa độ
-                (tl, tr, br, bl) = bbox
-                tl = (max(0, int(tl[0])), max(0, int(tl[1])))
-                br = (min(w-1, int(br[0])), min(h-1, int(br[1])))
-                
-                # Tránh các khung hình nhiễu méo mó làm sâp crop
-                if br[1] - tl[1] <= 2 or br[0] - tl[0] <= 2:
-                    continue
-
-                # 3. Cắt (crop) vùng chữ tìm được từ ảnh gốc bgr (rgb color)
-                crop_img = frame_bgr[tl[1]:br[1], tl[0]:br[0]]
-
-                # 4. Lưu ảnh text đã được cut (để bạn có thể kiểm tra xem công cụ cắt đúng không bằng mắt)
-                crop_debug_path = os.path.join(crop_dir, f"crop_{idx}.png")
-                cv2.imwrite(crop_debug_path, crop_img)
-
-                # Chuyển CV2 (BGR) sang PIL Image (RGB) cho Cỗ máy đọc VietOCR
-                crop_img_rgb = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(crop_img_rgb)
-
-                # 5. Dùng VietOCR để đọc ảnh mảnh vừa crop
-                text_predicted = vietocr_predictor.predict(pil_img)
-                
-                # Bỏ qua rác kí tự như @, ., s, v.v
-                if text_predicted and len(text_predicted.strip()) > 1:
-                    valid_texts.append(text_predicted)
-
-            raw_text = " ".join(valid_texts)
-            raw_text = unicodedata.normalize('NFC', raw_text)
-
-            # 6. Làm sạch sơ bộ (loại bỏ khoảng trắng thừa)
-            ocr_text = raw_text.strip()
-
-            append_debug_line(
-                f"[OCR] frame={frame_idx} sec={second} "
-                f"raw={repr(raw_text)} clean={repr(ocr_text)} len={len(ocr_text)}"
-            )
-
-        except Exception as e:
-            append_debug_line(f"[OCR ERROR] frame={frame_idx} error={str(e)}")
-
         # ===== NSFW =====
         try:
             rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
@@ -354,7 +287,64 @@ class ContentModerationSystem:
                 viol_prob = torch.softmax(logits, dim=1)[0][1].item()
         except:
             viol_prob = 0.0
+            
+        # ===== HATE SPEECH (OCR) =====
+        # Chạy sau NSFW và Violence để đảm bảo ảnh gốc (frame_bgr) hoàn toàn nguyên vẹn, 
+        # không bị bất kỳ can thiệp nào làm sai lệch tỉ lệ nhận diện NSFW/Violence.
+        ocr_text = ""
+        try:
+            append_debug_line(f"[OCR] START frame={frame_idx} second={second}")
 
+            # 1. Sử dụng thư viện gốc EasyOCR (mô hình CRAFT) để detector tìm vị trí khung chữ
+            # Tắt detail=0 (vì muốn lấy box, set detail=1)
+            # Khử bỏ text_threshold cao, dùng ngưỡng mặc định để không sót chữ
+            detected_boxes = reader.readtext(frame_bgr, detail=1)
+
+            valid_texts = []
+
+            for idx, (bbox, _, prob) in enumerate(detected_boxes):
+                # QUAN TRỌNG: Không dùng prob của EasyOCR để bỏ box nữa.
+                # Vì prob này là điểm tự tin "nhận diện" của EasyOCR chứ không phải điểm "phát hiện" vùng chữ.
+                # Nếu EasyOCR không dịch được tiếng Việt tốt -> prob sẽ thấp -> box sẽ bị skip oan uổng!
+
+                # Lấy tọa độ
+                (tl, tr, br, bl) = bbox
+                tl = (max(0, int(tl[0])), max(0, int(tl[1])))
+                br = (min(w-1, int(br[0])), min(h-1, int(br[1])))
+                
+                # Tránh các khung hình nhiễu méo mó làm sấp crop
+                if br[1] - tl[1] <= 2 or br[0] - tl[0] <= 2:
+                    continue
+
+                # 2. Cắt (crop) vùng chữ tìm được từ ảnh gốc bgr (rgb color)
+                crop_img = frame_bgr[tl[1]:br[1], tl[0]:br[0]]
+
+                # Chuyển CV2 (BGR) sang PIL Image (RGB) cho Cỗ máy đọc VietOCR
+                crop_img_rgb = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+                pil_img = Image.fromarray(crop_img_rgb)
+
+                # 3. Dùng VietOCR để đọc ảnh mảnh vừa crop
+                text_predicted = vietocr_predictor.predict(pil_img)
+                
+                # Bỏ qua rác kí tự như @, ., s, v.v
+                if text_predicted and len(text_predicted.strip()) > 1:
+                    valid_texts.append(text_predicted)
+
+            raw_text = " ".join(valid_texts)
+            raw_text = unicodedata.normalize('NFC', raw_text)
+
+            # 6. Làm sạch sơ bộ (loại bỏ khoảng trắng thừa)
+            ocr_text = raw_text.strip()
+
+            append_debug_line(
+                f"[OCR] frame={frame_idx} sec={second} "
+                f"raw={repr(raw_text)} clean={repr(ocr_text)} len={len(ocr_text)}"
+            )
+
+        except Exception as e:
+            append_debug_line(f"[OCR ERROR] frame={frame_idx} error={str(e)}")
+            
+            
         nsfw_box = {"x1": 0, "y1": 0, "x2": w, "y2": h} if nsfw_prob > 0 else None
         viol_box = {"x1": 0, "y1": 0, "x2": w, "y2": h} if viol_prob > 0 else None
 

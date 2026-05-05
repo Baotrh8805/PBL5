@@ -190,6 +190,26 @@ public class PostController {
         return ResponseEntity.ok(responses);
     }
 
+    @GetMapping("/{postId}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getPostById(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long postId) {
+        User currentUser = getAuthenticatedUser(authHeader);
+        if (currentUser == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Post post = postOpt.get();
+        if (!canViewPost(post, currentUser)) {
+            return ResponseEntity.status(403).body("Bạn không có quyền xem bài viết này.");
+        }
+
+        return ResponseEntity.ok(convertToResponse(post, currentUser));
+    }
+
     // Like hoặc Unlike
     @PostMapping("/{postId}/like")
     public ResponseEntity<?> toggleLike(@RequestHeader("Authorization") String authHeader, @PathVariable Long postId) {

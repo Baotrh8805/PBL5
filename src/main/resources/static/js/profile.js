@@ -209,7 +209,7 @@ async function fetchAndDisplayPhotos(userId) {
             
             if (photos.length > 0) {
                 container.innerHTML = photos.map(p => `
-                    <div class="photo-item" onclick="window.location.hash = 'post-${p.id}'">
+                    <div class="photo-item" onclick="window.location.href = '/html/post.html?id=${p.id}'">
                         <img src="${p.imageUrl}" alt="Post photo" onerror="this.parentElement.style.display='none'">
                     </div>
                 `).join('');
@@ -318,7 +318,7 @@ function renderProfilePosts(posts) {
                 <img src="${post.authorAvatar || '/uploads/default-avatar.png'}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
-                    <span class="post-time">${timeSince(post.createdAt)} <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
+                    <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">${timeSince(post.createdAt)}</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
                 </div>
             </div>
             
@@ -347,17 +347,21 @@ function renderProfilePosts(posts) {
 
         if (post.imageUrl) {
             postHtml += `
-            <div class="post-image-placeholder text-center">
-                <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
-            </div>
+            <a href="/html/post.html?id=${post.id}" class="post-image-link">
+                <div class="post-image-placeholder text-center">
+                    <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+                </div>
+            </a>
             `;
         }
 
         if (post.videoUrl) {
             postHtml += `
-            <div class="post-video-placeholder text-center">
-                <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;" controls></video>
-            </div>
+            <a href="/html/post.html?id=${post.id}" class="post-video-link">
+                <div class="post-video-placeholder text-center">
+                    <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;"></video>
+                </div>
+            </a>
             `;
         }
 

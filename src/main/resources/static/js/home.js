@@ -15,6 +15,8 @@ window.onload = () => {
     fetchUserProfile(token);
     // Fetch feed posts
     fetchPosts(token);
+    // Fetch sidebar suggestions
+    fetchSidebarSuggestions(token);
 };
 
 // Logout Function
@@ -229,7 +231,7 @@ function prependCreatedPostToFeed(post) {
                 <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
-                    <span class="post-time">Vừa xong <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
+                    <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">Vừa xong</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
                 </div>
             </div>
 
@@ -258,17 +260,21 @@ function prependCreatedPostToFeed(post) {
 
     if (post.imageUrl) {
         postHtml += `
-            <div class="post-image-placeholder text-center">
-                <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
-            </div>
+            <a href="/html/post.html?id=${post.id}" class="post-image-link">
+                <div class="post-image-placeholder text-center">
+                    <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+                </div>
+            </a>
         `;
     }
 
     if (post.videoUrl) {
         postHtml += `
-            <div class="post-video-placeholder text-center">
-                <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;" controls></video>
-            </div>
+            <a href="/html/post.html?id=${post.id}" class="post-video-link">
+                <div class="post-video-placeholder text-center">
+                    <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;"></video>
+                </div>
+            </a>
         `;
     }
 
@@ -339,7 +345,7 @@ function renderPosts(posts, token) {
                 <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
-                    <span class="post-time">${timeSince(post.createdAt)} <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
+                    <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">${timeSince(post.createdAt)}</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
                 </div>
             </div>
             
@@ -368,17 +374,21 @@ function renderPosts(posts, token) {
 
         if (post.imageUrl) {
             postHtml += `
-            <div class="post-image-placeholder text-center">
-                <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
-            </div>
+            <a href="/html/post.html?id=${post.id}" class="post-image-link">
+                <div class="post-image-placeholder text-center">
+                    <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+                </div>
+            </a>
             `;
         }
 
         if (post.videoUrl) {
             postHtml += `
-            <div class="post-video-placeholder text-center">
-                <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;" controls></video>
-            </div>
+            <a href="/html/post.html?id=${post.id}" class="post-video-link">
+                <div class="post-video-placeholder text-center">
+                    <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;"></video>
+                </div>
+            </a>
             `;
         }
 
@@ -696,3 +706,66 @@ async function submitComment(postId) {
         console.error(err);
     }
 }
+
+// ======================= SIDEBAR SUGGESTIONS =======================
+async function fetchSidebarSuggestions(token) {
+    const container = document.getElementById('sidebar-suggestions');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/friends/suggestions', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const suggestions = await res.json();
+            renderSidebarSuggestions(suggestions.slice(0, 5)); // Show top 5
+        }
+    } catch (err) {
+        console.error("Lỗi lấy gợi ý sidebar:", err);
+    }
+}
+
+function renderSidebarSuggestions(users) {
+    const container = document.getElementById('sidebar-suggestions');
+    if (!container) return;
+    
+    if (users.length === 0) {
+        container.innerHTML = '<div class="empty-state">Không có gợi ý mới</div>';
+        return;
+    }
+
+    container.innerHTML = users.map(user => {
+        const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+        return `
+            <div class="suggestion-item" id="suggestion-item-${user.id}">
+                <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                <div class="suggestion-info">
+                    <a href="/html/profile.html?userId=${user.id}" class="suggestion-name">${user.fullName}</a>
+                    <span class="suggestion-mutual">Gợi ý cho bạn</span>
+                </div>
+                <button class="add-friend-sidebar-btn" onclick="addFriendFromSidebar(${user.id})">Thêm</button>
+            </div>
+        `;
+    }).join('');
+}
+
+window.addFriendFromSidebar = async function(userId) {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/friends/request/${userId}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            // Remove from sidebar list
+            const item = document.getElementById(`suggestion-item-${userId}`);
+            if (item) {
+                item.style.opacity = '0.5';
+                item.querySelector('button').innerText = 'Đã gửi';
+                item.querySelector('button').disabled = true;
+            }
+        }
+    } catch (err) {
+        console.error("Lỗi gửi lời mời kết bạn:", err);
+    }
+};

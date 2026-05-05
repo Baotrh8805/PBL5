@@ -477,8 +477,55 @@ function toggleDropdown(postId) {
     dropdown.classList.toggle("show");
 }
 
+// ======================= GLOBAL SEARCH =======================
+let searchTimeout = null;
+
+window.handleGlobalSearch = function(query) {
+    const resultsContainer = document.getElementById('global-search-results');
+    if (!query || query.trim() === '') {
+        resultsContainer.innerHTML = '';
+        resultsContainer.style.display = 'none';
+        return;
+    }
+
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async () => {
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const users = await res.json();
+                renderSearchResults(users);
+            }
+        } catch (err) {
+            console.error("Lỗi tìm kiếm:", err);
+        }
+    }, 300);
+};
+
+function renderSearchResults(users) {
+    const resultsContainer = document.getElementById('global-search-results');
+    if (users.length === 0) {
+        resultsContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #65676b; font-size: 14px;">Không tìm thấy người dùng phù hợp.</div>';
+    } else {
+        resultsContainer.innerHTML = users.map(user => {
+            const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+            return `
+                <a href="/html/profile.html?userId=${user.id}" class="search-result-item">
+                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                    <span class="user-name-result">${user.fullName}</span>
+                </a>
+            `;
+        }).join('');
+    }
+    resultsContainer.style.display = 'block';
+}
+
 // Ẩn menu khi click ra ngoài
-window.onclick = function(event) {
+window.addEventListener('click', function(event) {
+    // Dropdown posts logic
     if (!event.target.closest('.options-btn')) {
         var dropdowns = document.getElementsByClassName("dropdown-content");
         for (var i = 0; i < dropdowns.length; i++) {
@@ -488,7 +535,14 @@ window.onclick = function(event) {
             }
         }
     }
-}
+
+    // Global search results logic
+    const searchContainer = document.querySelector('.search-bar');
+    const resultsContainer = document.getElementById('global-search-results');
+    if (searchContainer && resultsContainer && !searchContainer.contains(event.target)) {
+        resultsContainer.style.display = 'none';
+    }
+});
 
 // ===== API GỌI XÓA VÀ CHỈNH SỬA POST =====
 async function deletePost(postId) {

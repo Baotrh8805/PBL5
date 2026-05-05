@@ -25,9 +25,10 @@
                 <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i>
                 <span class="logo-text">LC Network</span>
             </a>
-            <div class="search-bar">
+            <div class="search-bar" style="position: relative;">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Tìm kiếm LC Network...">
+                <input type="text" id="global-search-input" placeholder="Tìm kiếm LC Network..." oninput="handleGlobalSearch(this.value)">
+                <div id="global-search-results" class="search-results-dropdown" style="display: none;"></div>
             </div>
         </div>
 

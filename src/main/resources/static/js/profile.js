@@ -113,18 +113,24 @@ function fillProfileData(user, isCurrentUser) {
     const genderEl = document.getElementById('profile-gender');
     if (genderEl) genderEl.innerText = user.gender || '---';
     
-    document.querySelectorAll('.modal-user-name').forEach(el => {
-        el.textContent = user.fullName || 'Người dùng';
+    // Luôn hiển thị tên của CHÍNH MÌNH (currentUser) trong các modal tạo bài viết hoặc chỉnh sửa
+    // Tuy nhiên, ở trang cá nhân người khác, user truyền vào fillProfileData là targetUser.
+    // Chúng ta cần lấy fullName của currentUser đã lưu trước đó.
+    const token = localStorage.getItem('token');
+    fetch('/api/users/profile', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(curr => {
+        document.querySelectorAll('.modal-user-name').forEach(el => {
+            el.textContent = curr.fullName || 'Người dùng';
+        });
+        const modalAvt = document.getElementById('modal-avatar');
+        if (modalAvt) modalAvt.src = curr.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(curr.fullName)}&background=00d1b2&color=fff`;
     });
 
     if (isCurrentUser) {
         // Setup placeholders
-        const pcInput = document.getElementById('post-content-input');
-        if (pcInput) pcInput.placeholder = `Bạn đang nghĩ gì?`;
-        const modalPostContent = document.getElementById('modal-post-content');
-        if (modalPostContent) {
-            modalPostContent.placeholder = `${user.fullName} ơi, bạn đang nghĩ gì thế?`;
-        }
     } else {
         // Ẩn các nút chỉnh sửa
         const btnEdit = document.getElementById('btn-edit-profile');
@@ -173,12 +179,90 @@ function fillProfileData(user, isCurrentUser) {
             };
         }
     }
+
+    // Fetch and display Photos and Friends
+    fetchAndDisplayPhotos(user.id);
+    fetchAndDisplayFriends(user.id);
 }
 
 function formatDate(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+}
+
+/**
+ * Lấy danh sách ảnh từ bài viết của user
+ */
+async function fetchAndDisplayPhotos(userId) {
+    const token = localStorage.getItem('token');
+    const container = document.getElementById('profile-photos-grid');
+    if (!container) return;
+
+    try {
+        const res = await fetch(`/api/posts/user/${userId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const posts = await res.json();
+            const photos = posts.filter(p => p.imageUrl).slice(0, 9);
+            
+            if (photos.length > 0) {
+                container.innerHTML = photos.map(p => `
+                    <div class="photo-item" onclick="window.location.hash = 'post-${p.id}'">
+                        <img src="${p.imageUrl}" alt="Post photo" onerror="this.parentElement.style.display='none'">
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div style="grid-column: span 3; padding: 20px; text-align: center; color: #65676b; font-size: 13px;">Chưa có ảnh nào.</div>';
+            }
+            
+            // Cập nhật số bài viết trong stats
+            const statPosts = document.querySelector('.stat-item:nth-child(1) strong');
+            if (statPosts) statPosts.innerText = posts.length;
+        }
+    } catch (err) {
+        console.error("Lỗi lấy ảnh:", err);
+    }
+}
+
+/**
+ * Lấy danh sách bạn bè
+ */
+async function fetchAndDisplayFriends(userId) {
+    const token = localStorage.getItem('token');
+    const container = document.getElementById('profile-friends-grid');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/friends', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const friends = await res.json();
+            const displayedFriends = friends.slice(0, 9);
+            
+            if (displayedFriends.length > 0) {
+                container.innerHTML = displayedFriends.map(f => {
+                    const avt = f.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff`;
+                    return `
+                        <a href="/html/profile.html?userId=${f.id}" class="friend-item">
+                            <img src="${avt}" alt="${f.fullName}" class="friend-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff'">
+                            <span class="friend-name">${f.fullName}</span>
+                        </a>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<div style="grid-column: span 3; padding: 20px; text-align: center; color: #65676b; font-size: 13px;">Chưa có bạn bè.</div>';
+            }
+            
+            // Cập nhật số người theo dõi (tạm thời dùng số bạn bè)
+            const statFollowers = document.querySelector('.stat-item:nth-child(2) strong');
+            if (statFollowers) statFollowers.innerText = friends.length;
+        }
+    } catch (err) {
+        console.error("Lỗi lấy bạn bè:", err);
+    }
 }
 
 function fetchMyPosts(endpointUrl) {
@@ -769,3 +853,103 @@ async function saveCroppedImage() {
 window.uploadImage = uploadImage;
 window.closeCropperModal = closeCropperModal;
 window.saveCroppedImage = saveCroppedImage;
+
+// Alias cho post-creation.js
+window.fetchPosts = function() {
+    fetchMyPosts();
+};
+
+// Hàm thêm bài viết mới vào đầu feed (để post-creation.js gọi)
+window.prependCreatedPostToFeed = function(post) {
+    const container = document.getElementById('profile-posts-container');
+    if (!container || !post) return false;
+
+    // Chỉ hiển thị bài mới nếu đang ở trang cá nhân của CHÍNH MÌNH 
+    // Hoặc nếu không có targetUserId (nghĩa là trang của mình)
+    if (targetUserId && targetUserId !== currentUserId) {
+        // Đang xem profile người khác, không nên tự chèn bài mình vừa đăng vào đây 
+        // trừ khi logic app cho phép. Thông thường là không.
+        return false; 
+    }
+
+    // Nếu đang có thông báo "Đang tải" hoặc "Chưa có bài viết", xóa đi
+    if (container.innerHTML.includes('Chưa có bài viết') || container.innerHTML.includes('Đang tải')) {
+        container.innerHTML = '';
+    }
+
+    let visibilityIcon = '';
+    if (post.visibility === 'PUBLIC') visibilityIcon = '<i class="fa-solid fa-earth-americas" style="margin-left: 5px; font-size: 11px;"></i>';
+    else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
+    else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
+    
+    const isMine = true; // Bài mới tạo chắc chắn là của mình
+
+    let authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff`;
+    let postHtml = `
+    <article class="card post" id="post-${post.id}">
+        <div class="post-header">
+            <img src="${authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff'">
+            <div class="post-meta">
+                <h4 class="post-author"><a href="/html/profile.html" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
+                <span class="post-time">Vừa xong <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
+            </div>
+        </div>
+        
+        <div class="post-options">
+            <button class="options-btn" onclick="toggleDropdown(${post.id})">
+                <i class="fa-solid fa-ellipsis"></i>
+            </button>
+            <div id="dropdown-${post.id}" class="dropdown-content">
+                <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
+                <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
+                <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
+                <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
+                <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+            </div>
+        </div>
+
+        <div class="post-content">
+            <p>${escapeHtml(post.content || '')}</p>
+        </div>
+    `;
+
+    if (post.imageUrl) {
+        postHtml += `
+        <div class="post-image-placeholder text-center">
+            <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+        </div>
+        `;
+    }
+
+    if (post.videoUrl) {
+        postHtml += `
+        <div class="post-video-placeholder text-center">
+            <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;" controls></video>
+        </div>
+        `;
+    }
+
+    postHtml += `
+        <div class="post-actions-bar">
+            <button id="like-btn-${post.id}" class="interaction-btn" onclick="toggleLike(${post.id})">
+                <i id="like-icon-${post.id}" class="fa-regular fa-heart"></i> <span id="like-count-${post.id}">Mọi người (0)</span>
+            </button>
+            <button class="interaction-btn" onclick="toggleComments(${post.id})">
+                <i class="fa-regular fa-comment"></i> <span id="comment-count-${post.id}">Bình luận (0)</span>
+            </button>
+            <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
+        </div>
+        <div id="comments-${post.id}" class="comments-section" style="display: none; padding: 15px; border-top: 1px solid #ced0d4;">
+            <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <img src="${document.getElementById('header-avatar') ? document.getElementById('header-avatar').src : 'https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'}" alt="Avatar" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." onkeypress="handleCommentKeyPress(event, ${post.id})">
+                <button class="btn btn-primary" onclick="submitComment(${post.id})"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+            <div id="comment-list-${post.id}" class="comment-list"></div>
+        </div>
+    </article>
+    `;
+
+    container.insertAdjacentHTML('afterbegin', postHtml);
+    return true;
+};

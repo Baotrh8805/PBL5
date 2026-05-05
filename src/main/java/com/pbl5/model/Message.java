@@ -24,6 +24,9 @@ public class Message {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
+    @Column(nullable = false)
+    private boolean isRead = false;
+
     @PrePersist
     protected void onCreate() {
         timestamp = LocalDateTime.now();
@@ -43,4 +46,7 @@ public class Message {
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
+    public boolean isRead() { return isRead; }
+    public void setRead(boolean read) { isRead = read; }
 }

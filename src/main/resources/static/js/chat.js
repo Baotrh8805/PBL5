@@ -81,6 +81,21 @@ function toggleInboxDropdown() {
     }
 }
 
+let currentMessengerFilter = 'all';
+let messengerSearchQuery = '';
+
+function handleMessengerSearch(val) {
+    messengerSearchQuery = val.toLowerCase().trim();
+    loadInboxDropdown();
+}
+
+function setMessengerFilter(filter, btn) {
+    currentMessengerFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
+    btn.classList.add('active');
+    loadInboxDropdown();
+}
+
 async function loadInboxDropdown() {
     const token = localStorage.getItem('token');
     const inboxList = document.getElementById('inbox-list');
@@ -104,11 +119,24 @@ async function loadInboxDropdown() {
                 mergedMap.set(u.id, { ...u, isFriend: true, lastMessage: 'Các bạn đã trở thành bạn bè', lastMessageTime: null });
             }
         });
-        const contacts = Array.from(mergedMap.values());
+        let contacts = Array.from(mergedMap.values());
+
+        // Apply filters
+        if (currentMessengerFilter === 'unread') {
+            contacts = contacts.filter(c => c.unreadCount > 0);
+        }
+        
+        if (messengerSearchQuery) {
+            contacts = contacts.filter(c => c.fullName.toLowerCase().includes(messengerSearchQuery));
+        }
 
         inboxList.innerHTML = '';
         if(contacts.length === 0) {
-            inboxList.innerHTML = '<div style="padding: 15px; color:#65676B; font-size:14px; text-align:center;">Chưa có đoạn chat nào.</div>';
+            let emptyMsg = 'Chưa có đoạn chat nào.';
+            if (currentMessengerFilter === 'unread') emptyMsg = 'Không có tin nhắn chưa đọc.';
+            if (messengerSearchQuery) emptyMsg = 'Không tìm thấy kết quả phù hợp.';
+            
+            inboxList.innerHTML = `<div style="padding: 15px; color:#65676B; font-size:14px; text-align:center;">${emptyMsg}</div>`;
             return;
         }
 
@@ -118,10 +146,12 @@ async function loadInboxDropdown() {
                  avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff`;
             }
             let msgStr = f.lastMessage || 'Bạn bè';
+            let isUnread = f.unreadCount > 0;
 
             const item = document.createElement('div');
-            item.className = 'notification-item';
+            item.className = 'notification-item' + (isUnread ? ' unread' : '');
             item.style.cursor = 'pointer';
+            item.style.position = 'relative';
             item.onclick = () => {
                 const dropdown = document.getElementById('inbox-dropdown');
                 if (dropdown) dropdown.style.display = 'none'; // hide dropdown
@@ -132,9 +162,10 @@ async function loadInboxDropdown() {
             item.innerHTML = `
                 <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff'">
                 <div class="notification-content">
-                    <div style="font-weight: 600; font-size: 15px; color: #050505;">${f.fullName}</div>
-                    <div class="notification-msg" style="color: #65676b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
+                    <div style="font-weight: ${isUnread ? '700' : '600'}; font-size: 15px; color: #050505;">${f.fullName}</div>
+                    <div class="notification-msg" style="color: ${isUnread ? '#050505' : '#65676b'}; font-weight: ${isUnread ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
                 </div>
+                ${isUnread ? '<div class="notification-dot" style="background-color: #00d1b2; width: 10px; height: 10px; border-radius: 50%; margin-left: auto;"></div>' : ''}
             `;
             inboxList.appendChild(item);
         });

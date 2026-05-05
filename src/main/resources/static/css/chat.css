@@ -333,6 +333,7 @@
 .filter-chip.active {
     background: #eaf3ff;
     color: #0084ff;
+    border: 2px solid #050505;
 }
 
 .filter-chip:hover:not(.active) {
@@ -355,4 +356,13 @@
 .messenger-body .notification-item img {
     width: 56px;
     height: 56px;
+}
+
+.notification-item.unread .notification-msg {
+    color: #050505 !important;
+    font-weight: 700 !important;
+}
+
+.notification-item.unread {
+    background-color: rgba(0, 132, 255, 0.05);
 }

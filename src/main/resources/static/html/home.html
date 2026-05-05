@@ -60,21 +60,17 @@
                     <div class="messenger-header">
                         <h2>Đoạn chat</h2>
                         <div class="messenger-header-actions">
-                            <button class="icon-btn-small tooltip" data-tooltip="Tùy chọn"><i class="fa-solid fa-ellipsis"></i></button>
-                            <button class="icon-btn-small tooltip" data-tooltip="Mở rộng"><i class="fa-solid fa-expand"></i></button>
-                            <button class="icon-btn-small tooltip" data-tooltip="Soạn tin nhắn mới"><i class="fa-regular fa-pen-to-square"></i></button>
                         </div>
                     </div>
                     
                     <div class="messenger-search">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" placeholder="Tìm kiếm trên Messenger">
+                        <input type="text" id="messenger-search-input" placeholder="Tìm kiếm trên Messenger" oninput="handleMessengerSearch(this.value)">
                     </div>
 
                     <div class="messenger-filters">
-                        <button class="filter-chip active">Tất cả</button>
-                        <button class="filter-chip">Chưa đọc</button>
-                        <button class="filter-chip">Nhóm</button>
+                        <button class="filter-chip active" onclick="setMessengerFilter('all', this)">Tất cả</button>
+                        <button class="filter-chip" onclick="setMessengerFilter('unread', this)">Chưa đọc</button>
                     </div>
 
                     <div class="messenger-body" id="inbox-list">

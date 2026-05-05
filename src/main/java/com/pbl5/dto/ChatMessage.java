@@ -8,6 +8,7 @@ public class ChatMessage {
     private Long receiverId;
     private String content;
     private LocalDateTime timestamp;
+    private boolean isRead;
     private String type; // CHAT, JOIN, LEAVE
 
     public Long getId() { return id; }
@@ -27,4 +28,7 @@ public class ChatMessage {
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
+
+    public boolean isRead() { return isRead; }
+    public void setRead(boolean read) { isRead = read; }
 }

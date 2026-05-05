@@ -83,6 +83,9 @@ public class ChatController {
 
         List<Message> history = messageRepository.findChatHistory(currentUser, targetUser);
         
+        // Mark as read
+        messageRepository.markAsRead(targetUser, currentUser);
+        
         List<ChatMessage> dtos = history.stream().map(m -> {
             ChatMessage dto = new ChatMessage();
             dto.setId(m.getId());
@@ -128,6 +131,10 @@ public class ChatController {
             item.put("fullName", partner.getFullName());
             item.put("avatar", partner.getAvatar());
             item.put("isFriend", false);
+            
+            long unreadCount = messageRepository.countUnreadMessages(partner, currentUser);
+            item.put("unreadCount", unreadCount);
+            
             result.add(item);
         }
 

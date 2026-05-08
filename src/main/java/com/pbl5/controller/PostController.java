@@ -23,6 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.pbl5.repository.NotificationRepository;
+import com.pbl5.repository.HiddenPostRepository;
+import com.pbl5.repository.ReportRepository;
+import com.pbl5.model.HiddenPost;
+import com.pbl5.model.Report;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,6 +72,12 @@ public class PostController {
 
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private HiddenPostRepository hiddenPostRepository;
+
+    @Autowired
+    private ReportRepository reportRepository;
 
     private boolean canViewPost(Post p, User currentUser) {
         if (p == null || p.getUser() == null || currentUser == null) {
@@ -141,9 +151,14 @@ public class PostController {
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
         List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+
+        // Lấy danh sách ID các bài viết mà user đã ẩn
+        Set<Long> hiddenPostIds = hiddenPostRepository.findByUserId(currentUser.getId())
+                .stream().map(hp -> hp.getPost().getId()).collect(Collectors.toSet());
+
         List<PostResponse> responses = new ArrayList<>();
         for (Post p : posts) {
-            if (canViewPost(p, currentUser)) {
+            if (!hiddenPostIds.contains(p.getId()) && canViewPost(p, currentUser)) {
                 responses.add(convertToResponse(p, currentUser));
             }
         }
@@ -302,6 +317,51 @@ public class PostController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Mức độ hiển thị không hợp lệ.");
         }
+    }
+
+    @PostMapping("/{postId}/hide")
+    public ResponseEntity<?> hidePost(@RequestHeader("Authorization") String authHeader, @PathVariable Long postId) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        if (hiddenPostRepository.findByUserAndPost(user, postOpt.get()).isEmpty()) {
+            HiddenPost hp = new HiddenPost();
+            hp.setUser(user);
+            hp.setPost(postOpt.get());
+            hiddenPostRepository.save(hp);
+        }
+        return ResponseEntity.ok("Đã ẩn bài viết.");
+    }
+
+    @PostMapping("/{postId}/report")
+    public ResponseEntity<?> reportPost(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long postId,
+            @RequestBody Map<String, String> body) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        String reason = body.get("reason");
+        if (reason == null || reason.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Lý do báo cáo không được để trống.");
+        }
+
+        Report report = new Report();
+        report.setUser(user);
+        report.setPost(postOpt.get());
+        report.setReason(reason);
+        reportRepository.save(report);
+
+        return ResponseEntity.ok("Đã gửi báo cáo thành công.");
     }
 
     @GetMapping("/{postId}/comments")

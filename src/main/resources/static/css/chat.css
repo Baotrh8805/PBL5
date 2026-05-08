@@ -125,28 +125,27 @@
 }
 
 .chat-message {
-    max-width: 70%;
-    width: fit-content;
+    max-width: 220px;
     padding: 8px 12px;
     font-size: 15px;
     line-height: 1.4;
     word-wrap: break-word;
+    overflow-wrap: break-word;
     word-break: break-word;
-    white-space: pre-wrap;
+    white-space: normal;
     box-sizing: border-box;
+    display: inline-block;
 }
 
 .chat-message.sent {
     background-color: #0084ff; /* Messenger Blue */
     color: white;
-    align-self: flex-end;
     border-radius: 18px 18px 4px 18px;
 }
 
 .chat-message.received {
     background-color: #f0f2f5; /* Messenger Gray */
     color: #050505;
-    align-self: flex-start;
     border-radius: 18px 18px 18px 4px;
 }
 
@@ -186,6 +185,7 @@
     transition: 0.2s;
     width: 36px;
     height: 36px;
+    flex-shrink: 0;
 }
 .chat-input-area button:hover {
     background-color: #f0f2f5;
@@ -195,20 +195,34 @@
 /* Thêm css cho thời gian và unread badge */
 .chat-message-wrapper {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: flex-end;
     margin-bottom: 8px;
+    gap: 6px;
 }
 .chat-message-wrapper.sent {
-    align-items: flex-end;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
 }
 .chat-message-wrapper.received {
+    flex-direction: row;
+    justify-content: flex-start;
+}
+.chat-message-wrapper .chat-msg-content {
+    display: flex;
+    flex-direction: column;
+    max-width: 220px;
+}
+.chat-message-wrapper.sent .chat-msg-content {
+    align-items: flex-end;
+}
+.chat-message-wrapper.received .chat-msg-content {
     align-items: flex-start;
 }
 .chat-message-time {
     font-size: 10px;
     color: #aeaeae;
     margin-top: 2px;
-    margin-bottom: 4px;
 }
 .chat-message-wrapper.sent .chat-message {
     margin-bottom: 0;
@@ -217,11 +231,35 @@
     margin-bottom: 0;
 }
 
-/* Ẩn .chat-message cũ margin */
+/* Reset any inherited margin */
 .chat-messages .chat-message {
     margin-bottom: 0px !important;
 }
 
+/* Date separator for messages >24h apart */
+.chat-date-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 12px 0;
+    gap: 8px;
+}
+.chat-date-separator::before,
+.chat-date-separator::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e0e0e0;
+}
+.chat-date-separator span {
+    font-size: 11px;
+    color: #65676b;
+    white-space: nowrap;
+    padding: 2px 8px;
+    background: #f0f2f5;
+    border-radius: 10px;
+    font-weight: 500;
+}
 .chat-contact {
     position: relative;
 }

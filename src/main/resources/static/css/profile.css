@@ -218,7 +218,8 @@
 }
 
 /* Profile Body Grid */
-.profile-body {
+.profile-body,
+.profile-body-wrapper {
     display: flex;
     gap: 20px;
 }

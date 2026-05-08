@@ -25,11 +25,11 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             "ORDER BY last_time DESC", nativeQuery = true)
     List<Object[]> findConversationPartnerIds(@Param("currentUserId") Long currentUserId);
 
-    @Query("SELECT COUNT(m) FROM Message m WHERE m.sender = :partner AND m.receiver = :currentUser AND m.isRead = false")
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.sender = :partner AND m.receiver = :currentUser AND (m.readStatus = false OR m.readStatus IS NULL)")
     long countUnreadMessages(@Param("partner") User partner, @Param("currentUser") User currentUser);
 
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.transaction.annotation.Transactional
-    @Query("UPDATE Message m SET m.isRead = true WHERE m.sender = :partner AND m.receiver = :currentUser AND m.isRead = false")
+    @Query("UPDATE Message m SET m.readStatus = true WHERE m.sender = :partner AND m.receiver = :currentUser AND (m.readStatus = false OR m.readStatus IS NULL)")
     void markAsRead(@Param("partner") User partner, @Param("currentUser") User currentUser);
 }

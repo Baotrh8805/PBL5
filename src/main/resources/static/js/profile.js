@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Fetch User Info
     fetchUserProfile();
+    fetchSidebarSuggestions(token);
 });
 
 function fetchUserProfile() {
@@ -527,14 +528,82 @@ async function changeVisibility(postId, level) {
     }
 }
 
-function hidePost(postId) {
-    document.getElementById('post-' + postId).style.display = 'none';
+async function hidePost(postId) {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${postId}/hide`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            document.getElementById('post-' + postId).style.display = 'none';
+            showToast('Đã ẩn bài viết vĩnh viễn.', 'info');
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }
 
+let activeReportPostId = null;
+
 function reportPost(postId) {
-    alert('Đã gửi báo cáo vi phạm nội dung!');
-    // Ẩn luôn sau khi báo cáo như FB
-    document.getElementById('post-' + postId).style.display = 'none';
+    activeReportPostId = postId;
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    
+    // Bind confirm button
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    confirmBtn.onclick = () => submitReport();
+}
+
+function closeReportModal() {
+    document.getElementById('report-modal').style.display = 'none';
+    activeReportPostId = null;
+}
+
+async function submitReport() {
+    const reason = document.getElementById('report-reason').value.trim();
+    if (!reason) {
+        showToast('Vui lòng nhập lý do báo cáo.', 'error');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${activeReportPostId}/report`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ reason: reason })
+        });
+
+        if (res.ok) {
+            document.getElementById('post-' + activeReportPostId).style.display = 'none';
+            closeReportModal();
+            showToast('Cảm ơn bạn! Báo cáo đã được gửi.', 'success');
+        } else {
+            const txt = await res.text();
+            showToast(txt, 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Lỗi khi gửi báo cáo.', 'error');
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.innerText = message;
+    toast.className = 'toast ' + type;
+    toast.classList.remove('hidden');
+
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
 }
 
 // ======================= CHỨC NĂNG BÌNH LUẬN =======================

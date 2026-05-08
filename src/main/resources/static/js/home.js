@@ -608,14 +608,82 @@ async function changeVisibility(postId, level) {
     }
 }
 
-function hidePost(postId) {
-    document.getElementById('post-' + postId).style.display = 'none';
+async function hidePost(postId) {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${postId}/hide`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            document.getElementById('post-' + postId).style.display = 'none';
+            showToast('Đã ẩn bài viết vĩnh viễn.', 'info');
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }
 
+let activeReportPostId = null;
+
 function reportPost(postId) {
-    alert('Đã gửi báo cáo vi phạm nội dung!');
-    // Ẩn luôn sau khi báo cáo như FB
-    document.getElementById('post-' + postId).style.display = 'none';
+    activeReportPostId = postId;
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    
+    // Bind confirm button
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    confirmBtn.onclick = () => submitReport();
+}
+
+function closeReportModal() {
+    document.getElementById('report-modal').style.display = 'none';
+    activeReportPostId = null;
+}
+
+async function submitReport() {
+    const reason = document.getElementById('report-reason').value.trim();
+    if (!reason) {
+        showToast('Vui lòng nhập lý do báo cáo.', 'error');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${activeReportPostId}/report`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ reason: reason })
+        });
+
+        if (res.ok) {
+            document.getElementById('post-' + activeReportPostId).style.display = 'none';
+            closeReportModal();
+            showToast('Cảm ơn bạn! Báo cáo đã được gửi.', 'success');
+        } else {
+            const txt = await res.text();
+            showToast(txt, 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Lỗi khi gửi báo cáo.', 'error');
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.innerText = message;
+    toast.className = 'toast ' + type;
+    toast.classList.remove('hidden');
+
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
 }
 
 
@@ -757,15 +825,36 @@ window.addFriendFromSidebar = async function(userId) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
-            // Remove from sidebar list
             const item = document.getElementById(`suggestion-item-${userId}`);
             if (item) {
-                item.style.opacity = '0.5';
-                item.querySelector('button').innerText = 'Đã gửi';
-                item.querySelector('button').disabled = true;
+                const btn = item.querySelector('button');
+                btn.innerText = 'Hủy';
+                btn.classList.add('cancel-btn');
+                btn.onclick = () => cancelRequestFromSidebar(userId);
             }
         }
     } catch (err) {
         console.error("Lỗi gửi lời mời kết bạn:", err);
+    }
+};
+
+window.cancelRequestFromSidebar = async function(userId) {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/friends/${userId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const item = document.getElementById(`suggestion-item-${userId}`);
+            if (item) {
+                const btn = item.querySelector('button');
+                btn.innerText = 'Thêm';
+                btn.classList.remove('cancel-btn');
+                btn.onclick = () => addFriendFromSidebar(userId);
+            }
+        }
+    } catch (err) {
+        console.error("Lỗi hủy lời mời:", err);
     }
 };

@@ -390,6 +390,7 @@ function openChatBox(userId, name, avatar) {
     .then(res => res.json())
     .then(messages => {
         messagesDiv.innerHTML = '';
+        lastMessageTimestamp = null; // Reset tracker
         messages.forEach(msg => {
             appendMessageToUI(msg);
         });
@@ -423,8 +424,39 @@ function handleIncomingMessage(msg) {
     }
 }
 
+// Track last message timestamp for date separator logic
+let lastMessageTimestamp = null;
+
+function formatDateSeparator(date) {
+    const hours = ('0' + date.getHours()).slice(-2);
+    const minutes = ('0' + date.getMinutes()).slice(-2);
+    const day = date.getDate();
+    const monthNames = [
+        'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${hours}:${minutes} ${day} ${month}, ${year}`;
+}
+
 function appendMessageToUI(msg) {
     const messagesDiv = document.getElementById('chat-messages-container');
+    
+    // Check if we need a date separator (>24h gap)
+    const currentMsgDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
+    if (lastMessageTimestamp) {
+        const gap = Math.abs(currentMsgDate.getTime() - lastMessageTimestamp.getTime());
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        if (gap >= twentyFourHours) {
+            const separator = document.createElement('div');
+            separator.className = 'chat-date-separator';
+            separator.innerHTML = `<span>${formatDateSeparator(currentMsgDate)}</span>`;
+            messagesDiv.appendChild(separator);
+        }
+    }
+    lastMessageTimestamp = currentMsgDate;
+    
     const div = document.createElement('div');
     const isSent = (msg.senderId == myUserId);
     
@@ -439,16 +471,12 @@ function appendMessageToUI(msg) {
     }
     
     div.className = `chat-message-wrapper ${isSent ? 'sent' : 'received'}`;
-    const targetAvatarHtml = !isSent ? `<img src="${window.chatTargetAvatarUrl || '/uploads/default-avatar.png'}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; margin-right:8px;" onerror="this.style.display='none'">` : '';
-
-    div.style.display = 'flex';
-    div.style.flexDirection = isSent ? 'row-reverse' : 'row';
-    div.style.alignItems = 'flex-end';
+    const targetAvatarHtml = !isSent ? `<img src="${window.chatTargetAvatarUrl || '/uploads/default-avatar.png'}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'">` : '';
 
     div.innerHTML = `
         ${targetAvatarHtml}
-        <div style="display:flex; flex-direction:column; align-items: ${isSent ? 'flex-end' : 'flex-start'};">
-            <div class="chat-message ${isSent ? 'sent' : 'received'}" style="margin: 0;">${msg.content}</div>
+        <div class="chat-msg-content">
+            <div class="chat-message ${isSent ? 'sent' : 'received'}">${msg.content}</div>
             <div class="chat-message-time">${timeStr}</div>
         </div>
     `;

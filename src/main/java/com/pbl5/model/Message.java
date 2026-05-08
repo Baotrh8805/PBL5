@@ -24,12 +24,15 @@ public class Message {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    @Column(nullable = false)
-    private boolean isRead = false;
+    @Column(name = "is_read")
+    private Boolean readStatus = false;
 
     @PrePersist
     protected void onCreate() {
         timestamp = LocalDateTime.now();
+        if (readStatus == null) {
+            readStatus = false;
+        }
     }
 
     public Long getId() { return id; }
@@ -47,6 +50,6 @@ public class Message {
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 
-    public boolean isRead() { return isRead; }
-    public void setRead(boolean read) { isRead = read; }
+    public Boolean getReadStatus() { return readStatus != null ? readStatus : false; }
+    public void setReadStatus(Boolean readStatus) { this.readStatus = readStatus; }
 }

@@ -1,6 +1,9 @@
 // Base API URL
 const API_URL = '/api/v1/auth'; // Update with proper prefix if needed
 
+let selectedCommentFiles = {}; // postId -> file
+let selectedCommentMediaTypes = {}; // postId -> 'image' | 'video'
+
 // Check authentication
 window.onload = () => {
     const token = localStorage.getItem('token');
@@ -182,9 +185,8 @@ async function submitOnboarding() {
 
 async function fetchPosts(token) {
     const container = document.getElementById('posts-container');
-    if (container) {
-        container.innerHTML = '<div class="card" style="padding:16px; text-align:center; color:#65676B;">Đang tải bài đăng...</div>';
-    }
+    // We don't clear the skeleton here anymore because it's already in the HTML
+    // container.innerHTML = '<div class="card" style="padding:16px; text-align:center; color:#65676B;">Đang tải bài đăng...</div>';
 
     try {
         const res = await fetch('/api/posts', {
@@ -290,13 +292,34 @@ function prependCreatedPostToFeed(post) {
                     <i class="fa-regular fa-comment"></i> <span id="comment-count-${post.id}">Bình luận (${post.commentCount || 0})</span>
                 </button>
                 <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
+                <button id="bookmark-btn-${post.id}" class="interaction-btn" onclick="toggleBookmark(${post.id})" style="margin-left: auto;"><i class="fa-regular fa-bookmark"></i></button>
             </div>
 
             <div id="comments-${post.id}" class="comments-section" style="display: none; padding: 15px; border-top: 1px solid #ced0d4;">
-                <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <!-- Media Preview Area -->
+                <div id="comment-media-preview-container-${post.id}" style="display: none; position: relative; margin-bottom: 10px; margin-left: 42px;">
+                    <img id="comment-image-preview-${post.id}" src="" style="max-width: 200px; max-height: 150px; border-radius: 8px; object-fit: cover;">
+                    <video id="comment-video-preview-${post.id}" src="" style="max-width: 200px; max-height: 150px; border-radius: 8px; object-fit: cover; display: none;" controls></video>
+                    <button onclick="removeCommentMedia(${post.id})" style="position: absolute; top: -10px; left: 190px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                        <i class="fa-solid fa-xmark" style="font-size: 12px;"></i>
+                    </button>
+                </div>
+
+                <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
                     <img src="${document.getElementById('header-avatar') && document.getElementById('header-avatar').src ? document.getElementById('header-avatar').src : '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
-                    <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." onkeypress="handleCommentKeyPress(event, ${post.id})">
-                    <button class="btn btn-primary" onclick="submitComment(${post.id})"><i class="fa-solid fa-paper-plane"></i></button>
+                    <div style="flex: 1; position: relative; display: flex; align-items: center; background: #f0f2f5; border-radius: 20px; padding: 0 12px;">
+                        <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." 
+                            onkeypress="handleCommentKeyPress(event, ${post.id})" 
+                            style="flex: 1; background: transparent; border: none; padding: 8px 0; outline: none; font-size: 14px;">
+                        
+                        <label for="comment-media-input-${post.id}" style="cursor: pointer; margin-left: 8px; color: #65676b;" title="Thêm ảnh hoặc video">
+                            <i class="fa-solid fa-camera"></i>
+                        </label>
+                        <input type="file" id="comment-media-input-${post.id}" accept="image/*,video/*" style="display: none;" onchange="previewCommentMedia(event, ${post.id})">
+                    </div>
+                    <button class="btn-send-comment" onclick="submitComment(${post.id})" style="background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 18px; display: flex; align-items: center;">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
                 </div>
                 <div id="comment-list-${post.id}" class="comment-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
             </div>
@@ -331,6 +354,7 @@ function renderPosts(posts, token) {
     const container = document.getElementById('posts-container');
     container.innerHTML = ''; // Clear cũ
 
+    let allPostsHtml = '';
     posts.forEach(post => {
         
         let visibilityIcon = '';
@@ -342,7 +366,7 @@ function renderPosts(posts, token) {
         let postHtml = `
         <article class="card post" id="post-${post.id}">
             <div class="post-header">
-                <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" loading="lazy" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                     <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">${timeSince(post.createdAt)}</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
@@ -376,7 +400,7 @@ function renderPosts(posts, token) {
             postHtml += `
             <a href="/html/post.html?id=${post.id}" class="post-image-link">
                 <div class="post-image-placeholder text-center">
-                    <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+                    <img src="${post.imageUrl}" alt="Post image" loading="lazy" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
                 </div>
             </a>
             `;
@@ -386,7 +410,7 @@ function renderPosts(posts, token) {
             postHtml += `
             <a href="/html/post.html?id=${post.id}" class="post-video-link">
                 <div class="post-video-placeholder text-center">
-                    <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;"></video>
+                    <video src="${post.videoUrl}" loading="lazy" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;"></video>
                 </div>
             </a>
             `;
@@ -405,14 +429,35 @@ function renderPosts(posts, token) {
                     <i class="fa-regular fa-comment"></i> <span id="comment-count-${post.id}">Bình luận (${post.commentCount})</span>
                 </button>
                 <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
+                <button id="bookmark-btn-${post.id}" class="interaction-btn" onclick="toggleBookmark(${post.id})" style="margin-left: auto; ${post.bookmarkedByCurrentUser ? 'color: var(--primary-color);' : ''}"><i class="${post.bookmarkedByCurrentUser ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i></button>
             </div>
 
             <!-- COMMENT SECTION -->
             <div id="comments-${post.id}" class="comments-section" style="display: none; padding: 15px; border-top: 1px solid #ced0d4;">
-                <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <img src="${document.getElementById('header-avatar') && document.getElementById('header-avatar').src ? document.getElementById('header-avatar').src : '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
-                    <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." onkeypress="handleCommentKeyPress(event, ${post.id})">
-                    <button class="btn btn-primary" onclick="submitComment(${post.id})"><i class="fa-solid fa-paper-plane"></i></button>
+                <!-- Media Preview Area -->
+                <div id="comment-media-preview-container-${post.id}" style="display: none; position: relative; margin-bottom: 10px; margin-left: 42px;">
+                    <img id="comment-image-preview-${post.id}" src="" loading="lazy" style="max-width: 200px; max-height: 150px; border-radius: 8px; object-fit: cover;">
+                    <video id="comment-video-preview-${post.id}" src="" style="max-width: 200px; max-height: 150px; border-radius: 8px; object-fit: cover; display: none;" controls></video>
+                    <button onclick="removeCommentMedia(${post.id})" style="position: absolute; top: -10px; left: 190px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                        <i class="fa-solid fa-xmark" style="font-size: 12px;"></i>
+                    </button>
+                </div>
+
+                <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
+                    <img src="${document.getElementById('header-avatar') && document.getElementById('header-avatar').src ? document.getElementById('header-avatar').src : '/uploads/default-avatar.png'}" class="avatar-small" loading="lazy" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
+                    <div style="flex: 1; position: relative; display: flex; align-items: center; background: #f0f2f5; border-radius: 20px; padding: 0 12px;">
+                        <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." 
+                            onkeypress="handleCommentKeyPress(event, ${post.id})" 
+                            style="flex: 1; background: transparent; border: none; padding: 8px 0; outline: none; font-size: 14px;">
+                        
+                        <label for="comment-media-input-${post.id}" style="cursor: pointer; margin-left: 8px; color: #65676b;" title="Thêm ảnh hoặc video">
+                            <i class="fa-solid fa-camera"></i>
+                        </label>
+                        <input type="file" id="comment-media-input-${post.id}" accept="image/*,video/*" style="display: none;" onchange="previewCommentMedia(event, ${post.id})">
+                    </div>
+                    <button class="btn-send-comment" onclick="submitComment(${post.id})" style="background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 18px; display: flex; align-items: center;">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
                 </div>
                 <div id="comment-list-${post.id}" class="comment-list" style="display: flex; flex-direction: column; gap: 10px;">
                     <!-- Nơi bình luận hiển thị -->
@@ -421,8 +466,9 @@ function renderPosts(posts, token) {
         </article>
         `;
 
-        container.innerHTML += postHtml;
+        allPostsHtml += postHtml;
     });
+    container.innerHTML = allPostsHtml;
 }
 
 function escapeHtml(unsafe) {
@@ -502,33 +548,72 @@ window.handleGlobalSearch = function(query) {
     searchTimeout = setTimeout(async () => {
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const users = await res.json();
-                renderSearchResults(users);
-            }
+            // Fetch both users and posts in parallel
+            const [usersRes, postsRes] = await Promise.all([
+                fetch(`/api/users/search?q=${encodeURIComponent(query)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`/api/posts/search?q=${encodeURIComponent(query)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+            ]);
+
+            let users = [];
+            let posts = [];
+
+            if (usersRes.ok) users = await usersRes.json();
+            if (postsRes.ok) posts = await postsRes.json();
+
+            renderSearchResults(users, posts, query);
         } catch (err) {
             console.error("Lỗi tìm kiếm:", err);
         }
     }, 300);
 };
 
-function renderSearchResults(users) {
+function renderSearchResults(users, posts, query) {
     const resultsContainer = document.getElementById('global-search-results');
-    if (users.length === 0) {
-        resultsContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #65676b; font-size: 14px;">Không tìm thấy người dùng phù hợp.</div>';
+    
+    if (users.length === 0 && posts.length === 0) {
+        resultsContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #65676b; font-size: 14px;">Không tìm thấy kết quả phù hợp.</div>';
     } else {
-        resultsContainer.innerHTML = users.map(user => {
-            const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
-            return `
-                <a href="/html/profile.html?userId=${user.id}" class="search-result-item">
-                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
-                    <span class="user-name-result">${user.fullName}</span>
-                </a>
-            `;
-        }).join('');
+        let html = '';
+
+        // Users Section
+        if (users.length > 0) {
+            html += '<div class="search-section-header">Mọi người</div>';
+            html += users.slice(0, 5).map(user => {
+                const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+                return `
+                    <a href="/html/profile.html?userId=${user.id}" class="search-result-item">
+                        <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                        <div class="search-item-info">
+                            <span class="user-name-result">${user.fullName}</span>
+                            <span class="search-item-sub">Người dùng</span>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // Posts Section
+        if (posts.length > 0) {
+            html += '<div class="search-section-header">Bài viết</div>';
+            html += posts.slice(0, 5).map(post => {
+                const contentSnippet = post.content ? (post.content.length > 60 ? post.content.substring(0, 60) + '...' : post.content) : 'Bài viết không có nội dung';
+                return `
+                    <a href="/html/post.html?id=${post.id}" class="search-result-item">
+                        <div class="search-post-icon"><i class="fa-regular fa-file-lines"></i></div>
+                        <div class="search-item-info">
+                            <span class="user-name-result">${contentSnippet}</span>
+                            <span class="search-item-sub">Bởi ${post.authorName}</span>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+        
+        resultsContainer.innerHTML = html;
     }
     resultsContainer.style.display = 'block';
 }
@@ -686,6 +771,39 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+async function toggleBookmark(postId) {
+    const token = localStorage.getItem('token');
+    const btn = document.getElementById(`bookmark-btn-${postId}`);
+    if (!btn) return;
+
+    const icon = btn.querySelector('i');
+    const isBookmarked = icon.classList.contains('fa-solid');
+
+    // Optimistic UI
+    if (isBookmarked) {
+        icon.classList.remove('fa-solid');
+        icon.classList.add('fa-regular');
+        btn.style.color = '';
+    } else {
+        icon.classList.remove('fa-regular');
+        icon.classList.add('fa-solid');
+        btn.style.color = 'var(--primary-color)';
+    }
+
+    try {
+        const res = await fetch(`/api/posts/${postId}/bookmark`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            showToast(data.message, 'success');
+        }
+    } catch (err) {
+        console.error('Bookmark error:', err);
+    }
+}
+
 
 // ======================= CHỨC NĂNG BÌNH LUẬN =======================
 
@@ -698,6 +816,48 @@ function toggleComments(postId) {
         commentsSection.style.display = 'none';
     }
 }
+
+window.previewCommentMedia = function(event, postId) {
+    const file = event.target.files[0];
+    if (file) {
+        selectedCommentFiles[postId] = file;
+        const fileName = (file.name || '').toLowerCase();
+        const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|avi|mkv|webm)$/.test(fileName);
+        selectedCommentMediaTypes[postId] = isVideo ? 'video' : 'image';
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imgPreview = document.getElementById(`comment-image-preview-${postId}`);
+            const videoPreview = document.getElementById(`comment-video-preview-${postId}`);
+            const container = document.getElementById(`comment-media-preview-container-${postId}`);
+            
+            if (isVideo) {
+                imgPreview.style.display = 'none';
+                videoPreview.style.display = 'block';
+                videoPreview.src = e.target.result;
+            } else {
+                imgPreview.style.display = 'block';
+                videoPreview.style.display = 'none';
+                imgPreview.src = e.target.result;
+            }
+            container.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+window.removeCommentMedia = function(postId) {
+    delete selectedCommentFiles[postId];
+    delete selectedCommentMediaTypes[postId];
+    const input = document.getElementById(`comment-media-input-${postId}`);
+    if (input) input.value = '';
+    const container = document.getElementById(`comment-media-preview-container-${postId}`);
+    if (container) container.style.display = 'none';
+    const imgPreview = document.getElementById(`comment-image-preview-${postId}`);
+    if (imgPreview) imgPreview.src = '';
+    const videoPreview = document.getElementById(`comment-video-preview-${postId}`);
+    if (videoPreview) videoPreview.src = '';
+};
 
 async function fetchComments(postId) {
     const token = localStorage.getItem('token');
@@ -715,21 +875,114 @@ async function fetchComments(postId) {
             return;
         }
 
-        comments.forEach(c => {
-            const timeStr = timeSince(c.createdAt);
-            listDiv.innerHTML += `
-                <div class="comment" style="display: flex; gap: 8px; margin-bottom: 10px;">
-                    <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
-                    <div class="comment-bubble" style="background: #f0f2f5; padding: 8px 12px; border-radius: 18px; max-width: 80%;">
-                        <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
-                        <div style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
-                    </div>
-                </div>
-                <div style="font-size: 11px; color: #65676b; margin-left: 45px; margin-top: -15px; margin-bottom: 10px;">${timeStr}</div>
-            `;
-        });
+        listDiv.innerHTML = comments.map(c => renderCommentItem(c, postId)).join('');
     } catch (err) {
         console.error("Lỗi lấy comment:", err);
+    }
+}
+
+function renderCommentItem(c, postId, isReply = false) {
+    const timeStr = timeSince(c.createdAt);
+    let mediaHtml = '';
+    if (c.imageUrl) {
+        mediaHtml = `<img src="${c.imageUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 8px; display: block;">`;
+    } else if (c.videoUrl) {
+        mediaHtml = `<video src="${c.videoUrl}" controls style="max-width: 100%; border-radius: 8px; margin-top: 8px; display: block;"></video>`;
+    }
+
+    const createdAtDate = new Date(c.createdAt);
+    const now = new Date();
+    const diffMinutes = (now - createdAtDate) / (1000 * 60);
+    
+    let actionsHtml = `
+        <div class="comment-actions" style="margin-left: ${isReply ? '35px' : '45px'}; font-size: 11px; display: flex; gap: 12px; margin-top: -8px; margin-bottom: 10px; align-items: center;">
+            <span onclick="toggleCommentLike(${postId}, ${c.id})" id="comment-like-btn-${c.id}" style="color: ${c.liked ? 'var(--primary-color)' : '#65676b'}; cursor: pointer; font-weight: 600;">
+                ${c.liked ? 'Đã thích' : 'Thích'} ${c.likeCount > 0 ? `(${c.likeCount})` : ''}
+            </span>
+            ${!isReply ? `<span onclick="showReplyInput(${postId}, ${c.id}, '${c.authorName}')" style="color: #65676b; cursor: pointer; font-weight: 600;">Phản hồi</span>` : ''}
+            ${c.isMine && diffMinutes < 30 ? `<span onclick="startEditComment(${postId}, ${c.id}, '${c.content ? c.content.replace(/'/g, "\\'") : ''}')" style="color: #65676b; cursor: pointer; font-weight: 600;">Sửa</span>` : ''}
+            ${c.isMine ? `<span onclick="deleteComment(${postId}, ${c.id})" style="color: #65676b; cursor: pointer; font-weight: 600;">Xóa</span>` : ''}
+            <span style="color: #65676b; font-size: 11px;">${timeStr}</span>
+        </div>
+    `;
+
+    let repliesHtml = '';
+    if (c.replies && c.replies.length > 0) {
+        repliesHtml = `<div class="replies-container" style="margin-left: 40px; border-left: 2px solid #e4e6eb; padding-left: 10px;">
+            ${c.replies.map(r => renderCommentItem(r, postId, true)).join('')}
+        </div>`;
+    }
+
+    return `
+        <div class="comment-container" id="comment-container-${c.id}" style="margin-bottom: 5px;">
+            <div class="comment" style="display: flex; gap: 8px; margin-bottom: 10px;">
+                <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
+                <div class="comment-bubble" style="background: #f0f2f5; padding: 6px 12px; border-radius: 18px; max-width: 85%; position: relative;">
+                    <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
+                    <div id="comment-content-${c.id}" style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
+                    ${mediaHtml}
+                </div>
+            </div>
+            ${actionsHtml}
+            <div id="reply-input-container-${c.id}" style="margin-left: 45px; margin-bottom: 10px;"></div>
+            ${repliesHtml}
+        </div>
+    `;
+}
+
+async function toggleCommentLike(postId, commentId) {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/comments/${commentId}/like`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            fetchComments(postId);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function showReplyInput(postId, commentId, authorName) {
+    const container = document.getElementById(`reply-input-container-${commentId}`);
+    if (container.innerHTML !== '') {
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = `
+        <div style="display: flex; gap: 8px; align-items: center; background: #f0f2f5; border-radius: 20px; padding: 4px 12px;">
+            <input type="text" id="reply-field-${commentId}" placeholder="Trả lời ${authorName}..." 
+                style="flex: 1; border: none; background: transparent; outline: none; padding: 6px 0; font-size: 13px;"
+                onkeypress="if(event.key==='Enter') submitReply(${postId}, ${commentId})">
+            <i class="fas fa-paper-plane" onclick="submitReply(${postId}, ${commentId})" style="color: var(--primary-color); cursor: pointer;"></i>
+        </div>
+    `;
+    document.getElementById(`reply-field-${commentId}`).focus();
+}
+
+async function submitReply(postId, parentId) {
+    const field = document.getElementById(`reply-field-${parentId}`);
+    const content = field.value.trim();
+    if (!content) return;
+
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${postId}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ content, parentId })
+        });
+        if (res.ok) {
+            fetchComments(postId);
+        }
+    } catch (err) {
+        console.error(err);
     }
 }
 
@@ -742,31 +995,66 @@ function handleCommentKeyPress(event, postId) {
 async function submitComment(postId) {
     const input = document.getElementById(`comment-input-${postId}`);
     const content = input.value.trim();
-    if (!content) return;
-
     const token = localStorage.getItem('token');
     
-    // Optimistic UI update: cộng số bình luận
-    const commentCountSpan = document.getElementById(`comment-count-${postId}`);
-    if (commentCountSpan) {
-        const countMatch = commentCountSpan.innerText.match(/\d+/);
-        let currentCount = countMatch ? parseInt(countMatch[0], 10) : 0;
-        commentCountSpan.innerText = `Bình luận (${currentCount + 1})`;
-    }
+    let imageUrl = null;
+    let videoUrl = null;
+
+    // Check if there's content or media
+    if (!content && !selectedCommentFiles[postId]) return;
 
     try {
+        // Upload media if exists
+        if (selectedCommentFiles[postId]) {
+            const file = selectedCommentFiles[postId];
+            const type = selectedCommentMediaTypes[postId];
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const endpoint = type === 'video' ? '/api/upload/video' : '/api/upload/image';
+            const uploadRes = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            
+            if (uploadRes.ok) {
+                const uploadData = await uploadRes.json();
+                if (type === 'video') videoUrl = uploadData.videoUrl || uploadData.url;
+                else imageUrl = uploadData.imageUrl || uploadData.url;
+            } else {
+                alert('Lỗi upload media cho bình luận');
+                return;
+            }
+        }
+
         const res = await fetch(`/api/posts/${postId}/comments`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}` 
             },
-            body: JSON.stringify({ content: content })
+            body: JSON.stringify({ 
+                content: content,
+                imageUrl: imageUrl,
+                videoUrl: videoUrl
+            })
         });
         
         if (res.ok) {
             input.value = '';
-            fetchComments(postId); // Chỉ tải lại đúng danh sách bình luận của bài này
+            removeCommentMedia(postId);
+            
+            // Optimistic UI update: cộng số bình luận (nếu chưa cộng)
+            const commentCountSpan = document.getElementById(`comment-count-${postId}`);
+            if (commentCountSpan) {
+                const countMatch = commentCountSpan.innerText.match(/\d+/);
+                let currentCount = countMatch ? parseInt(countMatch[0], 10) : 0;
+                // Note: we don't increment here if we already did it optimistically elsewhere, 
+                // but fetchComments will refresh anyway.
+            }
+            
+            fetchComments(postId); 
         } else {
             alert('Lỗi gửi bình luận');
         }
@@ -776,6 +1064,79 @@ async function submitComment(postId) {
 }
 
 // ======================= SIDEBAR SUGGESTIONS =======================
+async function deleteComment(postId, commentId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            // Optimistic UI update: giảm số bình luận
+            const commentCountSpan = document.getElementById(`comment-count-${postId}`);
+            if (commentCountSpan) {
+                const countMatch = commentCountSpan.innerText.match(/\d+/);
+                let currentCount = countMatch ? parseInt(countMatch[0], 10) : 0;
+                if (currentCount > 0) {
+                    commentCountSpan.innerText = `Bình luận (${currentCount - 1})`;
+                }
+            }
+            fetchComments(postId);
+        } else {
+            const data = await res.json();
+            alert(data.message || 'Lỗi khi xóa bình luận');
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+window.startEditComment = function(postId, commentId, currentContent) {
+    const contentDiv = document.getElementById(`comment-content-${commentId}`);
+    const originalHtml = contentDiv.innerHTML;
+    
+    contentDiv.innerHTML = `
+        <div style="margin-top: 5px;">
+            <textarea id="edit-input-${commentId}" style="width: 100%; border: 1px solid #ced4da; border-radius: 8px; padding: 5px; outline: none; font-size: 14px; font-family: inherit;">${currentContent}</textarea>
+            <div style="display: flex; gap: 5px; margin-top: 5px; justify-content: flex-end;">
+                <button onclick="cancelEditComment(${commentId}, \`${originalHtml.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" style="background: #e4e6eb; border: none; padding: 3px 8px; border-radius: 5px; font-size: 12px; cursor: pointer;">Hủy</button>
+                <button onclick="saveEditComment(${postId}, ${commentId})" style="background: var(--primary-color); color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 12px; cursor: pointer;">Lưu</button>
+            </div>
+        </div>
+    `;
+};
+
+window.cancelEditComment = function(commentId, originalHtml) {
+    const contentDiv = document.getElementById(`comment-content-${commentId}`);
+    contentDiv.innerHTML = originalHtml;
+};
+
+async function saveEditComment(postId, commentId) {
+    const newContent = document.getElementById(`edit-input-${commentId}`).value.trim();
+    if (!newContent) return;
+
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/comments/${commentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ content: newContent })
+        });
+        if (res.ok) {
+            fetchComments(postId);
+        } else {
+            const data = await res.json();
+            alert(data.message || 'Lỗi khi cập nhật bình luận');
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
 async function fetchSidebarSuggestions(token) {
     const container = document.getElementById('sidebar-suggestions');
     if (!container) return;

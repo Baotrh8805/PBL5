@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LC Network - Bài viết đã lưu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/home.css">
+    <link rel="stylesheet" href="/css/chat.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header class="top-header">
+        <div class="header-left">
+            <a href="/html/home.html" class="logo">
+                <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i>
+                <span class="logo-text">LC Network</span>
+            </a>
+            <div class="search-bar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Tìm mọi người hoặc bài viết...">
+            </div>
+        </div>
+
+        <div class="header-center">
+            <nav class="main-nav">
+                <a href="/html/home.html" class="nav-link" title="Trang chủ">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+                <a href="/html/friends.html" class="nav-link" title="Bạn bè">
+                    <i class="fa-solid fa-user-group"></i>
+                </a>
+                <a href="#" class="nav-link" title="Khám phá">
+                    <i class="fa-regular fa-compass"></i>
+                </a>
+            </nav>
+        </div>
+
+        <div class="header-right">
+            <button class="icon-btn tooltip create-btn" data-tooltip="Tạo bài viết" onclick="window.location.href='/html/home.html'">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+            <div class="user-avatar-btn" onclick="window.location.href='/html/profile.html'">
+                <img src="https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff" alt="User Avatar" id="header-avatar" style="cursor:pointer;">
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-layout container">
+        
+        <!-- Left Sidebar -->
+        <aside class="left-sidebar">
+            <div class="card profile-card" onclick="window.location.href='profile.html'" style="cursor: pointer; transition: 0.2s;">
+                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <div class="profile-info">
+                    <h3 class="user-name">Người dùng</h3>
+                    <p class="status"><span class="status-dot"></span> Đang trực truyến</p>
+                </div>
+            </div>
+
+            <nav class="card sidebar-nav dashboard-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Khám Phá</div>
+                    <a href="home.html" class="menu-item">
+                        <i class="fa-solid fa-pager"></i> <span>Bảng tin</span>
+                    </a>
+                    <a href="/html/friends.html" class="menu-item">
+                        <i class="fa-solid fa-user-group"></i> <span>Bạn bè &amp; Cộng đồng</span>
+                    </a>
+                </div>
+                <div class="nav-separator"></div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Cá Nhân</div>
+                    <a href="profile.html" class="menu-item">
+                        <i class="fa-regular fa-user"></i> <span>Hồ sơ của tôi</span>
+                    </a>
+                    <a href="/html/bookmarks.html" class="menu-item active">
+                        <i class="fa-regular fa-bookmark"></i> <span>Đã lưu</span>
+                    </a>
+                    <div id="admin-menu-container"></div>
+                </div>
+                <div class="nav-separator"></div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Tài Khoản</div>
+                    <a href="#" class="menu-item logout-btn" onclick="logout()">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Đăng xuất</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Center Content -->
+        <section class="feed-section">
+            <div class="card" style="padding: 20px; margin-bottom: 20px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-bookmark" style="color: var(--primary-color);"></i> Bài viết đã lưu
+                </h2>
+                <p style="color: #65676b; margin-top: 5px; font-size: 14px;">Các bài viết bạn đã lưu lại để xem sau.</p>
+            </div>
+
+            <div class="posts-container" id="bookmarks-container">
+                <div class="card" style="padding:16px; text-align:center; color:#65676B;">Đang tải bài viết đã lưu...</div>
+            </div>
+        </section>
+
+        <!-- Right Sidebar -->
+        <aside class="right-sidebar">
+            <div class="card" style="padding: 20px;">
+                <h3 style="margin: 0 0 10px 0; font-size: 16px;">💡 Mẹo</h3>
+                <p style="color: #65676b; font-size: 14px; line-height: 1.5;">
+                    Bạn có thể nhấn biểu tượng <i class="fa-solid fa-bookmark" style="color: var(--primary-color);"></i> trên bất kỳ bài viết nào để lưu lại. Bài viết đã lưu sẽ xuất hiện tại đây.
+                </p>
+            </div>
+            <footer class="sidebar-footer">
+                <div class="footer-links">
+                    <a href="#">Chính sách bảo mật</a>
+                    <a href="#">Điều khoản dịch vụ</a>
+                </div>
+                <div class="footer-links">
+                    <span>&copy; 2026 LC Network</span>
+                </div>
+            </footer>
+        </aside>
+    </main>
+
+    <!-- Chat Sidebar -->
+    <div id="chat-sidebar" class="chat-sidebar">
+        <div class="chat-sidebar-title">Người liên hệ</div>
+        <div id="chat-contact-list">
+            <div style="padding: 15px; color:#65676B; font-size:14px;">Đang tải...</div>
+        </div>
+    </div>
+
+    <!-- Chat Box -->
+    <div id="chat-box" class="chat-box">
+        <div class="chat-header">
+            <div class="chat-target-info">
+                <img id="chat-target-avatar" src="/uploads/default-avatar.png">
+                <span id="chat-target-name">Tên bạn bè</span>
+            </div>
+            <div class="chat-header-actions" onclick="closeChatBox()">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+        </div>
+        <div id="chat-messages-container" class="chat-messages"></div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input-text" placeholder="Nhập tin nhắn...">
+            <button onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="/js/chat.js"></script>
+    <script>
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = '/'; return; }
+            fetchUserInfo(token);
+            fetchBookmarks(token);
+        };
+
+        window.logout = function() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        };
+
+        async function fetchUserInfo(token) {
+            try {
+                const res = await fetch('/api/users/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.querySelectorAll('.user-name').forEach(el => el.textContent = data.fullName || 'Người dùng');
+                    let avatarUrl = data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=00d1b2&color=fff`;
+                    document.querySelectorAll('#header-avatar, .avatar-large').forEach(img => img.src = avatarUrl);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function fetchBookmarks(token) {
+            const container = document.getElementById('bookmarks-container');
+            try {
+                const res = await fetch('/api/posts/bookmarks', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) { container.innerHTML = '<div class="card" style="padding:16px; text-align:center; color:#d93025;">Lỗi tải dữ liệu.</div>'; return; }
+                const posts = await res.json();
+                if (posts.length === 0) {
+                    container.innerHTML = `
+                        <div class="card" style="padding: 40px; text-align: center;">
+                            <i class="fa-regular fa-bookmark" style="font-size: 48px; color: #ccc; margin-bottom: 15px; display: block;"></i>
+                            <h3 style="color: #65676b; font-weight: 600;">Chưa có bài viết đã lưu</h3>
+                            <p style="color: #8a8d91; font-size: 14px; margin-top: 5px;">Hãy nhấn biểu tượng <i class="fa-solid fa-bookmark" style="color: var(--primary-color);"></i> trên bài viết để lưu lại.</p>
+                        </div>`;
+                    return;
+                }
+                container.innerHTML = '';
+                posts.forEach(post => {
+                    container.innerHTML += renderBookmarkPost(post);
+                });
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<div class="card" style="padding:16px; text-align:center; color:#d93025;">Đã xảy ra lỗi.</div>';
+            }
+        }
+
+        function renderBookmarkPost(post) {
+            let visibilityIcon = '';
+            if (post.visibility === 'PUBLIC') visibilityIcon = '<i class="fa-solid fa-earth-americas" style="margin-left: 5px; font-size: 11px;"></i>';
+            else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
+            else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
+
+            let html = `
+                <article class="card post" id="post-${post.id}">
+                    <div class="post-header">
+                        <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                        <div class="post-meta">
+                            <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
+                            <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">${timeSince(post.createdAt)}</a> ${visibilityIcon}</span>
+                        </div>
+                    </div>
+                    <div class="post-content"><p>${escapeHtml(post.content || '')}</p></div>`;
+            
+            if (post.imageUrl) {
+                html += `<a href="/html/post.html?id=${post.id}" class="post-image-link"><div class="post-image-placeholder text-center"><img src="${post.imageUrl}" alt="Post image" style="max-width:100%; border-radius:8px; margin-bottom:12px; display:block; margin-left:auto; margin-right:auto;"></div></a>`;
+            }
+            if (post.videoUrl) {
+                html += `<a href="/html/post.html?id=${post.id}" class="post-video-link"><div class="post-video-placeholder text-center"><video src="${post.videoUrl}" style="max-width:100%; border-radius:8px; margin-bottom:12px; display:block; margin-left:auto; margin-right:auto; background:#000; max-height:400px;"></video></div></a>`;
+            }
+
+            const likeIcon = post.likedByCurrentUser ? 'fa-solid text-red' : 'fa-regular';
+            const likeStyle = post.likedByCurrentUser ? 'color: var(--red-icon);' : '';
+
+            html += `
+                    <div class="post-actions-bar">
+                        <button id="like-btn-${post.id}" class="interaction-btn" onclick="toggleLike(${post.id})" style="${likeStyle}">
+                            <i id="like-icon-${post.id}" class="${likeIcon} fa-heart"></i> <span id="like-count-${post.id}">Mọi người (${post.likeCount})</span>
+                        </button>
+                        <button class="interaction-btn"><i class="fa-regular fa-comment"></i> Bình luận (${post.commentCount})</button>
+                        <button id="bookmark-btn-${post.id}" class="interaction-btn" onclick="removeBookmark(${post.id})" style="margin-left: auto; color: var(--primary-color);">
+                            <i class="fa-solid fa-bookmark"></i>
+                        </button>
+                    </div>
+                </article>`;
+            return html;
+        }
+
+        async function removeBookmark(postId) {
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`/api/posts/${postId}/bookmark`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const el = document.getElementById('post-' + postId);
+                    if (el) {
+                        el.style.transition = 'opacity 0.3s';
+                        el.style.opacity = '0';
+                        setTimeout(() => el.remove(), 300);
+                    }
+                    showToast('Đã bỏ lưu bài viết', 'success');
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function toggleLike(postId) {
+            const token = localStorage.getItem('token');
+            const likeBtn = document.getElementById(`like-btn-${postId}`);
+            const likeIcon = document.getElementById(`like-icon-${postId}`);
+            const likeCountSpan = document.getElementById(`like-count-${postId}`);
+            if (likeBtn && likeIcon && likeCountSpan) {
+                const isLiked = likeIcon.classList.contains('fa-solid');
+                let currentCount = 0;
+                const countMatch = likeCountSpan.innerText.match(/\d+/);
+                if (countMatch) currentCount = parseInt(countMatch[0], 10);
+                if (isLiked) {
+                    likeIcon.classList.remove('fa-solid', 'text-red');
+                    likeIcon.classList.add('fa-regular');
+                    likeBtn.style.color = '';
+                    likeCountSpan.innerText = `Mọi người (${Math.max(0, currentCount - 1)})`;
+                } else {
+                    likeIcon.classList.remove('fa-regular');
+                    likeIcon.classList.add('fa-solid', 'text-red');
+                    likeBtn.style.color = 'var(--red-icon)';
+                    likeCountSpan.innerText = `Mọi người (${currentCount + 1})`;
+                }
+            }
+            try {
+                await fetch(`/api/posts/${postId}/like`, {
+                    method: 'POST', headers: { 'Authorization': `Bearer ${token}` }
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        function timeSince(dateString) {
+            const postDate = new Date(dateString);
+            if (Number.isNaN(postDate.getTime())) return 'Vừa xong';
+            const seconds = Math.floor((new Date() - postDate) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " năm trước";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " tháng trước";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " ngày trước";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " giờ trước";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " phút trước";
+            return Math.floor(seconds) + " giây trước";
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;").replace(/\n/g, "<br>");
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.innerText = message;
+            toast.className = 'toast ' + type;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>

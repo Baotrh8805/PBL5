@@ -306,3 +306,72 @@ body.post-detail-page {
         height: 50vh;
     }
 }
+/* Comment Menu Dropdown */
+.comment-item {
+    position: relative;
+}
+
+.comment-menu-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.comment-menu-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: 0.2s;
+    opacity: 0; /* Hide by default, show on hover */
+}
+
+.comment-item:hover .comment-menu-btn {
+    opacity: 1;
+}
+
+.comment-menu-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.comment-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 120px;
+    padding: 6px 0;
+    display: none; /* Controlled by JS */
+}
+
+.comment-dropdown.show {
+    display: block;
+}
+
+.comment-dropdown-item {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.comment-dropdown-item:hover {
+    background-color: #f2f2f2;
+}
+
+.comment-dropdown-item i {
+    width: 16px;
+    text-align: center;
+}

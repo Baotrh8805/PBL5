@@ -16,6 +16,7 @@ public class PostResponse {
     private boolean isLikedByCurrentUser;
     private boolean isMine;
     private String visibility;
+    private boolean bookmarkedByCurrentUser;
 
     public PostResponse(Long id, String content, String imageUrl, String videoUrl, LocalDateTime createdAt,
             Long authorId, String authorName, String authorAvatar, long likeCount, long commentCount,
@@ -33,6 +34,7 @@ public class PostResponse {
         this.isLikedByCurrentUser = isLikedByCurrentUser;
         this.isMine = isMine;
         this.visibility = visibility;
+        this.bookmarkedByCurrentUser = false;
     }
 
     public Long getId() {
@@ -85,5 +87,13 @@ public class PostResponse {
 
     public String getVisibility() {
         return visibility;
+    }
+
+    public boolean isBookmarkedByCurrentUser() {
+        return bookmarkedByCurrentUser;
+    }
+
+    public void setBookmarkedByCurrentUser(boolean bookmarkedByCurrentUser) {
+        this.bookmarkedByCurrentUser = bookmarkedByCurrentUser;
     }
 }

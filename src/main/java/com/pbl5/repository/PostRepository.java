@@ -24,5 +24,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
            "))) " +
            "ORDER BY p.createdAt DESC")
     List<Post> findHomeFeed(@Param("currentUserId") Long currentUserId);
+
+    @Query("SELECT p FROM Post p WHERE " +
+           "(LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           " LOWER(p.user.fullName) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+           "ORDER BY p.createdAt DESC")
+    List<Post> searchPosts(@Param("query") String query);
 }
 

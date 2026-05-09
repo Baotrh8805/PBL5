@@ -7,6 +7,7 @@
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,7 +28,7 @@
             </a>
             <div class="search-bar" style="position: relative;">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="global-search-input" placeholder="Tìm kiếm LC Network..." oninput="handleGlobalSearch(this.value)">
+                <input type="text" id="global-search-input" placeholder="Tìm mọi người hoặc bài viết..." oninput="handleGlobalSearch(this.value)">
                 <div id="global-search-results" class="search-results-dropdown" style="display: none;"></div>
             </div>
         </div>
@@ -129,9 +130,6 @@
                     <a href="/html/friends.html" class="menu-item">
                         <i class="fa-solid fa-user-group"></i> <span>Bạn bè & Cộng đồng</span>
                     </a>
-                    <a href="#" class="menu-item">
-                        <i class="fa-solid fa-fire text-yellow"></i> <span>Thịnh hành</span>
-                    </a>
                 </div>
 
                 <div class="nav-separator"></div>
@@ -141,7 +139,7 @@
                     <a href="profile.html" class="menu-item">
                         <i class="fa-regular fa-user"></i> <span>Hồ sơ của tôi</span>
                     </a>
-                    <a href="#" class="menu-item">
+                    <a href="/html/bookmarks.html" class="menu-item">
                         <i class="fa-regular fa-bookmark"></i> <span>Đã lưu</span>
                     </a>
                     <!-- JS append admin links here if authorized -->
@@ -184,6 +182,34 @@
 
             <!-- Posts Feed -->
             <div class="posts-container" id="posts-container">
+                <!-- Skeleton Loading State -->
+                <div class="skeleton-post card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-meta">
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-line x-short"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line medium"></div>
+                    </div>
+                </div>
+                <div class="skeleton-post card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-meta">
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-line x-short"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line medium"></div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -376,8 +402,8 @@
         </div>
     </div>
 
-    <script src="/js/post-creation.js"></script>
-    <script src="/js/home.js"></script>
-    <script src="/js/chat.js"></script>
+    <script src="/js/post-creation.js" defer></script>
+    <script src="/js/home.js" defer></script>
+    <script src="/js/chat.js" defer></script>
 </body>
 </html>

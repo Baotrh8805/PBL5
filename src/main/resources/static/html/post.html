@@ -7,10 +7,13 @@
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/post.css">
     <link rel="stylesheet" href="/css/home.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 </head>
 <body class="post-detail-page">
     <div class="post-detail-container">
@@ -24,7 +27,9 @@
             <div class="post-media-viewer" id="media-viewer">
                 <div class="media-placeholder" id="media-content">
                     <!-- Image or Video will be injected here -->
-                    <div class="loading-spinner"></div>
+                    <div class="skeleton-media" style="width: 100%; height: 100%; background: #242526; display: flex; align-items: center; justify-content: center;">
+                        <div class="loading-spinner"></div>
+                    </div>
                 </div>
                 
                 <!-- Navigation Arrows (if multiple media, but currently single) -->
@@ -78,7 +83,21 @@
                     <div class="comments-container-detail">
                         <div class="comments-filter">Phù hợp nhất <i class="fa-solid fa-caret-down"></i></div>
                         <div id="comments-list-detail" class="comments-list-detail">
-                            <!-- Comments injected here -->
+                            <!-- Skeleton Comments -->
+                            <div class="skeleton-comment" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #e4e6eb; animation: skeleton-pulse 1.5s infinite;"></div>
+                                <div class="skeleton-bubble" style="flex: 1;">
+                                    <div class="skeleton-line short" style="height: 10px; background: #e4e6eb; border-radius: 5px; width: 40%; margin-bottom: 8px; animation: skeleton-pulse 1.5s infinite;"></div>
+                                    <div class="skeleton-line" style="height: 12px; background: #e4e6eb; border-radius: 6px; width: 90%; animation: skeleton-pulse 1.5s infinite;"></div>
+                                </div>
+                            </div>
+                            <div class="skeleton-comment" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #e4e6eb; animation: skeleton-pulse 1.5s infinite;"></div>
+                                <div class="skeleton-bubble" style="flex: 1;">
+                                    <div class="skeleton-line short" style="height: 10px; background: #e4e6eb; border-radius: 5px; width: 30%; margin-bottom: 8px; animation: skeleton-pulse 1.5s infinite;"></div>
+                                    <div class="skeleton-line" style="height: 12px; background: #e4e6eb; border-radius: 6px; width: 80%; animation: skeleton-pulse 1.5s infinite;"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -87,6 +106,14 @@
                     <div class="comment-input-area-detail">
                         <img src="" alt="My Avatar" class="avatar-small" id="my-avatar">
                         <div class="input-wrapper-detail">
+                            <!-- Media Preview Area for Comment -->
+                            <div id="comment-media-preview-container" style="display: none; position: relative; margin-bottom: 10px; width: 100%;">
+                                <img id="comment-image-preview" src="" style="max-width: 150px; max-height: 120px; border-radius: 8px; object-fit: cover;">
+                                <video id="comment-video-preview" src="" style="max-width: 150px; max-height: 120px; border-radius: 8px; object-fit: cover; display: none;" controls></video>
+                                <button onclick="removeCommentMedia()" style="position: absolute; top: -5px; left: 140px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                                    <i class="fa-solid fa-xmark" style="font-size: 10px;"></i>
+                                </button>
+                            </div>
                             <input type="text" placeholder="Viết bình luận..." id="comment-input">
                             <div class="input-icons">
                                 <label for="comment-media-input"><i class="fa-solid fa-camera"></i></label>
@@ -100,6 +127,7 @@
         </div>
     </div>
 
-    <script src="/js/post.js"></script>
+    <script src="/js/chat.js" defer></script>
+    <script src="/js/post.js" defer></script>
 </body>
 </html>

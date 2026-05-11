@@ -436,7 +436,6 @@ async function loadDashboardData() {
             const posts = await res.json();
             cache.posts = Array.isArray(posts) ? posts : [];
             renderPostsTable(posts, 'dashboard-posts-list');
-            renderReportsTable(posts);
             renderReviewPostsTable(posts);
             renderManagePostsTable(posts);
 
@@ -450,6 +449,8 @@ async function loadDashboardData() {
                 reviewFeed.innerHTML = '<div class="review-empty">Không tải được dữ liệu bài viết cần duyệt.</div>';
             }
         }
+        
+        await loadReports();
     } catch (err) {
         console.error("Lỗi tải bài viết:", err);
         cache.posts = [];
@@ -782,29 +783,201 @@ function renderManagePostsTable(posts) {
     tbody.innerHTML = rows || '<tr><td colspan="5" class="table-loading">Chưa có bài viết nào.</td></tr>';
 }
 
-function renderReportsTable(posts) {
-    const tbody = document.getElementById('reports-list');
-    if (!tbody) return;
-
-    const rows = posts.slice(0, 15).map(post => {
-        const content = post.content ? escapeHtml(post.content.substring(0, 36)) : '(Nội dung trống)';
-        return `
-            <tr>
-                <td>#R-${post.id}</td>
-                <td>${escapeHtml(post.authorName || 'Ẩn danh')}</td>
-                <td title="${escapeHtml(post.content || '')}">${content}${post.content && post.content.length > 36 ? '...' : ''}</td>
-                <td>
-                    <div class="action-group">
-                        <button class="btn-action warning" onclick="markReviewed(${post.id})">Bỏ qua</button>
-                        <button class="btn-action danger" onclick="deletePost(${post.id})">Xóa</button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
-
-    tbody.innerHTML = rows || '<tr><td colspan="4" class="table-loading">Không có báo cáo nào.</td></tr>';
+async function loadReports() {
+    try {
+        const res = await fetch('/api/moderator/reports', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const reports = await res.json();
+            renderReportsTable(reports);
+        } else {
+            console.error("Không thể tải danh sách báo cáo vi phạm");
+        }
+    } catch (err) {
+        console.error("Lỗi tải báo cáo:", err);
+    }
 }
+
+function renderReportsTable(reports) {
+    const postTbody = document.getElementById('reports-post-list');
+    const commentTbody = document.getElementById('reports-comment-list');
+    if (!postTbody || !commentTbody) return;
+
+    if (!Array.isArray(reports)) reports = [];
+
+    const postReports = reports.filter(r => r.targetType === 'POST');
+    const commentReports = reports.filter(r => r.targetType === 'COMMENT');
+
+    // Render Post Reports
+    if (postReports.length === 0) {
+        postTbody.innerHTML = '<tr><td colspan="4" class="table-loading">Không có báo cáo bài viết nào.</td></tr>';
+    } else {
+        postTbody.innerHTML = postReports.slice(0, 15).map(report => {
+            const content = report.reason ? escapeHtml(report.reason.substring(0, 36)) : '(Không có lý do)';
+            const targetId = report.post ? report.post.id : '?';
+            let actions = '';
+            if (report.status === 'PENDING') {
+                actions = `
+                    <div class="action-group">
+                        <button class="btn-action primary" title="Xem chi tiết" onclick="showModPostDetailModal(${targetId})"><i class="fa-solid fa-eye"></i></button>
+                        <button class="btn-action warning" onclick="resolveReport(${report.id}, 'DISMISSED')">Bỏ qua</button>
+                        <button class="btn-action danger" onclick="resolveReport(${report.id}, 'RESOLVED')">Xử lý</button>
+                    </div>
+                `;
+            } else {
+                actions = `<span class="status-badge ${report.status === 'RESOLVED' ? 'success' : 'warning'}">${report.status === 'RESOLVED' ? 'Đã xử lý' : 'Đã bỏ qua'}</span>
+                           <button class="btn-action primary" style="margin-left:5px;" title="Xem chi tiết" onclick="showModPostDetailModal(${targetId})"><i class="fa-solid fa-eye"></i></button>`;
+            }
+            return `
+                <tr>
+                    <td>#R-${report.id} <br> <small style="color: #65676b;">${escapeHtml(report.category || 'Khác')}</small></td>
+                    <td>Bài viết (#${targetId}) <br> <small>Báo cáo bởi: ${report.reporter ? escapeHtml(report.reporter.fullName) : 'Ẩn danh'}</small></td>
+                    <td title="${escapeHtml(report.reason || '')}">${content}${report.reason && report.reason.length > 36 ? '...' : ''}</td>
+                    <td>${actions}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Render Comment Reports
+    if (commentReports.length === 0) {
+        commentTbody.innerHTML = '<tr><td colspan="4" class="table-loading">Không có báo cáo bình luận nào.</td></tr>';
+    } else {
+        commentTbody.innerHTML = commentReports.slice(0, 15).map(report => {
+            const content = report.reason ? escapeHtml(report.reason.substring(0, 36)) : '(Không có lý do)';
+            const targetId = report.comment ? report.comment.id : '?';
+            const postId = report.comment && report.comment.postId ? report.comment.postId : 'null';
+            let actions = '';
+            if (report.status === 'PENDING') {
+                actions = `
+                    <div class="action-group">
+                        <button class="btn-action primary" title="Xem chi tiết gốc" onclick="showModPostDetailModal(${postId}, ${targetId})"><i class="fa-solid fa-eye"></i></button>
+                        <button class="btn-action warning" onclick="resolveReport(${report.id}, 'DISMISSED')">Bỏ qua</button>
+                        <button class="btn-action danger" onclick="resolveReport(${report.id}, 'RESOLVED')">Xử lý</button>
+                    </div>
+                `;
+            } else {
+                actions = `<span class="status-badge ${report.status === 'RESOLVED' ? 'success' : 'warning'}">${report.status === 'RESOLVED' ? 'Đã xử lý' : 'Đã bỏ qua'}</span>
+                           <button class="btn-action primary" style="margin-left:5px;" title="Xem chi tiết" onclick="showModPostDetailModal(${postId}, ${targetId})"><i class="fa-solid fa-eye"></i></button>`;
+            }
+            return `
+                <tr>
+                    <td>#R-${report.id} <br> <small style="color: #65676b;">${escapeHtml(report.category || 'Khác')}</small></td>
+                    <td>Bình luận (#${targetId}) <br> <small>Báo cáo bởi: ${report.reporter ? escapeHtml(report.reporter.fullName) : 'Ẩn danh'}</small></td>
+                    <td title="${escapeHtml(report.reason || '')}">${content}${report.reason && report.reason.length > 36 ? '...' : ''}</td>
+                    <td>${actions}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+}
+
+// Thêm sự kiện click cho các tab báo cáo
+document.addEventListener('DOMContentLoaded', () => {
+    const reportTabs = document.querySelectorAll('.report-tab-btn');
+    reportTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            reportTabs.forEach(t => {
+                t.classList.remove('active');
+                t.style.borderBottomColor = 'transparent';
+                t.style.color = 'var(--text-muted)';
+            });
+            tab.classList.add('active');
+            tab.style.borderBottomColor = 'var(--primary)';
+            tab.style.color = 'var(--primary)';
+            
+            const type = tab.getAttribute('data-report-type');
+            if (type === 'POST') {
+                document.getElementById('report-post-container').style.display = 'block';
+                document.getElementById('report-comment-container').style.display = 'none';
+            } else {
+                document.getElementById('report-post-container').style.display = 'none';
+                document.getElementById('report-comment-container').style.display = 'block';
+            }
+        });
+    });
+});
+
+window.showModPostDetailModal = async function(postId, highlightCommentId = null) {
+    if (!postId || postId === 'null') {
+        alert("Không thể tìm thấy ID bài viết gốc.");
+        return;
+    }
+    
+    try {
+        const res = await fetch(`/api/posts/${postId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+            alert('Bài viết không tồn tại hoặc đã bị xóa.');
+            return;
+        }
+        const post = await res.json();
+        
+        document.getElementById('mod-post-modal-author').textContent = post.authorName || 'Ẩn danh';
+        const avatarUrl = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName || 'User')}&background=00d1b2&color=fff`;
+        document.getElementById('mod-post-modal-avatar').src = avatarUrl;
+        document.getElementById('mod-post-modal-time').textContent = new Date(post.createdAt).toLocaleString('vi-VN');
+        
+        document.getElementById('mod-post-modal-content').textContent = post.content || '';
+        
+        const mediaContainer = document.getElementById('mod-post-modal-media');
+        mediaContainer.innerHTML = '';
+        if (post.imageUrl) {
+            mediaContainer.innerHTML = `<img src="${post.imageUrl}" style="max-width: 100%; max-height: 400px; object-fit: contain;">`;
+        } else if (post.videoUrl) {
+            mediaContainer.innerHTML = `<video src="${post.videoUrl}" controls style="max-width: 100%; max-height: 400px;"></video>`;
+        }
+        
+        if (highlightCommentId) {
+            const commentNote = document.createElement('div');
+            commentNote.style.padding = '10px';
+            commentNote.style.background = 'rgba(240, 40, 73, 0.1)';
+            commentNote.style.borderLeft = '3px solid #f02849';
+            commentNote.style.marginTop = '15px';
+            commentNote.style.fontSize = '14px';
+            commentNote.innerHTML = `<strong>Lưu ý:</strong> Báo cáo này nhắm vào bình luận (ID: #${highlightCommentId}) trong bài viết trên. (Tính năng hiển thị chi tiết bình luận vi phạm đang được cập nhật).`;
+            document.getElementById('mod-post-modal-content').appendChild(commentNote);
+        }
+        
+        const modal = document.getElementById('mod-post-detail-modal');
+        modal.classList.remove('profile-modal-hidden');
+        modal.setAttribute('aria-hidden', 'false');
+    } catch (err) {
+        console.error("Lỗi xem chi tiết bài viết:", err);
+    }
+};
+
+window.closeModPostDetailModal = function() {
+    const modal = document.getElementById('mod-post-detail-modal');
+    modal.classList.add('profile-modal-hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    
+    // Stop any playing video
+    const video = modal.querySelector('video');
+    if (video) video.pause();
+};
+
+window.resolveReport = async function(reportId, status) {
+    let note = prompt("Nhập ghi chú cho báo cáo này (tùy chọn):");
+    if (note === null) return; // user cancelled
+
+    try {
+        const res = await fetch(`/api/moderator/reports/${reportId}/status?status=${status}&adminNote=${encodeURIComponent(note)}`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            alert('Đã cập nhật trạng thái báo cáo.');
+            loadReports();
+        } else {
+            alert('Lỗi cập nhật trạng thái: ' + await res.text());
+        }
+    } catch (err) {
+        console.error("Lỗi:", err);
+    }
+};
 
 function renderUsersTable(users) {
     const tbody = document.getElementById('users-list');

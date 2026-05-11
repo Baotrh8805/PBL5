@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -197,7 +197,13 @@
                     <h2>Báo cáo vi phạm</h2>
                     <p>Tổng hợp báo cáo vi phạm dựa trên nội dung cần kiểm duyệt.</p>
                 </div>
-                <div class="card">
+                
+                <div class="report-tabs" style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); display: flex; gap: 20px;">
+                    <button class="report-tab-btn active" data-report-type="POST" style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid var(--primary); color: var(--primary);">Bài viết bị báo cáo</button>
+                    <button class="report-tab-btn" data-report-type="COMMENT" style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; color: var(--text-muted);">Bình luận bị báo cáo</button>
+                </div>
+
+                <div class="card" id="report-post-container">
                     <table class="mod-table">
                         <thead>
                             <tr>
@@ -207,7 +213,23 @@
                                 <th>Quyết định</th>
                             </tr>
                         </thead>
-                        <tbody id="reports-list">
+                        <tbody id="reports-post-list">
+                            <tr><td colspan="4" class="table-loading">Đang tải danh sách báo cáo...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card" id="report-comment-container" style="display: none;">
+                    <table class="mod-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Tickets</th>
+                                <th>Đối tượng</th>
+                                <th>Nguyên nhân</th>
+                                <th>Quyết định</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reports-comment-list">
                             <tr><td colspan="4" class="table-loading">Đang tải danh sách báo cáo...</td></tr>
                         </tbody>
                     </table>
@@ -355,6 +377,38 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancel-profile-edit">Hủy</button>
                 <button type="button" class="btn btn-primary" id="save-profile-edit">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mod-post-detail-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
+        <div class="modal-card" style="max-width: 600px; padding: 0; background: #242526; color: #e4e6eb; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="modal-header" style="border-bottom: 1px solid #3e4042; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="mod-post-modal-title" style="font-size: 18px; margin: 0; text-align: center; flex: 1;">Chi tiết nội dung</h2>
+                <button type="button" onclick="closeModPostDetailModal()" class="close-modal" aria-label="Đóng" style="background: #3a3b3c; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #e4e6eb; border: none; cursor: pointer;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 15px 20px; overflow-y: auto; max-height: 70vh;">
+                <!-- Post Author Header -->
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <img id="mod-post-modal-avatar" src="" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+                    <div>
+                        <div id="mod-post-modal-author" style="font-weight: 600; font-size: 15px;"></div>
+                        <div style="font-size: 12px; color: #b0b3b8; display: flex; align-items: center; gap: 5px;">
+                            <span id="mod-post-modal-time"></span>
+                            <i class="fa-solid fa-earth-americas" style="font-size: 10px;"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Post Content -->
+                <div id="mod-post-modal-content" style="font-size: 15px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-word;"></div>
+                
+                <!-- Post Media -->
+                <div id="mod-post-modal-media" style="margin-bottom: 15px; display: flex; justify-content: center; background: #18191a; border-radius: 8px; overflow: hidden;">
+                    <!-- Image or video injected here -->
+                </div>
             </div>
         </div>
     </div>

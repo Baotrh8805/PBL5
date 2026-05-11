@@ -710,9 +710,26 @@ async function hidePost(postId) {
 }
 
 let activeReportPostId = null;
+let activeReportCommentId = null;
 
 function reportPost(postId) {
     activeReportPostId = postId;
+    activeReportCommentId = null;
+    const titleEl = document.getElementById('report-modal-title');
+    if(titleEl) titleEl.innerText = "Báo cáo bài viết";
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    
+    // Bind confirm button
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    confirmBtn.onclick = () => submitReport();
+}
+
+function reportComment(commentId) {
+    activeReportCommentId = commentId;
+    activeReportPostId = null;
+    const titleEl = document.getElementById('report-modal-title');
+    if(titleEl) titleEl.innerText = "Báo cáo bình luận";
     document.getElementById('report-modal').style.display = 'flex';
     document.getElementById('report-reason').value = '';
     
@@ -724,10 +741,13 @@ function reportPost(postId) {
 function closeReportModal() {
     document.getElementById('report-modal').style.display = 'none';
     activeReportPostId = null;
+    activeReportCommentId = null;
 }
 
 async function submitReport() {
     const reason = document.getElementById('report-reason').value.trim();
+    const categoryEl = document.getElementById('report-category');
+    const category = categoryEl ? categoryEl.value : 'OTHER';
     if (!reason) {
         showToast('Vui lòng nhập lý do báo cáo.', 'error');
         return;
@@ -735,17 +755,32 @@ async function submitReport() {
 
     const token = localStorage.getItem('token');
     try {
-        const res = await fetch(`/api/posts/${activeReportPostId}/report`, {
+        let endpoint = '';
+        if (activeReportPostId) {
+            endpoint = `/api/posts/${activeReportPostId}/report`;
+        } else if (activeReportCommentId) {
+            endpoint = `/api/posts/comments/${activeReportCommentId}/report`;
+        } else {
+            return;
+        }
+
+        const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}` 
             },
-            body: JSON.stringify({ reason: reason })
+            body: JSON.stringify({ reason: reason, category: category })
         });
 
         if (res.ok) {
-            document.getElementById('post-' + activeReportPostId).style.display = 'none';
+            if (activeReportPostId) {
+                const postEl = document.getElementById('post-' + activeReportPostId);
+                if (postEl) postEl.style.display = 'none';
+            } else if (activeReportCommentId) {
+                const commentEl = document.getElementById('comment-' + activeReportCommentId);
+                if (commentEl) commentEl.style.display = 'none';
+            }
             closeReportModal();
             showToast('Cảm ơn bạn! Báo cáo đã được gửi.', 'success');
         } else {
@@ -902,6 +937,7 @@ function renderCommentItem(c, postId, isReply = false) {
             ${!isReply ? `<span onclick="showReplyInput(${postId}, ${c.id}, '${c.authorName}')" style="color: #65676b; cursor: pointer; font-weight: 600;">Phản hồi</span>` : ''}
             ${c.isMine && diffMinutes < 30 ? `<span onclick="startEditComment(${postId}, ${c.id}, '${c.content ? c.content.replace(/'/g, "\\'") : ''}')" style="color: #65676b; cursor: pointer; font-weight: 600;">Sửa</span>` : ''}
             ${c.isMine ? `<span onclick="deleteComment(${postId}, ${c.id})" style="color: #65676b; cursor: pointer; font-weight: 600;">Xóa</span>` : ''}
+            ${!c.isMine ? `<span onclick="reportComment(${c.id})" style="color: #65676b; cursor: pointer; font-weight: 600;" title="Báo cáo bình luận"><i class="fa-regular fa-flag"></i></span>` : ''}
             <span style="color: #65676b; font-size: 11px;">${timeStr}</span>
         </div>
     `;

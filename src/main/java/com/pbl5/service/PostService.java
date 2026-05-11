@@ -105,6 +105,7 @@ public class PostService {
                 commentCount,
                 false,
                 true,
-                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC");
+                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
+                post.getStatus() != null ? post.getStatus().name() : "ACTIVE");
     }
 }

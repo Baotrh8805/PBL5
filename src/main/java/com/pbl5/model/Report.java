@@ -1,7 +1,10 @@
 package com.pbl5.model;
 
+import com.pbl5.enums.ReportCategory;
+import com.pbl5.enums.ReportStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "reports")
 public class Report {
@@ -15,60 +18,71 @@ public class Report {
 
     @ManyToOne
     @JoinColumn(name = "post_id")
-    private Post post; // Reported post
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
+    private Post post; // Reported post (nullable khi report comment)
+
+    @ManyToOne
+    @JoinColumn(name = "comment_id")
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
+    private Comment comment; // Reported comment (nullable khi report post)
 
     @Column(columnDefinition = "TEXT")
     private String reason;
 
-    private String status = "PENDING"; // PENDING, RESOLVED, DISMISSED
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'PENDING'")
+    private ReportStatus status = ReportStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(255) default 'OTHER'")
+    private ReportCategory category = ReportCategory.OTHER;
+
+    /** Admin/Moderator đã xử lý báo cáo này */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resolved_by")
+    private User resolvedBy;
+
+    /** Thời điểm xử lý */
+    private LocalDateTime resolvedAt;
+
+    /** Ghi chú của admin khi xử lý */
+    @Column(columnDefinition = "TEXT")
+    private String adminNote;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    public Long getId() {
-        return id;
-    }
+    // ===== GETTERS & SETTERS =====
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public User getUser() {
-        return user;
-    }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
+    public Post getPost() { return post; }
+    public void setPost(Post post) { this.post = post; }
 
-    public Post getPost() {
-        return post;
-    }
+    public Comment getComment() { return comment; }
+    public void setComment(Comment comment) { this.comment = comment; }
 
-    public void setPost(Post post) {
-        this.post = post;
-    }
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
 
-    public String getReason() {
-        return reason;
-    }
+    public ReportStatus getStatus() { return status; }
+    public void setStatus(ReportStatus status) { this.status = status; }
 
-    public void setReason(String reason) {
-        this.reason = reason;
-    }
+    public ReportCategory getCategory() { return category; }
+    public void setCategory(ReportCategory category) { this.category = category; }
 
-    public String getStatus() {
-        return status;
-    }
+    public User getResolvedBy() { return resolvedBy; }
+    public void setResolvedBy(User resolvedBy) { this.resolvedBy = resolvedBy; }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    public LocalDateTime getResolvedAt() { return resolvedAt; }
+    public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public String getAdminNote() { return adminNote; }
+    public void setAdminNote(String adminNote) { this.adminNote = adminNote; }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

@@ -29,6 +29,9 @@
         <a href="#" class="nav-item" data-page="moderators">
             <i class="fa-solid fa-shield-halved"></i> Kiểm duyệt viên
         </a>
+        <a href="#" class="nav-item" data-page="reports">
+            <i class="fa-solid fa-flag"></i> Báo cáo
+        </a>
         <a href="#" class="nav-item" data-page="stats">
             <i class="fa-solid fa-chart-bar"></i> Thống kê
         </a>
@@ -197,6 +200,8 @@
                             <th>ID</th>
                             <th>Tác giả</th>
                             <th>Nội dung</th>
+                            <th>Trạng thái</th>
+                            <th>Vi phạm</th>
                             <th>Chế độ</th>
                             <th>Lượt thích</th>
                             <th>Bình luận</th>
@@ -205,7 +210,7 @@
                         </tr>
                     </thead>
                     <tbody id="posts-tbody">
-                        <tr><td colspan="8" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        <tr><td colspan="10" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -317,6 +322,113 @@
                 <i class="fa-solid fa-shield-halved"></i>
                 <div class="big-stat-value" id="big-moderators">--</div>
                 <div class="big-stat-label">Moderator</div>
+            </div>
+            <div class="big-stat-card">
+                <i class="fa-solid fa-flag" style="color:var(--red);"></i>
+                <div class="big-stat-value" id="big-pending-reports">--</div>
+                <div class="big-stat-label">Báo cáo chưa xử lý</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page hidden" id="page-reports">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Báo cáo</h1>
+                <p class="page-subtitle">Xử lý các báo cáo từ người dùng về nội dung vi phạm</p>
+            </div>
+            <div class="header-actions">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="report-search-input" placeholder="Tìm theo nội dung, lý do..." oninput="filterReports()">
+                </div>
+                <select class="filter-select" id="report-filter-status" onchange="filterReports()">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="PENDING">Chờ xử lý</option>
+                    <option value="RESOLVED">Đã giải quyết</option>
+                    <option value="DISMISSED">Bỏ qua</option>
+                </select>
+                <button class="btn-refresh" onclick="loadReports()">
+                    <i class="fa-solid fa-rotate-right"></i> Làm mới
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="fa-solid fa-flag"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="report-stat-total">--</div>
+                    <div class="stat-label">Tổng báo cáo</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon yellow"><i class="fa-solid fa-clock"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="report-stat-pending">--</div>
+                    <div class="stat-label">Đang chờ</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="report-stat-resolved">--</div>
+                    <div class="stat-label">Đã giải quyết</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-tabs" style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); display: flex; gap: 20px;">
+            <button class="report-tab-btn active" data-report-type="POST" style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid var(--primary); color: var(--primary);">Bài viết bị báo cáo</button>
+            <button class="report-tab-btn" data-report-type="COMMENT" style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; color: var(--text-muted);">Bình luận bị báo cáo</button>
+        </div>
+
+        <div class="table-card" id="admin-report-post-container">
+            <div class="table-header">
+                <span id="report-table-count">Đang tải...</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Người báo cáo</th>
+                            <th>Bài viết bị báo cáo</th>
+                            <th>Lý do</th>
+                            <th>Thời gian</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-post-list">
+                        <tr><td colspan="7" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-card" id="admin-report-comment-container" style="display: none;">
+            <div class="table-header">
+                <span id="report-comment-table-count">Đang tải...</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Người báo cáo</th>
+                            <th>Bình luận bị báo cáo</th>
+                            <th>Lý do</th>
+                            <th>Thời gian</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-comment-list">
+                        <tr><td colspan="7" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

@@ -347,18 +347,92 @@ public class PostController {
         if (postOpt.isEmpty())
             return ResponseEntity.notFound().build();
 
+        Post post = postOpt.get();
+
+        // Chống report trùng
+        if (reportRepository.existsByUserAndPost(user, post)) {
+            return ResponseEntity.status(409).body("Bạn đã báo cáo bài viết này rồi.");
+        }
+
         String reason = body.get("reason");
         if (reason == null || reason.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Lý do báo cáo không được để trống.");
         }
 
+        // Parse category
+        com.pbl5.enums.ReportCategory category = com.pbl5.enums.ReportCategory.OTHER;
+        String categoryStr = body.get("category");
+        if (categoryStr != null) {
+            try {
+                category = com.pbl5.enums.ReportCategory.valueOf(categoryStr.toUpperCase());
+            } catch (IllegalArgumentException ignored) {}
+        }
+
         Report report = new Report();
         report.setUser(user);
-        report.setPost(postOpt.get());
-        report.setReason(reason);
+        report.setPost(post);
+        report.setReason(reason.trim());
+        report.setCategory(category);
         reportRepository.save(report);
 
+        // Ẩn bài cho người report (giống hide post)
+        if (hiddenPostRepository.findByUserAndPost(user, post).isEmpty()) {
+            HiddenPost hp = new HiddenPost();
+            hp.setUser(user);
+            hp.setPost(post);
+            hiddenPostRepository.save(hp);
+        }
+
+        // Auto-escalate: nếu >= 3 report PENDING → ẩn bài khỏi mọi người
+        long pendingCount = reportRepository.countByPostAndStatus(post, com.pbl5.enums.ReportStatus.PENDING);
+        if (pendingCount >= 3 && post.getStatus() != com.pbl5.enums.PostStatus.AUTO_REJECTED) {
+            post.setStatus(com.pbl5.enums.PostStatus.PENDING_REVIEW);
+            postRepository.save(post);
+        }
+
         return ResponseEntity.ok("Đã gửi báo cáo thành công.");
+    }
+
+    @PostMapping("/comments/{commentId}/report")
+    public ResponseEntity<?> reportComment(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long commentId,
+            @RequestBody Map<String, String> body) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Comment> commentOpt = commentRepository.findById(commentId);
+        if (commentOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Comment comment = commentOpt.get();
+
+        // Chống report trùng
+        if (reportRepository.existsByUserAndComment(user, comment)) {
+            return ResponseEntity.status(409).body("Bạn đã báo cáo bình luận này rồi.");
+        }
+
+        String reason = body.get("reason");
+        if (reason == null || reason.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Lý do báo cáo không được để trống.");
+        }
+
+        com.pbl5.enums.ReportCategory category = com.pbl5.enums.ReportCategory.OTHER;
+        String categoryStr = body.get("category");
+        if (categoryStr != null) {
+            try {
+                category = com.pbl5.enums.ReportCategory.valueOf(categoryStr.toUpperCase());
+            } catch (IllegalArgumentException ignored) {}
+        }
+
+        Report report = new Report();
+        report.setUser(user);
+        report.setComment(comment);
+        report.setReason(reason.trim());
+        report.setCategory(category);
+        reportRepository.save(report);
+
+        return ResponseEntity.ok("Đã gửi báo cáo bình luận thành công.");
     }
 
     @GetMapping("/{postId}/comments")
@@ -551,7 +625,8 @@ public class PostController {
                             commentCount,
                             isLiked,
                             isMine,
-                            post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC"));
+                            post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
+                            post.getStatus() != null ? post.getStatus().name() : "ACTIVE"));
                 }
             } catch (Exception e) {
                 // skip broken post
@@ -606,7 +681,8 @@ public class PostController {
                 commentCount,
                 isLiked,
                 isMine,
-                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC");
+                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
+                post.getStatus() != null ? post.getStatus().name() : "ACTIVE");
 
         // Set bookmark state
         if (currentUser != null) {

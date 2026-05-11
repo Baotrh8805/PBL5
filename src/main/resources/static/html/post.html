@@ -47,7 +47,12 @@
                             <span id="post-time"></span>
                         </div>
                     </div>
-                    <button class="options-btn"><i class="fa-solid fa-ellipsis"></i></button>
+                    <div class="post-options" style="position: relative;">
+                        <button class="options-btn" id="post-options-btn" onclick="togglePostMenu(event)"><i class="fa-solid fa-ellipsis"></i></button>
+                        <div id="post-dropdown-menu" class="dropdown-content post-dropdown" style="right: 0; left: auto; top: 30px;">
+                            <!-- JS will inject options here based on ownership -->
+                        </div>
+                    </div>
                 </header>
 
                 <div class="post-sidebar-content">
@@ -124,6 +129,36 @@
                     </div>
                 </footer>
             </aside>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Report Modal -->
+    <div id="report-modal" class="modal-overlay" style="display: none; z-index: 3000;">
+        <div class="modal-content" style="max-width: 400px; padding: 25px;">
+            <div class="modal-header" style="border-bottom: 1px solid #e4e6eb; padding-bottom: 15px; margin-bottom: 20px;">
+                <h2 id="report-modal-title" style="font-size: 20px; font-weight: 700;">Báo cáo bài viết</h2>
+                <button class="close-modal" onclick="closeReportModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #65676b; margin-bottom: 15px; font-size: 14px;">Tại sao bạn muốn báo cáo nội dung này?</p>
+                <select id="report-category" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none;">
+                    <option value="SPAM">Spam / Nội dung rác</option>
+                    <option value="VIOLENCE">Bạo lực</option>
+                    <option value="HARASSMENT">Quấy rối</option>
+                    <option value="HATE_SPEECH">Ngôn từ thù ghét</option>
+                    <option value="NSFW">Nội dung nhạy cảm</option>
+                    <option value="FALSE_INFO">Thông tin sai lệch</option>
+                    <option value="OTHER" selected>Khác</option>
+                </select>
+                <textarea id="report-reason" placeholder="Nhập lý do chi tiết..." style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; resize: none; margin-bottom: 20px; font-family: inherit; outline: none;"></textarea>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="closeReportModal()">Hủy</button>
+                    <button class="btn btn-primary" id="confirm-report-btn">Gửi báo cáo</button>
+                </div>
+            </div>
         </div>
     </div>
 

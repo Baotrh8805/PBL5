@@ -41,6 +41,9 @@ public class ModeratorController {
     @Autowired
     private JwtTokenProvider tokenProvider;
 
+    @Autowired
+    private com.pbl5.repository.ReportRepository reportRepository;
+
     // ==================== KIỂM DUYỆT BÀI VIẾT ====================
 
     /** Lấy tất cả bài viết (để xem xét nội dung) */
@@ -133,6 +136,55 @@ public class ModeratorController {
         }
         commentRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Đã xoá bình luận ID " + id));
+    }
+
+    // ==================== KIỂM DUYỆT BÁO CÁO NGƯỜI DÙNG ====================
+
+    /** Lấy danh sách báo cáo PENDING (Moderator xem) */
+    @GetMapping("/reports")
+    public ResponseEntity<?> getPendingReports() {
+        List<Map<String, Object>> reports = reportRepository.findByStatusOrderByCreatedAtDesc(com.pbl5.enums.ReportStatus.PENDING).stream()
+                .map(r -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", r.getId());
+                    map.put("reason", r.getReason());
+                    map.put("category", r.getCategory() != null ? r.getCategory().name() : "OTHER");
+                    map.put("createdAt", r.getCreatedAt());
+                    map.put("targetType", r.getComment() != null ? "COMMENT" : "POST");
+
+                    if (r.getUser() != null) {
+                        Map<String, Object> reporterMap = new HashMap<>();
+                        reporterMap.put("fullName", r.getUser().getFullName());
+                        reporterMap.put("avatar", r.getUser().getAvatar() != null ? r.getUser().getAvatar() : "");
+                        map.put("reporter", reporterMap);
+                    }
+
+                    if (r.getPost() != null) {
+                        Map<String, Object> postMap = new HashMap<>();
+                        postMap.put("id", r.getPost().getId());
+                        postMap.put("content", r.getPost().getContent());
+                        postMap.put("imageUrl", r.getPost().getImageUrl());
+                        if (r.getPost().getUser() != null) {
+                            postMap.put("authorName", r.getPost().getUser().getFullName());
+                        }
+                        map.put("post", postMap);
+                    }
+
+                    if (r.getComment() != null) {
+                        Map<String, Object> commentMap = new HashMap<>();
+                        commentMap.put("id", r.getComment().getId());
+                        commentMap.put("content", r.getComment().getContent());
+                        if (r.getComment().getUser() != null) {
+                            commentMap.put("authorName", r.getComment().getUser().getFullName());
+                        }
+                        if (r.getComment().getPost() != null) {
+                            commentMap.put("postId", r.getComment().getPost().getId());
+                        }
+                        map.put("comment", commentMap);
+                    }
+                    return map;
+                }).collect(Collectors.toList());
+        return ResponseEntity.ok(reports);
     }
 
     // ==================== KIỂM DUYỆT NGƯỜI DÙNG ====================

@@ -140,6 +140,18 @@ function renderPostDetail(post) {
         likeBtn.classList.remove('active');
         likeBtn.innerHTML = '<i class="fa-regular fa-heart"></i> Thích';
     }
+
+    // Post Options Menu
+    const dropdownMenu = document.getElementById('post-dropdown-menu');
+    if (post.mine || post.isMine) {
+        dropdownMenu.innerHTML = `
+            <a href="javascript:void(0)" onclick="deletePostDetail(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+        `;
+    } else {
+        dropdownMenu.innerHTML = `
+            <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
+        `;
+    }
 }
 
 async function toggleLike(postId, token) {
@@ -230,6 +242,19 @@ function renderCommentItem(c, isReply = false) {
                     ` : ''}
                     <div class="comment-dropdown-item" onclick="deleteComment(${c.id})" style="color: #f02849;">
                         <i class="fa-solid fa-trash"></i> Xóa bình luận
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        menuHtml = `
+            <div class="comment-menu-container">
+                <div class="comment-menu-btn" onclick="toggleCommentMenu(event, ${c.id})">
+                    <i class="fa-solid fa-ellipsis"></i>
+                </div>
+                <div class="comment-dropdown" id="comment-dropdown-${c.id}">
+                    <div class="comment-dropdown-item" onclick="reportComment(${c.id})">
+                        <i class="fa-regular fa-flag"></i> Báo cáo bình luận
                     </div>
                 </div>
             </div>
@@ -501,4 +526,127 @@ window.toggleCommentMenu = function (event, commentId) {
 document.addEventListener('click', () => {
     const allDropdowns = document.querySelectorAll('.comment-dropdown');
     allDropdowns.forEach(d => d.classList.remove('show'));
+    
+    // Thêm logic đóng menu bài viết nếu có
+    const allPostDropdowns = document.querySelectorAll('.post-dropdown');
+    if(allPostDropdowns) {
+        allPostDropdowns.forEach(d => d.classList.remove('show'));
+    }
 });
+
+let activeReportPostId = null;
+let activeReportCommentId = null;
+
+function reportPost(postId) {
+    activeReportPostId = postId;
+    activeReportCommentId = null;
+    const titleEl = document.getElementById('report-modal-title');
+    if(titleEl) titleEl.innerText = "Báo cáo bài viết";
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    confirmBtn.onclick = () => submitReport();
+}
+
+function reportComment(commentId) {
+    activeReportCommentId = commentId;
+    activeReportPostId = null;
+    const titleEl = document.getElementById('report-modal-title');
+    if(titleEl) titleEl.innerText = "Báo cáo bình luận";
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    confirmBtn.onclick = () => submitReport();
+}
+
+function closeReportModal() {
+    document.getElementById('report-modal').style.display = 'none';
+    activeReportPostId = null;
+    activeReportCommentId = null;
+}
+
+async function submitReport() {
+    const reason = document.getElementById('report-reason').value.trim();
+    const categoryEl = document.getElementById('report-category');
+    const category = categoryEl ? categoryEl.value : 'OTHER';
+    if (!reason) {
+        showToast('Vui lòng nhập lý do báo cáo.', 'error');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+        let endpoint = '';
+        if (activeReportPostId) {
+            endpoint = `/api/posts/${activeReportPostId}/report`;
+        } else if (activeReportCommentId) {
+            endpoint = `/api/posts/comments/${activeReportCommentId}/report`;
+        } else {
+            return;
+        }
+
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ reason: reason, category: category })
+        });
+
+        if (res.ok) {
+            closeReportModal();
+            showToast('Cảm ơn bạn! Báo cáo đã được gửi.', 'success');
+        } else {
+            const txt = await res.text();
+            showToast(txt, 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Lỗi khi gửi báo cáo.', 'error');
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.innerText = message;
+    toast.className = 'toast ' + type;
+    toast.classList.remove('hidden');
+
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
+}
+
+window.togglePostMenu = function (event) {
+    event.stopPropagation();
+    const dropdown = document.getElementById('post-dropdown-menu');
+    if (dropdown) {
+        dropdown.classList.toggle('show');
+    }
+};
+
+window.deletePostDetail = async function(postId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${postId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            alert('Bài viết đã được xóa.');
+            window.location.href = '/html/home.html';
+        } else {
+            const txt = await res.text();
+            alert("Lỗi: " + txt);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+};

@@ -313,8 +313,16 @@ function renderProfilePosts(posts) {
         else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
         const isMine = post.mine ?? post.isMine ?? false;
 
+        const isRejected = post.status === 'AUTO_REJECTED';
+        const rejectedHtml = isRejected ? `
+            <div style="background-color: #ffebe9; border: 1px solid #ff8182; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: #d1293f; font-weight: 500;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 18px;"></i>
+                <span>Bài viết này đã bị gỡ khỏi hệ thống do vi phạm tiêu chuẩn cộng đồng. Chỉ có bạn mới có thể nhìn thấy nội dung này.</span>
+            </div>
+        ` : '';
+
         let postHtml = `
-        <article class="card post" id="post-${post.id}">
+        <article class="card post" id="post-${post.id}" ${isRejected ? 'style="opacity: 0.8; border: 1px solid #ff8182;"' : ''}>
             <div class="post-header">
                 <img src="${post.authorAvatar || '/uploads/default-avatar.png'}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
@@ -323,6 +331,7 @@ function renderProfilePosts(posts) {
                 </div>
             </div>
             
+            ${!isRejected ? `
             <div class="post-options">
                 <button class="options-btn" onclick="toggleDropdown(${post.id})">
                     <i class="fa-solid fa-ellipsis"></i>
@@ -339,9 +348,10 @@ function renderProfilePosts(posts) {
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
                     `}
                 </div>
-            </div>
+            </div>` : ''}
 
             <div class="post-content">
+                ${rejectedHtml}
                 <p>${escapeHtml(post.content || '')}</p>
             </div>
         `;
@@ -545,9 +555,26 @@ async function hidePost(postId) {
 }
 
 let activeReportPostId = null;
+let activeReportCommentId = null;
 
 function reportPost(postId) {
     activeReportPostId = postId;
+    activeReportCommentId = null;
+    const titleEl = document.getElementById('report-modal-title');
+    if(titleEl) titleEl.innerText = "Báo cáo bài viết";
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    
+    // Bind confirm button
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    confirmBtn.onclick = () => submitReport();
+}
+
+function reportComment(commentId) {
+    activeReportCommentId = commentId;
+    activeReportPostId = null;
+    const titleEl = document.getElementById('report-modal-title');
+    if(titleEl) titleEl.innerText = "Báo cáo bình luận";
     document.getElementById('report-modal').style.display = 'flex';
     document.getElementById('report-reason').value = '';
     
@@ -559,10 +586,13 @@ function reportPost(postId) {
 function closeReportModal() {
     document.getElementById('report-modal').style.display = 'none';
     activeReportPostId = null;
+    activeReportCommentId = null;
 }
 
 async function submitReport() {
     const reason = document.getElementById('report-reason').value.trim();
+    const categoryEl = document.getElementById('report-category');
+    const category = categoryEl ? categoryEl.value : 'OTHER';
     if (!reason) {
         showToast('Vui lòng nhập lý do báo cáo.', 'error');
         return;
@@ -570,17 +600,32 @@ async function submitReport() {
 
     const token = localStorage.getItem('token');
     try {
-        const res = await fetch(`/api/posts/${activeReportPostId}/report`, {
+        let endpoint = '';
+        if (activeReportPostId) {
+            endpoint = `/api/posts/${activeReportPostId}/report`;
+        } else if (activeReportCommentId) {
+            endpoint = `/api/posts/comments/${activeReportCommentId}/report`;
+        } else {
+            return;
+        }
+
+        const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}` 
             },
-            body: JSON.stringify({ reason: reason })
+            body: JSON.stringify({ reason: reason, category: category })
         });
 
         if (res.ok) {
-            document.getElementById('post-' + activeReportPostId).style.display = 'none';
+            if (activeReportPostId) {
+                const postEl = document.getElementById('post-' + activeReportPostId);
+                if (postEl) postEl.style.display = 'none';
+            } else if (activeReportCommentId) {
+                const commentEl = document.getElementById('comment-' + activeReportCommentId);
+                if (commentEl) commentEl.style.display = 'none';
+            }
             closeReportModal();
             showToast('Cảm ơn bạn! Báo cáo đã được gửi.', 'success');
         } else {
@@ -644,6 +689,7 @@ async function fetchComments(postId) {
                             <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
                             <div style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
                         </div>
+                        <div style="margin-top: 5px; cursor: pointer; color: #65676b;" onclick="reportComment(${c.id})" title="Báo cáo bình luận"><i class="fa-regular fa-flag"></i></div>
                     </div>
                     <div style="font-size: 11px; color: #65676b; margin-left: 45px; margin-top: 2px;">${timeStr}</div>
                 </div>

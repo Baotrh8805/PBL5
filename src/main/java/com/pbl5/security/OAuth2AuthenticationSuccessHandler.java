@@ -50,18 +50,25 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         // Lấy thông tin người dùng từ Google (đã được xử lý bởi CustomOAuth2UserService)
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        // Trích xuất email từ dữ liệu Google trả về
         String email = oAuth2User.getAttribute("email");
 
-        // Tạo JWT token với email là subject – mặc định Ghi nhớ đăng nhập (30 ngày) cho OAuth2
-        String token = tokenProvider.generateToken(email, true);
-
-        // Lưu lịch sử đăng nhập Google
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isBlank()) ip = request.getRemoteAddr();
         final String finalIp = ip;
+
         Optional<User> userOpt = userRepository.findByEmail(email);
-        userOpt.ifPresent(user -> loginHistoryRepository.save(new LoginHistory(user, finalIp, "GOOGLE")));
+        
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (user.getStatus() == com.pbl5.enums.UserStatus.BANNED) {
+                getRedirectStrategy().sendRedirect(request, response, "/?error=banned");
+                return;
+            }
+            loginHistoryRepository.save(new LoginHistory(user, finalIp, "GOOGLE"));
+        }
+
+        // Tạo JWT token với email là subject – mặc định Ghi nhớ đăng nhập (30 ngày) cho OAuth2
+        String token = tokenProvider.generateToken(email, true);
 
         getRedirectStrategy().sendRedirect(request, response, "/?oauth_token=" + token);
     }

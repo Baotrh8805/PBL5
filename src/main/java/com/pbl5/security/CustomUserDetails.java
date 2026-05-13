@@ -77,11 +77,12 @@ public class CustomUserDetails implements UserDetails {
 
     /**
      * Kiểm tra tài khoản có bị khóa không.
-     * Hệ thống dùng field status để kiểm tra → luôn trả về true ở đây.
-     * (Logic khóa tài khoản được xử lý thủ công trong AuthService)
+     * Trả về false nếu user bị khóa (BANNED).
      */
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() { 
+        return user.getStatus() != com.pbl5.enums.UserStatus.BANNED; 
+    }
 
     /**
      * Kiểm tra thông tin xác thực (password) có hết hạn không.
@@ -92,13 +93,10 @@ public class CustomUserDetails implements UserDetails {
 
     /**
      * Kiểm tra tài khoản có được kích hoạt không.
-     * Trả về true chỉ khi trạng thái tài khoản là ACTIVE.
-     * Spring Security dùng kết quả này khi xác thực – nếu false, đăng nhập sẽ thất bại.
-     *
-     * @return true nếu user có status = ACTIVE
+     * Trả về true nếu user không phải là INACTIVE (tức là ACTIVE hoặc WARNING).
      */
     @Override
     public boolean isEnabled() {
-        return user.getStatus() == com.pbl5.enums.UserStatus.ACTIVE;
+        return user.getStatus() != com.pbl5.enums.UserStatus.INACTIVE;
     }
 }

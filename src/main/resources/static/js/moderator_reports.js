@@ -222,18 +222,51 @@ window.openReportDetailModal = function(reportId) {
     // Tự động tải nội dung để xem trước
     fetchAndRenderReportedContent(isPost, targetObj, postId);
 
-    // Action Buttons in Modal
-    const dismissBtn = document.getElementById('rd-dismiss-btn');
-    const resolveBtn = document.getElementById('rd-resolve-btn');
-    
-    if (report.status === 'PENDING') {
-        dismissBtn.style.display = 'block';
-        resolveBtn.style.display = 'block';
-        dismissBtn.onclick = () => { resolveReport(report.id, 'DISMISSED'); window.closeReportDetailModal(); };
-        resolveBtn.onclick = () => { resolveReport(report.id, 'RESOLVED'); window.closeReportDetailModal(); };
-    } else {
-        dismissBtn.style.display = 'none';
-        resolveBtn.style.display = 'none';
+    // Action Buttons in Modal (Dynamic based on status and targetType)
+    const footer = document.getElementById('rd-modal-footer');
+    if (footer) {
+        footer.innerHTML = ''; // Reset content
+        
+        if (report.status === 'PENDING') {
+            if (isPost) {
+                // Render: Bỏ qua, Ẩn bài viết, Xóa bài (không close modal lập tức vì cần nhập lý do qua custom modal)
+                footer.innerHTML = `
+                    <button type="button" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600; padding: 10px 25px; cursor: pointer;" 
+                        onclick="resolveReport(${report.id}, 'DISMISSED');">
+                        Bỏ qua
+                    </button>
+                    <button type="button" class="btn btn-warning" style="background: #faad14; color: #fff; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; cursor: pointer;" 
+                        onclick="resolveReport(${report.id}, 'RESOLVED', 'HIDE');">
+                        Ẩn bài viết
+                    </button>
+                    <button type="button" class="btn btn-danger" style="background: var(--danger-color); color: #fff; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 10px rgba(241, 70, 104, 0.3); cursor: pointer;" 
+                        onclick="resolveReport(${report.id}, 'RESOLVED', 'DELETE');">
+                        Xóa bài
+                    </button>
+                `;
+            } else {
+                // COMMENT: Render: Bỏ qua, Xóa bình luận
+                footer.innerHTML = `
+                    <button type="button" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600; padding: 10px 25px; cursor: pointer;" 
+                        onclick="resolveReport(${report.id}, 'DISMISSED');">
+                        Bỏ qua
+                    </button>
+                    <button type="button" class="btn btn-danger" style="background: var(--danger-color); color: #fff; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 10px rgba(241, 70, 104, 0.3); cursor: pointer;" 
+                        onclick="resolveReport(${report.id}, 'RESOLVED', 'DELETE');">
+                        Xóa bình luận
+                    </button>
+                `;
+            }
+        } else {
+            // Trạng thái đã xử lý
+            const statusText = report.status === 'RESOLVED' ? 'Đã giải quyết' : 'Đã bỏ qua';
+            const badgeClass = report.status === 'RESOLVED' ? 'mod-badge-resolved' : 'mod-badge-dismissed';
+            footer.innerHTML = `
+                <div style="font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                    Trạng thái: <span class="mod-badge ${badgeClass}">${statusText}</span>
+                </div>
+            `;
+        }
     }
 };
 
@@ -359,23 +392,93 @@ window.showModPostDetailModal = async function (postId, highlightCommentId = nul
     }
 };
 
-window.resolveReport = async function (reportId, status) {
-    let note = prompt("Nhập ghi chú xử lý (tùy chọn):");
-    if (note === null) return; 
+window.closeActionNoteModal = function () {
+    const modal = document.getElementById('mod-action-note-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.getElementById('note-modal-input').value = '';
+    }
+};
 
+window.resolveReport = function (reportId, status, action = null) {
+    const modal = document.getElementById('mod-action-note-modal');
+    if (!modal) {
+        // Fallback to prompt if modal not found
+        let note = prompt("Nhập ghi chú xử lý (tùy chọn):");
+        if (note === null) return;
+        executeResolveReport(reportId, status, action, note);
+        return;
+    }
+
+    const titleEl = document.getElementById('note-modal-title');
+    const descEl = document.getElementById('note-modal-desc');
+    const confirmBtn = document.getElementById('note-modal-confirm-btn');
+    const inputEl = document.getElementById('note-modal-input');
+
+    inputEl.value = ''; // Reset
+
+    let title = 'Ghi chú xử lý báo cáo';
+    let desc = 'Vui lòng nhập ghi chú hoặc lý do xử lý báo cáo này.';
+    let btnText = 'Xác nhận';
+    let btnBg = '#00d1b2';
+
+    if (status === 'DISMISSED') {
+        title = '<i class="fa-solid fa-circle-minus" style="color: #6e7681;"></i> Bỏ qua báo cáo';
+        desc = 'Thao tác này sẽ bỏ qua khiếu nại. Bài viết/bình luận bị báo cáo vẫn sẽ hoạt động bình thường trên hệ thống.';
+        btnText = 'Xác nhận bỏ qua';
+        btnBg = '#6e7681';
+    } else if (status === 'RESOLVED') {
+        if (action === 'HIDE') {
+            title = '<i class="fa-solid fa-eye-slash" style="color: #faad14;"></i> Ẩn bài viết vi phạm';
+            desc = 'Ẩn bài viết này khỏi bảng tin cộng đồng. Tác giả sẽ nhận được thông báo nhưng KHÔNG bị tăng điểm vi phạm.';
+            btnText = 'Xác nhận ẩn bài';
+            btnBg = '#faad14';
+        } else if (action === 'DELETE') {
+            title = '<i class="fa-solid fa-trash-can" style="color: #ff4d4f;"></i> Xóa nội dung vi phạm';
+            desc = 'Xóa vĩnh viễn nội dung bị báo cáo và gửi thông báo cảnh cáo cho tác giả. Thao tác này có thể tăng điểm vi phạm của tác giả.';
+            btnText = 'Xác nhận xóa';
+            btnBg = '#ff4d4f';
+        }
+    }
+
+    if (titleEl) titleEl.innerHTML = title;
+    if (descEl) descEl.textContent = desc;
+    if (confirmBtn) {
+        confirmBtn.textContent = btnText;
+        confirmBtn.style.backgroundColor = btnBg;
+        confirmBtn.onclick = async () => {
+            const noteValue = inputEl.value.trim();
+            window.closeActionNoteModal();
+            await executeResolveReport(reportId, status, action, noteValue);
+        };
+    }
+
+    modal.style.display = 'flex';
+};
+
+async function executeResolveReport(reportId, status, action, note) {
     try {
-        const res = await fetch(`/api/moderator/reports/${reportId}/status?status=${status}&adminNote=${encodeURIComponent(note)}`, {
+        let url = `/api/moderator/reports/${reportId}/status?status=${status}&adminNote=${encodeURIComponent(note)}`;
+        if (action) {
+            url += `&action=${action}`;
+        }
+        
+        const res = await fetch(url, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${window.token || localStorage.getItem('token')}` }
         });
         if (res.ok) {
-            window.showToast('Đã cập nhật trạng thái báo cáo.', 'success');
+            window.showToast('Đã xử lý báo cáo thành công.', 'success');
             loadReports();
+            if (typeof window.closeReportDetailModal === 'function') {
+                window.closeReportDetailModal();
+            }
         } else {
-            window.showToast('Lỗi cập nhật trạng thái.', 'error');
+            window.showToast('Lỗi cập nhật trạng thái báo cáo.', 'error');
         }
     } catch (err) {
         console.error("Lỗi:", err);
+        window.showToast('Có lỗi xảy ra khi kết nối máy chủ.', 'error');
     }
 }
 

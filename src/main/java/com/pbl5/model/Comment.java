@@ -5,11 +5,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comments")
-public class Comment {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Comment extends BaseContent {
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -22,8 +18,7 @@ public class Comment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+
 
     @Column(name = "image_url")
     private String imageUrl;
@@ -38,21 +33,16 @@ public class Comment {
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<Comment> replies = new java.util.ArrayList<>();
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+
+
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
     public Post getPost() { return post; }
     public void setPost(Post post) { this.post = post; }
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public String getVideoUrl() { return videoUrl; }

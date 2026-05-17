@@ -9,11 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "posts")
-public class Post {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Post extends BaseContent {
 
     @Column(columnDefinition = "TEXT")
     private String content;
@@ -75,8 +71,7 @@ public class Post {
     @JoinColumn(name = "processing_moderator_id")
     private User processingModerator;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
@@ -88,18 +83,9 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
 
-    public Long getId() {
-        return id;
-    }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+
 
     public String getContent() {
         return content;
@@ -246,13 +232,7 @@ public class Post {
         this.processingModerator = processingModerator;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
 
     public User getUser() {
         return user;

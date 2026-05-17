@@ -419,6 +419,110 @@ public class ModeratorController {
         return ResponseEntity.ok(reports);
     }
 
+    /** Xử lý báo cáo vi phạm bởi Moderator/Admin */
+    @PutMapping("/reports/{id}/status")
+    public ResponseEntity<?> updateReportStatus(@PathVariable Long id,
+            @RequestParam String status,
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String adminNote,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        User moderator = getAuthenticatedUser(authHeader);
+        if (moderator == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        Optional<com.pbl5.model.Report> reportOpt = reportRepository.findById(id);
+        if (reportOpt.isEmpty()) {
+            return ResponseEntity.status(404).body("Không tìm thấy báo cáo");
+        }
+
+        com.pbl5.model.Report report = reportOpt.get();
+        
+        com.pbl5.enums.ReportStatus reportStatus;
+        try {
+            reportStatus = com.pbl5.enums.ReportStatus.valueOf(status.toUpperCase());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Trạng thái không hợp lệ. Chỉ chấp nhận: RESOLVED, DISMISSED");
+        }
+
+        report.setStatus(reportStatus);
+        report.setResolvedAt(LocalDateTime.now());
+        report.setResolvedBy(moderator);
+        
+        if (adminNote != null && !adminNote.isBlank()) {
+            report.setAdminNote(adminNote.trim());
+        } else {
+            report.setAdminNote(reportStatus == com.pbl5.enums.ReportStatus.RESOLVED ? "Đã xử lý vi phạm." : "Bỏ qua báo cáo.");
+        }
+
+        reportRepository.save(report);
+
+        if (reportStatus == com.pbl5.enums.ReportStatus.RESOLVED) {
+            // Xử lý báo cáo bài viết
+            if (report.getPost() != null) {
+                Post post = report.getPost();
+                
+                // Cập nhật trạng thái bài viết thành REJECTED (ẩn khỏi feed)
+                post.setStatus(PostStatus.REJECTED);
+                post.setProcessingModerator(moderator);
+                post.setReviewedAt(LocalDateTime.now());
+                postRepository.save(post);
+
+                User author = post.getUser();
+                if (author != null) {
+                    if ("DELETE".equalsIgnoreCase(action)) {
+                        // Cộng 1 điểm vi phạm nếu là Xóa bài
+                        int currentScore = author.getScore() != null ? author.getScore() : 0;
+                        author.setScore(currentScore + 1);
+                        userRepository.save(author);
+
+                        sendNotification(author, moderator, "POST_REJECTED",
+                                "Bài viết của bạn đã bị gỡ do vi phạm tiêu chuẩn cộng đồng. Bạn bị cộng 1 điểm vi phạm.",
+                                "/html/home.html");
+                    } else {
+                        // Chỉ ẩn bài viết
+                        sendNotification(author, moderator, "POST_HIDDEN",
+                                "Bài viết của bạn đã bị ẩn bởi đội ngũ quản trị.",
+                                "/html/home.html");
+                    }
+                }
+            }
+
+            // Xử lý báo cáo bình luận
+            if (report.getComment() != null) {
+                com.pbl5.model.Comment comment = report.getComment();
+                User author = comment.getUser();
+                if (author != null) {
+                    sendNotification(author, moderator, "COMMENT_REJECTED",
+                            "Bình luận của bạn đã bị gỡ do vi phạm quy tắc cộng đồng.",
+                            "/html/home.html");
+                }
+                // Xoá comment khỏi DB
+                commentRepository.delete(comment);
+                report.setComment(null); // Tránh lỗi khóa ngoại khi comment bị xoá
+                reportRepository.save(report);
+            }
+
+            // Thông báo cho người báo cáo
+            if (report.getUser() != null) {
+                sendNotification(report.getUser(), moderator, "REPORT_RESOLVED",
+                        "Báo cáo của bạn đã được xử lý. Nội dung vi phạm đã được gỡ bỏ. Cảm ơn bạn!",
+                        "/html/home.html");
+            }
+
+        } else if (reportStatus == com.pbl5.enums.ReportStatus.DISMISSED) {
+            // Thông báo cho người báo cáo
+            if (report.getUser() != null) {
+                sendNotification(report.getUser(), moderator, "REPORT_DISMISSED",
+                        "Báo cáo của bạn đã được xem xét. Nội dung không vi phạm tiêu chuẩn cộng đồng.",
+                        "/html/home.html");
+            }
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Đã cập nhật trạng thái báo cáo ID " + id));
+    }
+
+
     // ==================== KIỂM DUYỆT NGƯỜI DÙNG ====================
 
     @Autowired

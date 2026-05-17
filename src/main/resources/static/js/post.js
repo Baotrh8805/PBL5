@@ -1,3 +1,4 @@
+
 // post.js
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -397,10 +398,40 @@ async function submitComment(postId, token) {
             commentCountSpan.innerText = currentCount + 1;
 
             fetchComments(postId, token); // Refresh list
+        } else if (res.status === 403) {
+            const msg = await res.text();
+            if (typeof showBanModal === 'function') {
+                showBanModal(msg);
+            } else {
+                alert(msg);
+            }
+        } else {
+            const msg = await res.text();
+            alert(msg || 'Không thể gửi bình luận');
         }
     } catch (err) {
         console.error(err);
     }
+}
+
+function showBanModal(message) {
+    const oldModal = document.getElementById('ban-alert-modal');
+    if (oldModal) oldModal.remove();
+
+    const modalHtml = `
+        <div id="ban-alert-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 999999;">
+            <div style="background: white; border-radius: 12px; width: 450px; max-width: 90vw; padding: 30px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.4); position: relative;">
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; color: #65676b; cursor: pointer;">&times;</button>
+                <div style="margin-bottom: 20px;">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size: 60px; color: #e41e3f;"></i>
+                </div>
+                <h3 style="font-size: 22px; color: #1c1e21; margin-bottom: 15px; font-weight: 700;">Thông báo vi phạm</h3>
+                <p style="font-size: 16px; color: #4b4f56; line-height: 1.5; margin-bottom: 25px;">${message}</p>
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="background: #e41e3f; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; width: 100%;">Đóng</button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
 async function fetchMyProfile(token) {
@@ -631,7 +662,7 @@ window.togglePostMenu = function (event) {
 };
 
 window.deletePostDetail = async function(postId) {
-    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return;
+    if (!confirm('Bạn có chắc chắn muốn chuyển bài viết này vào thùng rác?')) return;
     
     const token = localStorage.getItem('token');
     try {
@@ -640,7 +671,7 @@ window.deletePostDetail = async function(postId) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
-            alert('Bài viết đã được xóa.');
+            alert('Bài viết đã được chuyển vào thùng rác.');
             window.location.href = '/html/home.html';
         } else {
             const txt = await res.text();

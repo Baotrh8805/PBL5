@@ -83,7 +83,9 @@ public class AdminController {
                     map.put("status", u.getStatus());
                     map.put("provider", u.getProvider());
                     map.put("avatar", u.getAvatar());
+                    map.put("score", u.getScore());
                     return map;
+
                 }).collect(Collectors.toList());
         return ResponseEntity.ok(users);
     }
@@ -338,7 +340,16 @@ public class AdminController {
         post.setStatus(com.pbl5.enums.PostStatus.AUTO_REJECTED);
         postRepository.save(post);
 
+        // Cộng điểm vi phạm cho người dùng (tác giả bài viết)
+        User author = post.getUser();
+        if (author != null) {
+            int currentScore = author.getScore() != null ? author.getScore() : 0;
+            author.setScore(currentScore + 1);
+            userRepository.save(author);
+        }
+
         return ResponseEntity.ok(Map.of("message", "Đã gỡ bài viết ID " + id));
+
     }
 
     /** Xóa bình luận theo ID */

@@ -60,13 +60,13 @@
             </div>
             
             <nav class="main-nav">
-                <a href="moderator.html" class="nav-link active" id="nav-overview-view">
+                <a href="moderator.html" class="nav-link" id="nav-overview-view">
                     <i class="fa-solid fa-chart-pie"></i> Tổng quan
                 </a>
                 <a href="moderator_review.html" class="nav-link" id="nav-review-posts-view">
                     <i class="fa-solid fa-check-double"></i> Duyệt bài viết
                 </a>
-                <a href="moderator_manage_posts.html" class="nav-link" id="nav-manage-posts-view">
+                <a href="moderator_manage_posts.html" class="nav-link" id="nav-manage-posts-view" class="nav-link active" class="nav-link">
                     <i class="fa-solid fa-layer-group"></i> Quản lý bài viết
                 </a>
                 <a href="moderator_users.html" class="nav-link" id="nav-manage-users-view">
@@ -83,60 +83,33 @@
 
         <main class="mod-main-content">
 
-<section id="overview-view" class="mod-section active">
+<section id="manage-posts-view" class="mod-section active">
                 <div class="section-title">
-                    <h2>Bảng điều khiển chung</h2>
-                    <p>Tổng quan tình trạng kiểm duyệt của hệ thống LC Network.</p>
+                    <h2>Quản lý bài viết</h2>
+                    <p>Quản lý toàn bộ bài viết và xử lý vi phạm.</p>
+                </div>
+                <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px; position: relative;">
+                        <i class="fa-solid fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #65676b;"></i>
+                        <input type="text" id="manage-search-input" placeholder="Tìm theo ID bài (#P-xxx), ID user hoặc tên..." style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 8px; border: none; background: #ffffff; color: #333333; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    </div>
+                    
+                    <select id="manage-type-filter" style="padding: 12px 15px; border-radius: 8px; border: none; background: #ffffff; color: #333333; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-width: 160px;">
+                        <option value="ALL">Tất cả bài viết</option>
+                        <option value="NORMAL">Bài viết bình thường</option>
+                        <option value="REVIEW">Bài viết kiểm tra</option>
+                    </select>
+
+                    <select id="manage-visibility-filter" style="padding: 12px 15px; border-radius: 8px; border: none; background: #ffffff; color: #333333; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-width: 160px;">
+                        <option value="ALL">Mọi quyền riêng tư</option>
+                        <option value="PUBLIC">Công khai</option>
+                        <option value="FRIENDS">Bạn bè</option>
+                        <option value="PRIVATE">Chỉ mình tôi</option>
+                    </select>
                 </div>
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon caution"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                        <div class="stat-info">
-                            <h3>Bài viết đã duyệt</h3>
-                            <p class="stat-number" id="stat-pending-count">0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon danger"><i class="fa-solid fa-user-lock"></i></div>
-                        <div class="stat-info">
-                            <h3>Tài khoản đã khóa</h3>
-                            <p class="stat-number" id="stat-banned-count">0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon success"><i class="fa-solid fa-check-double"></i></div>
-                        <div class="stat-info">
-                            <h3>Đã xử lý hôm nay</h3>
-                            <p class="stat-number" id="stat-processed-today">0</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="split-layout dashboard-split">
-                    <div class="card flex-2">
-                        <h3 class="card-heading"><i class="fa-solid fa-bolt text-caution"></i> Vi phạm đang xử lý chung</h3>
-                        <table class="mod-table">
-                            <thead>
-                                <tr>
-                                    <th>Mã vi phạm</th>
-                                    <th>Mã bài viết</th>
-                                    <th>Mức độ</th>
-                                    <th>Tỉ lệ vi phạm</th>
-                                    <th>Tên người đăng</th>
-                                    <th>Thời gian duyệt</th>
-                                    <th>Phụ trách</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashboard-posts-list">
-                                </tbody>
-                        </table>
-                    </div>
-
-                    <div class="card flex-1">
-                        <h3 class="card-heading"><i class="fa-solid fa-chart-pie text-primary"></i> Hiệu suất tuần</h3>
-                        <canvas id="miniChart"></canvas>
-                    </div>
+                <div class="manage-feed" id="manage-posts-feed">
+                    <div class="review-empty">Đang tải danh sách bài viết...</div>
                 </div>
             </section>
 </main>
@@ -273,6 +246,53 @@
 
                 <!-- Interactions -->
                 <div id="mod-post-modal-interactions"></div>
+            </div>
+        </div>
+    </div>
+
+    
+
+    <!-- Warn User Modal -->
+    <div id="warn-user-modal" class="modal-overlay profile-modal-hidden" style="display: none; align-items: center; justify-content: center;">
+        <div class="profile-modal-content" style="max-width: 450px; background: #242526; border-radius: 8px; overflow: hidden; box-shadow: 0 12px 28px rgba(0,0,0,0.5);">
+            <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid #3e4042; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 18px; color: #e4e6eb;">Thiết lập cảnh cáo</h3>
+                <button class="profile-modal-close" onclick="closeWarnUserModal()" style="background: none; border: none; color: #b0b3b8; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="profile-modal-body" style="padding: 20px;">
+                <input type="hidden" id="warn-user-id">
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Hình thức cảnh cáo:</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e6eb;">
+                            <input type="radio" name="warn-type" value="POST" checked> Cảnh cáo đăng bài
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e6eb;">
+                            <input type="radio" name="warn-type" value="COMMENT"> Cảnh cáo bình luận
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Thời hạn cảnh cáo:</label>
+                    <select id="warn-duration" onchange="toggleCustomDuration()" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-size: 15px;">
+                        <option value="3">3 ngày</option>
+                        <option value="7">7 ngày</option>
+                        <option value="30">1 tháng (30 ngày)</option>
+                        <option value="custom">Tùy chọn khác...</option>
+                    </select>
+                </div>
+
+                <div id="custom-duration-container" style="display: none; margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Nhập số ngày:</label>
+                    <input type="number" id="warn-custom-days" min="1" placeholder="Ví dụ: 15" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-size: 15px;">
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn-action secondary" onclick="closeWarnUserModal()" style="padding: 8px 20px; background: #3a3b3c; color: #e4e6eb; border: none; border-radius: 6px; cursor: pointer;">Hủy</button>
+                    <button class="btn-action warning" onclick="submitUserWarning()" style="padding: 8px 20px; background: #f02849; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Gửi cảnh cáo</button>
+                </div>
             </div>
         </div>
     </div>

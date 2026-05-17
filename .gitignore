@@ -29,7 +29,12 @@ buildNumber.properties
 .Trashes
 ehthumbs.db
 Thumbs.db
+<<<<<<< HEAD
+=======
 
 # AI Agents & ECC
 .agent/
 .gemini/
+src/main/model/*.pt
+src/main/model/*.pth
+>>>>>>> origin/Mondetar/Home

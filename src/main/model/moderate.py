@@ -244,12 +244,23 @@ class ContentModerationSystem:
                 tag_prob = probs[word_idx][pred_tag].item()
                 str_tag = id2tag.get(pred_tag, "O")
                 
+                word = tokens[i]
+
+                # Lọc false positive từ OCR (những chữ vô nghĩa tiếng Anh / rác OCR)
+                if str_tag in ["B-T", "I-T"]:
+                    # Quy tắc: Từ tiếng Việt (cả từ lóng) thường rất ngắn. Nếu từ dài >= 7 ký tự và không có dấu tiếng Việt, khả năng cao là rác OCR hoặc tiếng Anh.
+                    has_vn_accent = re.search(r'[àáảãạâầấẩẫậăằắẳẵặêềếểễệeèéẻẽẹìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]', word.lower())
+                    is_ocr_garbage = len(word) >= 7 and not has_vn_accent
+                    
+                    if is_ocr_garbage:
+                        str_tag = "O"
+
                 # Lưu toàn bộ cấu trúc câu cùng với Tag để nhét vào Database
-                detailed_tags.append({"word": tokens[i], "tag": str_tag})
+                detailed_tags.append({"word": word, "tag": str_tag})
                 
                 # Lưu lại những từ mang nhãn B-T, I-T vào violating_words
                 if str_tag in ["B-T", "I-T"]:
-                    violating_words.append(tokens[i])
+                    violating_words.append(word)
                     max_prob = max(max_prob, tag_prob)
                     
             if violating_words:
@@ -262,73 +273,6 @@ class ContentModerationSystem:
 
     def evaluate_image(self, frame_bgr, frame_idx=None, second=None):
         h, w = frame_bgr.shape[:2]
-
-        # ===== OCR FIRST =====
-        ocr_text = ""
-        try:
-            append_debug_line(f"[OCR] START frame={frame_idx} second={second}")
-
-            # 1. Lưu ảnh full frame để kiểm tra
-            debug_img = os.path.join(SCRIPT_DIR, f"frame_{frame_idx}.png")
-            cv2.imwrite(debug_img, frame_bgr)
-
-            # 2. Sử dụng thư viện gốc EasyOCR (mô hình CRAFT) để detector tìm vị trí khung chữ
-            # Tắt detail=0 (vì muốn lấy box, set detail=1)
-            # Khử bỏ text_threshold cao, dùng ngưỡng mặc định để không sót chữ
-            detected_boxes = reader.readtext(frame_bgr, detail=1)
-
-            valid_texts = []
-            
-            # Tạo thư mục crop cho mỗi frame để tiện debug
-            crop_dir = os.path.join(SCRIPT_DIR, f"crops_frame_{frame_idx}")
-            if not os.path.exists(crop_dir):
-                os.makedirs(crop_dir)
-
-            for idx, (bbox, _, prob) in enumerate(detected_boxes):
-                # QUAN TRỌNG: Không dùng prob của EasyOCR để bỏ box nữa.
-                # Vì prob này là điểm tự tin "nhận diện" của EasyOCR chứ không phải điểm "phát hiện" vùng chữ.
-                # Nếu EasyOCR không dịch được tiếng Việt tốt -> prob sẽ thấp -> box sẽ bị skip oan uổng!
-
-                # Lấy tọa độ
-                (tl, tr, br, bl) = bbox
-                tl = (max(0, int(tl[0])), max(0, int(tl[1])))
-                br = (min(w-1, int(br[0])), min(h-1, int(br[1])))
-                
-                # Tránh các khung hình nhiễu méo mó làm sâp crop
-                if br[1] - tl[1] <= 2 or br[0] - tl[0] <= 2:
-                    continue
-
-                # 3. Cắt (crop) vùng chữ tìm được từ ảnh gốc bgr (rgb color)
-                crop_img = frame_bgr[tl[1]:br[1], tl[0]:br[0]]
-
-                # 4. Lưu ảnh text đã được cut (để bạn có thể kiểm tra xem công cụ cắt đúng không bằng mắt)
-                crop_debug_path = os.path.join(crop_dir, f"crop_{idx}.png")
-                cv2.imwrite(crop_debug_path, crop_img)
-
-                # Chuyển CV2 (BGR) sang PIL Image (RGB) cho Cỗ máy đọc VietOCR
-                crop_img_rgb = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(crop_img_rgb)
-
-                # 5. Dùng VietOCR để đọc ảnh mảnh vừa crop
-                text_predicted = vietocr_predictor.predict(pil_img)
-                
-                # Bỏ qua rác kí tự như @, ., s, v.v
-                if text_predicted and len(text_predicted.strip()) > 1:
-                    valid_texts.append(text_predicted)
-
-            raw_text = " ".join(valid_texts)
-            raw_text = unicodedata.normalize('NFC', raw_text)
-
-            # 6. Làm sạch sơ bộ (loại bỏ khoảng trắng thừa)
-            ocr_text = raw_text.strip()
-
-            append_debug_line(
-                f"[OCR] frame={frame_idx} sec={second} "
-                f"raw={repr(raw_text)} clean={repr(ocr_text)} len={len(ocr_text)}"
-            )
-
-        except Exception as e:
-            append_debug_line(f"[OCR ERROR] frame={frame_idx} error={str(e)}")
 
         # ===== NSFW =====
         try:
@@ -354,7 +298,64 @@ class ContentModerationSystem:
                 viol_prob = torch.softmax(logits, dim=1)[0][1].item()
         except:
             viol_prob = 0.0
+            
+        # ===== HATE SPEECH (OCR) =====
+        # Chạy sau NSFW và Violence để đảm bảo ảnh gốc (frame_bgr) hoàn toàn nguyên vẹn, 
+        # không bị bất kỳ can thiệp nào làm sai lệch tỉ lệ nhận diện NSFW/Violence.
+        ocr_text = ""
+        try:
+            append_debug_line(f"[OCR] START frame={frame_idx} second={second}")
 
+            # 1. Sử dụng thư viện gốc EasyOCR (mô hình CRAFT) để detector tìm vị trí khung chữ
+            # Tắt detail=0 (vì muốn lấy box, set detail=1)
+            # Khử bỏ text_threshold cao, dùng ngưỡng mặc định để không sót chữ
+            detected_boxes = reader.readtext(frame_bgr, detail=1)
+
+            valid_texts = []
+
+            for idx, (bbox, _, prob) in enumerate(detected_boxes):
+                # QUAN TRỌNG: Không dùng prob của EasyOCR để bỏ box nữa.
+                # Vì prob này là điểm tự tin "nhận diện" của EasyOCR chứ không phải điểm "phát hiện" vùng chữ.
+                # Nếu EasyOCR không dịch được tiếng Việt tốt -> prob sẽ thấp -> box sẽ bị skip oan uổng!
+
+                # Lấy tọa độ
+                (tl, tr, br, bl) = bbox
+                tl = (max(0, int(tl[0])), max(0, int(tl[1])))
+                br = (min(w-1, int(br[0])), min(h-1, int(br[1])))
+                
+                # Tránh các khung hình nhiễu méo mó làm sấp crop
+                if br[1] - tl[1] <= 2 or br[0] - tl[0] <= 2:
+                    continue
+
+                # 2. Cắt (crop) vùng chữ tìm được từ ảnh gốc bgr (rgb color)
+                crop_img = frame_bgr[tl[1]:br[1], tl[0]:br[0]]
+
+                # Chuyển CV2 (BGR) sang PIL Image (RGB) cho Cỗ máy đọc VietOCR
+                crop_img_rgb = cv2.cvtColor(crop_img, cv2.COLOR_BGR2RGB)
+                pil_img = Image.fromarray(crop_img_rgb)
+
+                # 3. Dùng VietOCR để đọc ảnh mảnh vừa crop
+                text_predicted = vietocr_predictor.predict(pil_img)
+                
+                # Bỏ qua rác kí tự như @, ., s, v.v
+                if text_predicted and len(text_predicted.strip()) > 1:
+                    valid_texts.append(text_predicted)
+
+            raw_text = " ".join(valid_texts)
+            raw_text = unicodedata.normalize('NFC', raw_text)
+
+            # 6. Làm sạch sơ bộ (loại bỏ khoảng trắng thừa)
+            ocr_text = raw_text.strip()
+
+            append_debug_line(
+                f"[OCR] frame={frame_idx} sec={second} "
+                f"raw={repr(raw_text)} clean={repr(ocr_text)} len={len(ocr_text)}"
+            )
+
+        except Exception as e:
+            append_debug_line(f"[OCR ERROR] frame={frame_idx} error={str(e)}")
+            
+            
         nsfw_box = {"x1": 0, "y1": 0, "x2": w, "y2": h} if nsfw_prob > 0 else None
         viol_box = {"x1": 0, "y1": 0, "x2": w, "y2": h} if viol_prob > 0 else None
 
@@ -403,10 +404,6 @@ class ContentModerationSystem:
     def moderate_request(self, content, image_url, video_url):
         # Result initialization
         print(f"\n[MODERATE_REQUEST] START")
-        # Bỏ qua in content, image, video trực tiếp ra console để tránh lỗi Unicode
-        # print(f"  Content: {content[:50] if content else 'None'}")
-        # print(f"  Image URL: {image_url[:50] if image_url else 'None'}")
-        # print(f"  Video URL: {video_url[:50] if video_url else 'None'}")
         append_debug_line("[REQUEST] /api/moderate called")
         append_debug_line(f"[REQUEST] has_content={bool(content)} has_image={bool(image_url)} has_video={bool(video_url)}")
         
@@ -415,15 +412,19 @@ class ContentModerationSystem:
         final_hate_score = 0.0
         final_nsfw_box = None
         final_viol_box = None
-        final_hate_words = []
-        all_detected_texts = []
-        highest_score_frame_second = None
+        
+        content_hate_text = ""
+        video_hate_text = ""
+        
+        highest_score_frame_index = None
+        total_frames = 0
         total_frames_analyzed = 0
+        fps = 30.0
 
         # 1. Evaluate Text Content
         if content:
             append_debug_line(f"[CONTENT] len={len(content)} text={repr(content)}")
-            all_detected_texts.append(content)
+            content_hate_text = content
             print(f"[MODERATE_REQUEST] Added content text")
 
         # 2. Evaluate Image
@@ -441,12 +442,11 @@ class ContentModerationSystem:
                     if n_prob > 0: final_nsfw_box = n_box
                     if v_prob > 0: final_viol_box = v_box
                     if ocr_text:
-                        all_detected_texts.append(ocr_text)
+                        # Ghép OCR ảnh vào phần Video/Text chung
+                        video_hate_text = (video_hate_text + " " + ocr_text).strip()
                 os.remove(local_img)
-            else:
-                append_debug_line("[IMAGE] Download/read failed, skip OCR")
 
-        # 3. Evaluate Video (Requirement 3: 1 frame/sec, highest score frame represents video)
+        # 3. Evaluate Video
         if video_url:
             print(f"[MODERATE_REQUEST] Processing video...")
             append_debug_line("[VIDEO] Start processing video_url")
@@ -455,31 +455,23 @@ class ContentModerationSystem:
                 cap = cv2.VideoCapture(local_vid)
                 if cap.isOpened():
                     fps = cap.get(cv2.CAP_PROP_FPS)
-                    print(f"[MODERATE_REQUEST] Video FPS: {fps}")
-                    append_debug_line(f"[VIDEO] Opened successfully, fps={fps}")
-                    if fps <= 0: fps = 30
+                    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                    if fps <= 0: fps = 30.0
                     
                     best_vid_nsfw = 0.0
                     best_vid_viol = 0.0
                     best_vid_hate = 0.0
-                    best_vid_nsfw_box = None
-                    best_vid_viol_box = None
                     best_vid_ocr = ""
-                    best_vid_hate_words = []
                     best_overall_score = -1.0
                     
                     frame_idx = 0
-                    ocr_frame_count = 0
                     while True:
                         ret, frame = cap.read()
                         if not ret:
                             break
                         
-                        # 1 frame per second
                         if frame_idx % max(1, int(fps)) == 0:
                             total_frames_analyzed += 1
-                            print(f"[MODERATE_REQUEST] Analyzing frame {total_frames_analyzed}")
-                            append_debug_line(f"[VIDEO] Analyze frame_index={frame_idx} sampled_index={total_frames_analyzed}")
                             current_second = int(frame_idx // fps)
 
                             n_prob, n_box, v_prob, v_box, ocr_text = self.evaluate_image(
@@ -487,11 +479,11 @@ class ContentModerationSystem:
                                 frame_idx=frame_idx,
                                 second=current_second
                             )
-                            if ocr_text:
-                                ocr_frame_count += 1
-                            # temporary evaluate OCR to find if this frame is worst in hate speech
-                            h_prob, frame_hate_words, _ = self.evaluate_text(ocr_text) if ocr_text else (0.0, [], [])
                             
+                            # Đánh giá hate speech ngay cho frame này
+                            h_prob, _, _ = self.evaluate_text(ocr_text) if ocr_text else (0.0, [], [])
+                            
+                            # Tìm khung hình có vi phạm cao nhất (bất kỳ mô hình nào)
                             frame_max_score = max(n_prob, v_prob, h_prob)
                             
                             if frame_max_score > best_overall_score:
@@ -502,64 +494,50 @@ class ContentModerationSystem:
                                 best_vid_nsfw_box = n_box
                                 best_vid_viol_box = v_box
                                 best_vid_ocr = ocr_text
-                                best_vid_hate_words = frame_hate_words
-                                highest_score_frame_second = int(frame_idx // fps)
-                                
+                                highest_score_frame_index = frame_idx
+
                         frame_idx += 1
                     cap.release()
-                    append_debug_line(f"[OCR SUMMARY] frames_with_text={ocr_frame_count}")
-                    print(f"[MODERATE_REQUEST] Total frames analyzed: {total_frames_analyzed}")
-                    append_debug_line(f"[VIDEO] Total frames analyzed: {total_frames_analyzed}")
                     
                     final_nsfw_score = max(final_nsfw_score, best_vid_nsfw)
                     final_viol_score = max(final_viol_score, best_vid_viol)
                     if best_vid_nsfw > 0: final_nsfw_box = best_vid_nsfw_box
                     if best_vid_viol > 0: final_viol_box = best_vid_viol_box
-                    if best_vid_ocr:
-                        all_detected_texts.append(best_vid_ocr)
-                    if best_vid_hate_words:
-                        final_hate_words.extend(best_vid_hate_words)
-                else:
-                    append_debug_line("[VIDEO] cv2.VideoCapture could not open file")
+                    
+                    # Video hate text chỉ lấy từ frame có score cao nhất
+                    video_hate_text = best_vid_ocr
                 os.remove(local_vid)
-            else:
-                append_debug_line("[VIDEO] Download failed or temp file missing")
 
-        # Aggregate texts and check hate speech
-        combined_text = " ".join(all_detected_texts)
-        append_debug_line(
-            f"[FINAL TEXT] len={len(combined_text)} text={repr(combined_text[:200])}"
-        )
-        hate_score, hate_words, detailed_tags = self.evaluate_text(combined_text)
-        final_hate_score = max(final_hate_score, hate_score)
-        final_hate_words = list(set(final_hate_words + hate_words))
+        # 4. Evaluate Hate Speech Separately
+        # Content
+        c_hate_score, _, c_detailed_tags = self.evaluate_text(content_hate_text)
+        content_hate_str = " ".join([f"{item['word']}[{item['tag']}]" for item in c_detailed_tags]) if c_detailed_tags else ""
+        
+        # Video (including image OCR from best frame or single image)
+        v_hate_score, _, v_detailed_tags = self.evaluate_text(video_hate_text)
+        video_hate_str = " ".join([f"{item['word']}[{item['tag']}]" for item in v_detailed_tags]) if v_detailed_tags else ""
 
+        final_hate_score = max(c_hate_score, v_hate_score)
         best_score = max(final_nsfw_score, final_viol_score, final_hate_score)
-        
-        # Tạo chuỗi phản hồi các tags (VD: con[O] chó[B-T] ...)
-        # Hoặc dùng json.dumps(detailed_tags) nếu cần. Ở đây nối thành chuỗi cho dễ đọc trên CSDL
-        detailed_tags_str = " ".join([f"{item['word']}[{item['tag']}]" for item in detailed_tags]) if detailed_tags else ""
-        
-        # Thay vì chỉ lưu các từ vi phạm (VD: "chó"), ta lưu thẳng toàn bộ kết quả phân tích BIO của câu vào chung
-        # biến mà Java backend đang đọc ('hate_speech_word') để Java lưu thẳng lên CSDL
-        violating_words_str = detailed_tags_str if final_hate_words else ""
 
         print(f"[MODERATE_REQUEST] COMPLETE - best_score={best_score:.4f}\n")
-        append_debug_line(f"[REQUEST] Complete best_score={best_score:.4f} frames={total_frames_analyzed} violating_words={violating_words_str} detailed_tags={detailed_tags_str}")
-
+        
         return {
             "nsfw_score": float(final_nsfw_score),
             "violence_score": float(final_viol_score),
             "hatespeech_score": float(final_hate_score),
             "best_score": float(best_score),
-            "detected_text": combined_text,
+            "detected_text": (content_hate_text + " " + video_hate_text).strip(),
             "nsfw_box": final_nsfw_box,
             "violen_box": final_viol_box,
-            "hate_speech_word": violating_words_str,
-            "hate_speech_details": detailed_tags_str, # Trả về API chuỗi phân tích chi tiết (B-T, I-T, O)
-            "highest_score_frame_second": highest_score_frame_second,
-            "total_frames_analyzed": total_frames_analyzed
+            "video_hate_speech": video_hate_str,
+            "content_hate_speech": content_hate_str,
+            "hate_speech_word": f"(Video:){video_hate_str} (Content:){content_hate_str}",
+            "highest_score_frame": highest_score_frame_index,
+            "total_frames": total_frames,
+            "fps": float(fps)
         }
+
 
 sys_mod = ContentModerationSystem()
 

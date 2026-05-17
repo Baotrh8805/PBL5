@@ -314,6 +314,7 @@ function renderProfilePosts(posts) {
         const isMine = post.mine ?? post.isMine ?? false;
 
         const isRejected = post.status === 'AUTO_REJECTED';
+        const isDeleted = post.status === 'DELETED';
         const rejectedHtml = isRejected ? `
             <div style="background-color: #ffebe9; border: 1px solid #ff8182; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: #d1293f; font-weight: 500;">
                 <i class="fa-solid fa-triangle-exclamation" style="font-size: 18px;"></i>
@@ -321,8 +322,18 @@ function renderProfilePosts(posts) {
             </div>
         ` : '';
 
+        const deletedHtml = isDeleted ? `
+            <div style="background-color: #f0f2f5; border: 1px solid #ccc; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 10px; color: #65676B;">
+                    <i class="fa-solid fa-trash-can" style="font-size: 18px;"></i>
+                    <span>Bài viết đã được chuyển vào thùng rác (sẽ bị xóa vĩnh viễn sau 1 ngày).</span>
+                </div>
+                <button onclick="restorePost(${post.id})" style="background: var(--primary-color); color: #fff; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer;">Khôi phục</button>
+            </div>
+        ` : '';
+
         let postHtml = `
-        <article class="card post" id="post-${post.id}" ${isRejected ? 'style="opacity: 0.8; border: 1px solid #ff8182;"' : ''}>
+        <article class="card post" id="post-${post.id}" ${(isRejected || isDeleted) ? 'style="opacity: 0.8; border: 1px solid ' + (isRejected ? '#ff8182' : '#ccc') + ';"' : ''}>
             <div class="post-header">
                 <img src="${post.authorAvatar || '/uploads/default-avatar.png'}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
@@ -338,11 +349,13 @@ function renderProfilePosts(posts) {
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
                     ${isMine ? `
+                        ${!isDeleted ? `
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
                         <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
                         <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        ` : ''}
                     ` : `
                         <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
@@ -352,6 +365,7 @@ function renderProfilePosts(posts) {
 
             <div class="post-content">
                 ${rejectedHtml}
+                ${deletedHtml}
                 <p>${escapeHtml(post.content || '')}</p>
             </div>
         `;
@@ -379,7 +393,8 @@ function renderProfilePosts(posts) {
         const likeIcon = post.likedByCurrentUser ? 'fa-solid text-red' : 'fa-regular';
         const likeStyle = post.likedByCurrentUser ? 'color: var(--red-icon);' : '';
 
-        postHtml += `
+        if (!isRejected && !isDeleted) {
+            postHtml += `
             <div class="post-actions-bar">
                 <button id="like-btn-${post.id}" class="interaction-btn" onclick="toggleLike(${post.id})" style="${likeStyle}">
                     <i id="like-icon-${post.id}" class="${likeIcon} fa-heart"></i> <span id="like-count-${post.id}">Mọi người (${post.likeCount})</span>
@@ -401,6 +416,10 @@ function renderProfilePosts(posts) {
                     <!-- Nơi bình luận hiển thị -->
                 </div>
             </div>
+            `;
+        }
+
+        postHtml += `
         </article>
         `;
 
@@ -486,7 +505,7 @@ window.onclick = function(event) {
 }
 
 async function deletePost(postId) {
-    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return;
+    if (!confirm('Bạn có chắc chắn muốn chuyển bài viết này vào thùng rác?')) return;
     
     const token = localStorage.getItem('token');
     try {
@@ -495,8 +514,30 @@ async function deletePost(postId) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
-            // Xóa khỏi giao diện
-            document.getElementById('post-' + postId).remove();
+            // Tải lại để hiển thị trạng thái đã xóa
+            if (typeof loadUserPosts === 'function') loadUserPosts();
+            else window.location.reload();
+        } else {
+            const txt = await res.text();
+            alert("Lỗi: " + txt);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function restorePost(postId) {
+    if (!confirm('Bạn có chắc chắn muốn khôi phục bài viết này không?')) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${postId}/restore`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            if (typeof loadUserPosts === 'function') loadUserPosts();
+            else window.location.reload();
         } else {
             const txt = await res.text();
             alert("Lỗi: " + txt);

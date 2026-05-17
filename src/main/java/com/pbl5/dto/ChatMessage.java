@@ -10,9 +10,13 @@ public class ChatMessage {
     private LocalDateTime timestamp;
     private boolean isRead;
     private String type; // CHAT, JOIN, LEAVE
+    private String senderName;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getSenderName() { return senderName; }
+    public void setSenderName(String senderName) { this.senderName = senderName; }
 
     public Long getSenderId() { return senderId; }
     public void setSenderId(Long senderId) { this.senderId = senderId; }

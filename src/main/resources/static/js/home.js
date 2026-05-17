@@ -641,7 +641,7 @@ window.addEventListener('click', function(event) {
 
 // ===== API GỌI XÓA VÀ CHỈNH SỬA POST =====
 async function deletePost(postId) {
-    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return;
+    if (!confirm('Bạn có chắc chắn muốn chuyển bài viết này vào thùng rác?')) return;
     
     const token = localStorage.getItem('token');
     try {
@@ -650,8 +650,9 @@ async function deletePost(postId) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
-            // Xóa khỏi giao diện
-            document.getElementById('post-' + postId).remove();
+            // Xóa khỏi giao diện trang chủ vì bị ẩn
+            const elm = document.getElementById('post-' + postId);
+            if (elm) elm.remove();
         } else {
             const txt = await res.text();
             alert("Lỗi: " + txt);

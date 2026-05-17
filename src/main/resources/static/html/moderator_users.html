@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderator Control Panel - LC Network</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../css/home.css">
+    <link rel="stylesheet" href="../css/moderator.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="/js/auth-interceptor.js"></script>
+</head>
+<body class="mod-layout">
+
+    <header class="mod-topbar">
+        <div class="topbar-left">
+            <div class="staff-menu-wrap">
+                <button id="staff-menu-toggle" class="logo home-link staff-menu-toggle" type="button" aria-expanded="false" aria-controls="staff-menu-dropdown">
+                    <img id="header-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=00d1b2&color=fff" alt="Avatar" class="staff-avatar">
+                    <span id="staff-display-name">Nhân viên điều phối</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div id="staff-menu-dropdown" class="dropdown-menu staff-menu-dropdown" role="menu" aria-hidden="true">
+                    <button class="dropdown-item-btn" type="button" id="profile-info-btn">
+                        <i class="fa-solid fa-id-card"></i> Chỉnh sửa thông tin cá nhân
+                    </button>
+                    <button class="dropdown-item-btn" type="button" id="change-avatar-btn">
+                        <i class="fa-solid fa-image"></i> Thay ảnh đại diện
+                    </button>
+                    <button class="dropdown-item-btn" type="button" id="change-password-btn">
+                        <i class="fa-solid fa-key"></i> Đổi mật khẩu
+                    </button>
+                    <button class="dropdown-item-btn" type="button" id="staff-logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+                <input type="file" id="staff-avatar-upload" accept="image/*" hidden>
+            </div>
+        </div>
+        
+        <div class="topbar-right">
+            <button type="button" class="topbar-btn" id="toggle-right-rail" title="Ẩn/Hiện thanh bên">
+                <i class="fa-solid fa-bars-staggered"></i>
+            </button>
+            <button type="button" class="topbar-logout-btn" id="topbar-logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </button>
+        </div>
+    </header>
+
+    <div class="mod-container">
+
+        <aside class="mod-sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-shield-halved"></i> Mod Panel</h2>
+            </div>
+            
+            <nav class="main-nav">
+                <a href="moderator.html" class="nav-link" id="nav-overview-view">
+                    <i class="fa-solid fa-chart-pie"></i> Tổng quan
+                </a>
+                <a href="moderator_review.html" class="nav-link" id="nav-review-posts-view">
+                    <i class="fa-solid fa-check-double"></i> Duyệt bài viết
+                </a>
+                <a href="moderator_manage_posts.html" class="nav-link" id="nav-manage-posts-view">
+                    <i class="fa-solid fa-layer-group"></i> Quản lý bài viết
+                </a>
+                <a href="moderator_users.html" class="nav-link" id="nav-manage-users-view" class="nav-link active" class="nav-link">
+                    <i class="fa-solid fa-users-gear"></i> Quản lý người dùng
+                </a>
+                <a href="moderator_reports.html" class="nav-link" id="nav-reports-view">
+                    <i class="fa-solid fa-flag"></i> Báo cáo vi phạm
+                </a>
+                <a href="moderator_logs.html" class="nav-link" id="nav-statistics-view">
+                    <i class="fa-solid fa-chart-simple"></i> Lịch sử hoạt động
+                </a>
+            </nav>
+        </aside>
+
+        <main class="mod-main-content">
+
+<section id="manage-users-view" class="mod-section active">
+                <div class="section-title">
+                    <h2>Quản lý người dùng</h2>
+                    <p>Danh sách thành viên cần theo dõi và thao tác nhanh.</p>
+                </div>
+
+                <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+                    <div style="flex: 1; position: relative;">
+                        <i class="fa-solid fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #65676b;"></i>
+                        <input type="text" id="users-search-input" placeholder="Tìm kiếm theo ID user hoặc tên user..." style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 8px; border: none; background: #ffffff; color: #333333; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    </div>
+                    <select id="users-role-filter" style="padding: 12px 20px; border-radius: 8px; border: none; background: #ffffff; color: #333333; font-size: 14px; min-width: 150px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <option value="ALL">Tất cả vai trò</option>
+                        <option value="USER">Người dùng (USER)</option>
+                        <option value="MODERATOR">Điều phối viên (MODERATOR)</option>
+                    </select>
+                </div>
+                <div class="card">
+                    <table class="mod-table">
+                        <thead>
+                            <tr>
+                                <th>Thành viên</th>
+                                <th>Email</th>
+                                <th>Trạng thái</th>
+                                <th>Vai trò</th>
+                                <th class="text-center">Điểm vi phạm</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list">
+                            <tr><td colspan="5" class="table-loading">Đang tải danh sách thành viên...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+</main>
+
+        <aside class="mod-chat-sidebar">
+            <div class="right-rail-header">
+                <button class="right-rail-tab active" type="button" data-rail-tab="notifications">
+                    <i class="fa-solid fa-bell"></i> Thông báo
+                </button>
+                <button class="right-rail-tab" type="button" data-rail-tab="messages">
+                    <i class="fa-solid fa-comments"></i> Tin nhắn
+                </button>
+            </div>
+
+            <div class="right-rail-body">
+                <div class="rail-panel active" id="rail-notifications-panel">
+                    <div class="rail-panel-header">
+                        <h3>Thông báo gần đây</h3>
+                        <button type="button" id="mark-all-notifications-read" class="rail-link-btn">Đánh dấu đã đọc</button>
+                    </div>
+                    <div class="rail-list" id="notifications-list">
+                        <div class="table-loading">Đang tải thông báo...</div>
+                    </div>
+                </div>
+
+                <div class="rail-panel" id="rail-messages-panel">
+                    <div class="rail-panel-header">
+                        <h3>Cuộc trò chuyện</h3>
+                    </div>
+                    <div class="rail-list" id="messages-list">
+                        <div class="table-loading">Đang tải tin nhắn...</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <div id="profile-edit-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
+        <div class="modal-card profile-modal">
+            <div class="modal-header">
+                <h2>Chỉnh sửa thông tin cá nhân</h2>
+                <button type="button" id="close-profile-modal" class="close-modal" aria-label="Đóng">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-modal-avatar-row">
+                    <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=00d1b2&color=fff" alt="Avatar">
+                    <div>
+                        <button type="button" id="profile-modal-change-avatar" class="btn btn-secondary">Đổi ảnh đại diện</button>
+                        <input type="file" id="profile-modal-avatar-upload" accept="image/*" hidden>
+                    </div>
+                </div>
+
+                <form id="profile-edit-form" class="profile-edit-form">
+                    <label>
+                        <span>Họ và tên</span>
+                        <input type="text" id="profile-fullName" placeholder="Nhập họ và tên">
+                    </label>
+                    <label>
+                        <span>Số điện thoại</span>
+                        <input type="text" id="profile-phoneNumber" placeholder="Nhập số điện thoại">
+                    </label>
+                    <label>
+                        <span>Ngày sinh</span>
+                        <input type="date" id="profile-dateOfBirth">
+                    </label>
+                    <label>
+                        <span>Giới tính</span>
+                        <select id="profile-gender">
+                            <option value="">Chọn giới tính</option>
+                            <option value="MALE">Nam</option>
+                            <option value="FEMALE">Nữ</option>
+                            <option value="OTHER">Khác</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Tiểu sử</span>
+                        <textarea id="profile-bio" rows="4" placeholder="Viết vài dòng giới thiệu"></textarea>
+                    </label>
+                    <label>
+                        <span>Trạng thái quan hệ</span>
+                        <select id="profile-relationshipStatus">
+                            <option value="">Chọn trạng thái</option>
+                            <option value="SINGLE">Độc thân</option>
+                            <option value="MARRIED">Đã kết hôn</option>
+                            <option value="COMPLICATED">Phức tạp</option>
+                            <option value="IN_RELATIONSHIP">Đang hẹn hò</option>
+                        </select>
+                    </label>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancel-profile-edit">Hủy</button>
+                <button type="button" class="btn btn-primary" id="save-profile-edit">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="user-profile-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
+        <div class="modal-card" style="width: 850px; max-width: 95vw; padding: 0; background: #242526; color: #e4e6eb; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #3e4042;">
+            <div class="modal-header" style="border-bottom: 1px solid #3e4042; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #242526;">
+                <h2 id="user-profile-modal-title" style="font-size: 18px; margin: 0; color: #e4e6eb; display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-user-shield" style="color: #00d1b2;"></i> Hồ sơ người dùng
+                </h2>
+                <button type="button" onclick="closeUserProfileModal()" class="close-modal" aria-label="Đóng" style="background: #3a3b3c; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #e4e6eb; border: none; cursor: pointer;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px; overflow-y: auto; max-height: 85vh; background: #1c1e21;">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <div id="mod-post-detail-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
+        <div class="modal-card" style="width: 800px; max-width: 95vw; padding: 0; background: #242526; color: #e4e6eb; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="modal-header" style="border-bottom: 1px solid #3e4042; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="mod-post-modal-title" style="font-size: 18px; margin: 0; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    Chi tiết nội dung 
+                    <span id="mod-post-modal-id-badge" style="background: #3a3b3c; padding: 2px 8px; border-radius: 4px; font-size: 13px; color: #b0b3b8;">#P-?</span>
+                </h2>
+                <button type="button" onclick="closeModPostDetailModal()" class="close-modal" aria-label="Đóng" style="background: #3a3b3c; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #e4e6eb; border: none; cursor: pointer;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 15px 20px; overflow-y: auto; max-height: 85vh;">
+                <!-- Post Author Header & Actions -->
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img id="mod-post-modal-avatar" src="" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+                        <div>
+                            <div id="mod-post-modal-author" style="font-weight: 600; font-size: 15px;"></div>
+                            <div style="font-size: 12px; color: #b0b3b8; display: flex; align-items: center; gap: 5px;">
+                                <span id="mod-post-modal-time"></span>
+                                <i class="fa-solid fa-earth-americas" style="font-size: 10px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="mod-post-modal-actions"></div>
+                </div>
+                
+                <!-- Scores -->
+                <div id="mod-post-modal-scores"></div>
+
+                <!-- Original Content Section -->
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: #b0b3b8; text-transform: uppercase; margin-bottom: 8px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-align-left"></i> Nội dung gốc
+                    </div>
+                    <div id="mod-post-modal-content-original" style="font-size: 15px; white-space: pre-wrap; word-break: break-word; color: #e4e6eb; line-height: 1.5;"></div>
+                </div>
+
+                <!-- Violation Evidence Section -->
+                <div id="mod-post-modal-evidence-wrapper" style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: #ffba08; text-transform: uppercase; margin-bottom: 8px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> Bằng chứng vi phạm
+                    </div>
+                    <div id="mod-post-modal-content-evidence" style="font-size: 15px; white-space: pre-wrap; word-break: break-word; color: #e4e6eb; background: rgba(241, 196, 15, 0.08); padding: 15px; border-radius: 10px; border-left: 5px solid #f1c40f; line-height: 1.5;"></div>
+                </div>
+                
+                <!-- Post Media -->
+                <div id="mod-post-modal-media" style="margin-bottom: 15px; display: flex; justify-content: center; background: #18191a; border-radius: 8px; overflow: hidden;">
+                </div>
+
+                <!-- Interactions -->
+                <div id="mod-post-modal-interactions"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Window Container -->
+    <div id="mod-chat-window" class="chat-box" style="display: none; position: fixed; bottom: 20px; right: 350px; width: 330px; height: 450px; background: #242526; border-radius: 8px 8px 0 0; border: 1px solid #3e4042; flex-direction: column; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+        <div class="chat-header" style="padding: 10px 15px; border-bottom: 1px solid #3e4042; display: flex; align-items: center; justify-content: space-between; background: #242526; border-radius: 8px 8px 0 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img id="chat-partner-avatar" src="" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
+                <span id="chat-partner-name" style="font-weight: 600; color: #e4e6eb; font-size: 14px;">Tên người dùng</span>
+            </div>
+            <button onclick="closeModChat()" style="background: none; border: none; color: #b0b3b8; cursor: pointer; font-size: 18px;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="chat-messages-body" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #18191a;">
+            <!-- Messages load here -->
+        </div>
+        <div class="chat-input-row" style="padding: 10px; border-top: 1px solid #3e4042; display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="chat-input-field" placeholder="Aa" style="flex: 1; background: #3a3b3c; border: none; border-radius: 20px; padding: 8px 15px; color: #e4e6eb; font-size: 14px; outline: none;">
+            <button id="send-chat-btn" style="background: none; border: none; color: #00d1b2; cursor: pointer; font-size: 18px;"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    
+
+    <!-- Warn User Modal -->
+    <div id="warn-user-modal" class="modal-overlay profile-modal-hidden" style="display: none; align-items: center; justify-content: center;">
+        <div class="profile-modal-content" style="max-width: 450px; background: #242526; border-radius: 8px; overflow: hidden; box-shadow: 0 12px 28px rgba(0,0,0,0.5);">
+            <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid #3e4042; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 18px; color: #e4e6eb;">Thiết lập cảnh cáo</h3>
+                <button class="profile-modal-close" onclick="closeWarnUserModal()" style="background: none; border: none; color: #b0b3b8; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="profile-modal-body" style="padding: 20px;">
+                <input type="hidden" id="warn-user-id">
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Hình thức cảnh cáo:</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e6eb;">
+                            <input type="radio" name="warn-type" value="POST" checked> Cảnh cáo đăng bài
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e6eb;">
+                            <input type="radio" name="warn-type" value="COMMENT"> Cảnh cáo bình luận
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Thời hạn cảnh cáo:</label>
+                    <select id="warn-duration" onchange="toggleCustomDuration()" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-size: 15px;">
+                        <option value="3">3 ngày</option>
+                        <option value="7">7 ngày</option>
+                        <option value="30">1 tháng (30 ngày)</option>
+                        <option value="custom">Tùy chọn khác...</option>
+                    </select>
+                </div>
+
+                <div id="custom-duration-container" style="display: none; margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Nhập số ngày:</label>
+                    <input type="number" id="warn-custom-days" min="1" placeholder="Ví dụ: 15" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-size: 15px;">
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn-action secondary" onclick="closeWarnUserModal()" style="padding: 8px 20px; background: #3a3b3c; color: #e4e6eb; border: none; border-radius: 6px; cursor: pointer;">Hủy</button>
+                    <button class="btn-action warning" onclick="submitUserWarning()" style="padding: 8px 20px; background: #f02849; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Gửi cảnh cáo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Khóa tài khoản -->
+    <div id="lock-user-modal" class="profile-modal-overlay profile-modal-hidden" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001; justify-content: center; align-items: center;">
+        <div class="profile-modal-content" style="background: #242526; width: 450px; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 28px rgba(0,0,0,0.5);">
+            <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid #3e4042; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 18px; color: #e4e6eb;">Khóa tài khoản người dùng</h3>
+                <button class="profile-modal-close" onclick="closeLockUserModal()" style="background: none; border: none; color: #b0b3b8; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="profile-modal-body" style="padding: 20px;">
+                <input type="hidden" id="lock-user-id">
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Hình thức khóa:</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e6eb;">
+                            <input type="radio" name="lock-type" value="TEMP" checked onchange="toggleLockType()"> Khóa tạm thời
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e6eb;">
+                            <input type="radio" name="lock-type" value="PERM" onchange="toggleLockType()"> Khóa vĩnh viễn
+                        </label>
+                    </div>
+                </div>
+
+                <div id="lock-duration-section" style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Thời hạn khóa:</label>
+                    <select id="lock-duration" onchange="toggleCustomLockDuration()" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-size: 15px;">
+                        <option value="3">3 ngày</option>
+                        <option value="7">7 ngày</option>
+                        <option value="30">1 tháng (30 ngày)</option>
+                        <option value="custom">Tùy chọn khác...</option>
+                    </select>
+                    
+                    <div id="lock-custom-days-container" style="display: none; margin-top: 15px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Nhập số ngày khóa:</label>
+                        <input type="number" id="lock-custom-days" min="1" placeholder="Ví dụ: 15" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-size: 15px;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Lý do khóa (Gửi tới Email):</label>
+                    <textarea id="lock-reason" placeholder="Nhập lý do vi phạm..." style="width: 100%; height: 80px; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; font-size: 14px; resize: none; outline: none;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn-action secondary" onclick="closeLockUserModal()" style="padding: 8px 20px; background: #3a3b3c; color: #e4e6eb; border: none; border-radius: 6px; cursor: pointer;">Hủy</button>
+                    <button class="btn-action danger" onclick="submitLockUser()" style="padding: 8px 20px; background: #f02849; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Xác nhận khóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/moderator_core.js"></script>
+    <script src="../js/moderator_dashboard.js"></script>
+    <script src="../js/moderator_review.js"></script>
+    <script src="../js/moderator_manage_posts.js"></script>
+    <script src="../js/moderator_users.js"></script>
+    <script src="../js/moderator_reports.js"></script>
+    <script src="../js/moderator_logs.js"></script>
+
+</body>
+</html>

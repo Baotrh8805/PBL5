@@ -1399,8 +1399,9 @@ function openModChat(id, name, avatar) {
         .then(res => res.json())
         .then(messages => {
             body.innerHTML = '';
+            window.modLastMessageTimestamp = null; // Reset tracker
             messages.forEach(msg => {
-                const isMine = msg.senderId === myUserId;
+                const isMine = msg.senderId === window.myUserId;
                 appendModMessage(msg, isMine);
             });
             scrollToBottom();
@@ -1413,12 +1414,51 @@ window.closeModChat = function () {
     document.getElementById('mod-chat-window').style.display = 'none';
 };
 
+function formatModDateSeparator(date) {
+    const hours = ('0' + date.getHours()).slice(-2);
+    const minutes = ('0' + date.getMinutes()).slice(-2);
+    const day = date.getDate();
+    const monthNames = [
+        'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${hours}:${minutes} ${day} ${month}, ${year}`;
+}
+
 function appendModMessage(msg, isMine) {
     const body = document.getElementById('chat-messages-body');
+    
+    // Date separator logic
+    const currentMsgDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
+    let needsSeparator = false;
+    
+    if (!window.modLastMessageTimestamp) {
+        needsSeparator = true;
+    } else {
+        if (currentMsgDate.toDateString() !== window.modLastMessageTimestamp.toDateString()) {
+            needsSeparator = true;
+        }
+    }
+    
+    if (needsSeparator) {
+        const separator = document.createElement('div');
+        separator.style.textAlign = 'center';
+        separator.style.margin = '10px 0';
+        separator.style.fontSize = '12px';
+        separator.style.color = '#8a8d91';
+        separator.innerHTML = `<span>${formatModDateSeparator(currentMsgDate)}</span>`;
+        body.appendChild(separator);
+    }
+    window.modLastMessageTimestamp = currentMsgDate;
+    
+    // Message container
     const div = document.createElement('div');
     div.style.display = 'flex';
     div.style.flexDirection = 'column';
     div.style.alignItems = isMine ? 'flex-end' : 'flex-start';
+    div.style.marginBottom = '10px';
 
     const content = document.createElement('div');
     content.textContent = msg.content;
@@ -1431,6 +1471,27 @@ function appendModMessage(msg, isMine) {
     content.style.wordBreak = 'break-word';
 
     div.appendChild(content);
+    
+    // Time string formatting
+    let timeStr = "";
+    if (msg.timestamp) {
+        const d = new Date(msg.timestamp);
+        timeStr = ('0' + d.getHours()).slice(-2) + ":" + ('0' + d.getMinutes()).slice(-2);
+    } else {
+        const d = new Date();
+        timeStr = ('0' + d.getHours()).slice(-2) + ":" + ('0' + d.getMinutes()).slice(-2);
+    }
+    
+    const timeDiv = document.createElement('div');
+    timeDiv.textContent = timeStr;
+    timeDiv.style.fontSize = '11px';
+    timeDiv.style.color = '#8a8d91';
+    timeDiv.style.marginTop = '4px';
+    timeDiv.style.marginRight = isMine ? '5px' : '0';
+    timeDiv.style.marginLeft = isMine ? '0' : '5px';
+    
+    div.appendChild(timeDiv);
+
     body.appendChild(div);
 }
 

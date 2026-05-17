@@ -125,12 +125,7 @@
 }
 
 .chat-message {
-<<<<<<< HEAD
-    max-width: 70%;
-    width: fit-content;
-=======
     max-width: 220px;
->>>>>>> origin/Mondetar/Home
     padding: 8px 12px;
     font-size: 15px;
     line-height: 1.4;
@@ -145,20 +140,14 @@
 .chat-message.sent {
     background-color: #0084ff; /* Messenger Blue */
     color: white;
-<<<<<<< HEAD
-    align-self: flex-end;
-=======
->>>>>>> origin/Mondetar/Home
+
     border-radius: 18px 18px 4px 18px;
 }
 
 .chat-message.received {
     background-color: #f0f2f5; /* Messenger Gray */
     color: #050505;
-<<<<<<< HEAD
-    align-self: flex-start;
-=======
->>>>>>> origin/Mondetar/Home
+
     border-radius: 18px 18px 18px 4px;
 }
 
@@ -198,10 +187,7 @@
     transition: 0.2s;
     width: 36px;
     height: 36px;
-<<<<<<< HEAD
-=======
     flex-shrink: 0;
->>>>>>> origin/Mondetar/Home
 }
 .chat-input-area button:hover {
     background-color: #f0f2f5;
@@ -387,10 +373,7 @@
 .filter-chip.active {
     background: #eaf3ff;
     color: #0084ff;
-<<<<<<< HEAD
-=======
     border: 2px solid #050505;
->>>>>>> origin/Mondetar/Home
 }
 
 .filter-chip:hover:not(.active) {
@@ -414,8 +397,6 @@
     width: 56px;
     height: 56px;
 }
-<<<<<<< HEAD
-=======
 
 .notification-item.unread .notification-msg {
     color: #050505 !important;
@@ -425,4 +406,3 @@
 .notification-item.unread {
     background-color: rgba(0, 132, 255, 0.05);
 }
->>>>>>> origin/Mondetar/Home

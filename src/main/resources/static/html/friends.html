@@ -47,11 +47,8 @@
             </a>
             <div class="search-bar">
                 <i class="fa-solid fa-magnifying-glass"></i>
-<<<<<<< HEAD
-                <input type="text" placeholder="Tìm kiếm LC Network...">
-=======
-                <input type="text" placeholder="Tìm mọi người hoặc bài viết...">
->>>>>>> origin/Mondetar/Home
+                <input type="text" id="global-search-input" placeholder="Tìm mọi người hoặc bài viết..." oninput="handleGlobalSearch(this.value)">
+                <div id="global-search-results" class="search-results-dropdown" style="display: none;"></div>
             </div>
         </div>
 

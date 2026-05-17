@@ -1,7 +1,6 @@
 package com.pbl5.controller;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
+import com.pbl5.service.FileUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,7 @@ import java.util.Map;
 public class FileUploadController {
 
     @Autowired
-    private Cloudinary cloudinary;
+    private FileUploadService fileUploadService;
 
     @PostMapping("/image")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
@@ -26,13 +25,8 @@ public class FileUploadController {
         }
 
         try {
-            // Tải ảnh trực tiếp lên Cloudinary thay vì lưu vào ổ cứng
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            String imageUrl = fileUploadService.uploadImage(file);
 
-            // Nhận một link https nét và vĩnh viễn từ Cloudinary trả về
-            String imageUrl = uploadResult.get("secure_url").toString();
-
-            // Trả về url có thể truy cập 24/7 từ Cloudinary cho Frontend
             Map<String, String> response = new HashMap<>();
             response.put("imageUrl", imageUrl);
             response.put("url", imageUrl);
@@ -52,14 +46,8 @@ public class FileUploadController {
         }
 
         try {
-            // Tải video trực tiếp lên Cloudinary
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                    ObjectUtils.asMap("resource_type", "video"));
+            String videoUrl = fileUploadService.uploadVideo(file);
 
-            // Nhận một link https từ Cloudinary trả về
-            String videoUrl = uploadResult.get("secure_url").toString();
-
-            // Trả về url có thể truy cập 24/7 từ Cloudinary cho Frontend
             Map<String, String> response = new HashMap<>();
             response.put("videoUrl", videoUrl);
             response.put("url", videoUrl);

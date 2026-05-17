@@ -220,9 +220,17 @@ public class AdminController {
 
         if (!postIds.isEmpty()) {
             likeRepository.countLikesByPostIds(postIds)
-                    .forEach(row -> likeCounts.put((Long) row[0], (Long) row[1]));
+                    .forEach(row -> {
+                        if (row[0] != null && row[1] != null) {
+                            likeCounts.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+                        }
+                    });
             commentRepository.countCommentsByPostIds(postIds)
-                    .forEach(row -> commentCounts.put((Long) row[0], (Long) row[1]));
+                    .forEach(row -> {
+                        if (row[0] != null && row[1] != null) {
+                            commentCounts.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+                        }
+                    });
         }
 
         List<Map<String, Object>> result = posts.stream().map(p -> {

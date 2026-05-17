@@ -176,7 +176,10 @@ public class PostController {
 
         // Lấy danh sách ID các bài viết mà user đã ẩn
         Set<Long> hiddenPostIds = hiddenPostRepository.findByUserId(currentUser.getId())
-                .stream().map(hp -> hp.getPost().getId()).collect(Collectors.toSet());
+                .stream()
+                .filter(hp -> hp.getPost() != null)
+                .map(hp -> hp.getPost().getId())
+                .collect(Collectors.toSet());
 
         List<Post> filteredPosts = posts.stream()
                 .filter(p -> !hiddenPostIds.contains(p.getId()))
@@ -503,12 +506,16 @@ public class PostController {
 
         Map<Long, Long> likeCountsMap = new HashMap<>();
         for (Object[] result : likeRepository.countLikesByPostIds(postIds)) {
-            likeCountsMap.put((Long) result[0], (Long) result[1]);
+            if (result[0] != null && result[1] != null) {
+                likeCountsMap.put(((Number) result[0]).longValue(), ((Number) result[1]).longValue());
+            }
         }
 
         Map<Long, Long> commentCountsMap = new HashMap<>();
         for (Object[] result : commentRepository.countCommentsByPostIds(postIds)) {
-            commentCountsMap.put((Long) result[0], (Long) result[1]);
+            if (result[0] != null && result[1] != null) {
+                commentCountsMap.put(((Number) result[0]).longValue(), ((Number) result[1]).longValue());
+            }
         }
 
         Set<Long> likedPostIdsSet = new HashSet<>();

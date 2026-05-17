@@ -63,4 +63,29 @@ public class EmailService {
         // Gửi email qua JavaMailSender
         mailSender.send(email);
     }
+
+    /**
+     * Gửi email thông báo khóa tài khoản.
+     *
+     * @param to       Địa chỉ email người nhận
+     * @param reason   Lý do bị khóa
+     * @param expiry   Thời hạn mở khóa (null nếu vĩnh viễn)
+     */
+    public void sendLockEmail(String to, String reason, String expiry) {
+        String subject = "Thông báo: Tài khoản LC Network của bạn đã bị khóa";
+        String expiryMsg = expiry != null ? "Thời hạn mở khóa dự kiến: " + expiry : "Hình thức: KHÓA VĨNH VIỄN";
+
+        String message = "Chào bạn,\n\n"
+                       + "Chúng tôi rất tiếc phải thông báo rằng tài khoản LC Network của bạn đã bị khóa do vi phạm tiêu chuẩn cộng đồng.\n\n"
+                       + "Chi tiết vi phạm: " + reason + "\n"
+                       + expiryMsg + "\n\n"
+                       + "Nếu bạn tin rằng đây là một sự nhầm lẫn, vui lòng phản hồi email này để được hỗ trợ.\n"
+                       + "Trân trọng,\nĐội ngũ quản trị viên LC Network.";
+
+        SimpleMailMessage email = new SimpleMailMessage();
+        email.setTo(to);
+        email.setSubject(subject);
+        email.setText(message);
+        mailSender.send(email);
+    }
 }

@@ -3,7 +3,9 @@ package com.pbl5.service;
 import com.pbl5.dto.ModerationResult;
 import com.pbl5.enums.PostStatus;
 import com.pbl5.model.Post;
+import com.pbl5.model.User;
 import com.pbl5.repository.PostRepository;
+import com.pbl5.repository.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +27,7 @@ public class ContentModerationService {
     private static final Logger logger = LoggerFactory.getLogger(ContentModerationService.class);
 
     private static final double REJECT_THRESHOLD = 0.80; // > 80% → xóa
-    private static final double REVIEW_THRESHOLD = 0.30; // 30-80% → chờ duyệt
+    private static final double REVIEW_THRESHOLD = 0.40; // 40-80% → chờ duyệt
     private static final String MODERATION_API_URL = "http://127.0.0.1:5000/api/moderate";
 
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -34,9 +36,11 @@ public class ContentModerationService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
 
-    public ContentModerationService(PostRepository postRepository) {
+    public ContentModerationService(PostRepository postRepository, UserRepository userRepository) {
         this.postRepository = postRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -53,7 +57,7 @@ public class ContentModerationService {
 
         if (!hasContent && !hasImage && !hasVideo) {
             return new ModerationResult(PostStatus.ACTIVE, 0.0, 0.0, 0.0, 0.0, false, "", mediaType,
-                    null, null, null, null, 0);
+                    null, null, "(Video:) (Content:)", null, null, 0, 30.0);
         }
 
         try {
@@ -67,16 +71,26 @@ public class ContentModerationService {
             String detectedText = String.valueOf(scores.getOrDefault("detected_text", ""));
             String nsfwBox = normalizeJsonValue(scores.get("nsfw_box"));
             String violenBox = normalizeJsonValue(scores.get("violen_box"));
-            String hateSpeechWord = normalizeJsonValue(scores.get("hate_speech_word"));
-            
-            Integer highestScoreFrameSecond = null;
-            if (scores.containsKey("highest_score_frame_second") && scores.get("highest_score_frame_second") != null) {
-                highestScoreFrameSecond = ((Number) scores.get("highest_score_frame_second")).intValue();
+            String videoHate = scores.get("video_hate_speech") != null ? normalizeJsonValue(scores.get("video_hate_speech")) : "";
+            String contentHate = scores.get("content_hate_speech") != null ? normalizeJsonValue(scores.get("content_hate_speech")) : "";
+
+            // Luôn lưu cả 2 prefix để frontend bóc tách dễ dàng, tránh lỗi khi trường bị null
+            String hateSpeechWord = (String) scores.get("hate_speech_word");
+            if (hateSpeechWord == null || (!hateSpeechWord.contains("(Video:)") && !hateSpeechWord.contains("(Content:)"))) {
+                hateSpeechWord = "(Video:)" + videoHate + " (Content:)" + contentHate;
             }
 
-            int totalFramesAnalyzed = 0;
-            if (scores.containsKey("total_frames_analyzed") && scores.get("total_frames_analyzed") != null) {
-                totalFramesAnalyzed = ((Number) scores.get("total_frames_analyzed")).intValue();
+            Integer highestScoreFrame = null;
+            Integer totalFrames = null;
+            Double fps = null;
+            if (scores.containsKey("highest_score_frame") && scores.get("highest_score_frame") != null) {
+                highestScoreFrame = ((Number) scores.get("highest_score_frame")).intValue();
+            }
+            if (scores.containsKey("total_frames") && scores.get("total_frames") != null) {
+                totalFrames = ((Number) scores.get("total_frames")).intValue();
+            }
+            if (scores.containsKey("fps") && scores.get("fps") != null) {
+                fps = ((Number) scores.get("fps")).doubleValue();
             }
 
             if ("null".equalsIgnoreCase(detectedText)) {
@@ -96,16 +110,18 @@ public class ContentModerationService {
                     String.format("%.4f", hateSpeechScore),
                     status,
                     detectedText == null ? 0 : detectedText.length(),
-                    totalFramesAnalyzed);
+                    totalFrames);
 
             return new ModerationResult(status, bestScore, nsfwScore, violenceScore, hateSpeechScore,
-                    violationDetected, detectedText, mediaType, nsfwBox, violenBox, hateSpeechWord, highestScoreFrameSecond, totalFramesAnalyzed);
+                    violationDetected, detectedText, mediaType, nsfwBox, violenBox, hateSpeechWord,
+                    null, highestScoreFrame, totalFrames, fps);
 
         } catch (Exception e) {
             // Nếu có lỗi, cho phép đăng bài (fail-open approach)
             logger.error("[MODERATION] Lỗi kiểm tra nội dung: {}", e.getMessage(), e);
+            // Vẫn trả về cấu trúc prefix rỗng để không lỗi UI
             return new ModerationResult(PostStatus.ACTIVE, 0.0, 0.0, 0.0, 0.0, false, "", mediaType,
-                    null, null, null, null, 0);
+                    null, null, "(Video:) (Content:)", null, null, 0, 30.0);
         }
     }
 
@@ -129,11 +145,17 @@ public class ContentModerationService {
 
             if (isAutoRejected(moderationResult.getStatus())) {
                 logger.warn(
-                        "[MODERATION] postId={} bị AUTO_REJECTED, bestScore={} => cập nhật trạng thái",
+                        "[MODERATION] postId={} bị AUTO_REJECTED, bestScore={} => cập nhật trạng thái và cộng điểm vi phạm",
                         postId,
                         String.format("%.4f", moderationResult.getBestScore()));
-                // We no longer delete the post, so the author can still see it in their feed
-                // and know it was rejected. canViewPost handles hiding it from others.
+
+                // Cộng điểm vi phạm tự động khi AI xóa bài
+                User author = post.getUser();
+                if (author != null) {
+                    int currentScore = author.getScore() != null ? author.getScore() : 0;
+                    author.setScore(currentScore + 1);
+                    userRepository.save(author);
+                }
             }
 
             // Luôn cập nhật tất cả điểm và dữ liệu kiểm duyệt, bất kể trạng thái
@@ -147,8 +169,10 @@ public class ContentModerationService {
             post.setNsfwBox(moderationResult.getNsfwBox());
             post.setViolenBox(moderationResult.getViolenBox());
             post.setHateSpeechWord(moderationResult.getHateSpeechWord());
+            post.setHighestScoreFrameIndex(moderationResult.getHighestScoreFrameIndex());
             post.setHighestScoreFrameSecond(moderationResult.getHighestScoreFrameSecond());
             post.setTotalFramesAnalyzed(moderationResult.getTotalFramesAnalyzed());
+            post.setFps(moderationResult.getFps());
 
             postRepository.save(post);
             logger.info(

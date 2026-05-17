@@ -14,14 +14,17 @@ public class ModerationResult {
     private String nsfwBox;
     private String violenBox;
     private String hateSpeechWord;
+    private Integer highestScoreFrameIndex;
     private Integer highestScoreFrameSecond;
     private Integer totalFramesAnalyzed;
+    private Double fps;
 
     public ModerationResult(PostStatus status, Double bestScore, Double nsfwScore,
             Double violenceScore, Double hateSpeechScore,
             Boolean violationDetected, String detectedText, String mediaType,
             String nsfwBox, String violenBox, String hateSpeechWord,
-            Integer highestScoreFrameSecond, Integer totalFramesAnalyzed) {
+            Integer highestScoreFrameIndex, Integer highestScoreFrameSecond, 
+            Integer totalFramesAnalyzed, Double fps) {
         this.status = status;
         this.bestScore = bestScore;
         this.nsfwScore = nsfwScore;
@@ -33,8 +36,10 @@ public class ModerationResult {
         this.nsfwBox = nsfwBox;
         this.violenBox = violenBox;
         this.hateSpeechWord = hateSpeechWord;
+        this.highestScoreFrameIndex = highestScoreFrameIndex;
         this.highestScoreFrameSecond = highestScoreFrameSecond;
         this.totalFramesAnalyzed = totalFramesAnalyzed;
+        this.fps = fps;
     }
 
     public PostStatus getStatus() {
@@ -125,6 +130,14 @@ public class ModerationResult {
         this.hateSpeechWord = hateSpeechWord;
     }
 
+    public Integer getHighestScoreFrameIndex() {
+        return highestScoreFrameIndex;
+    }
+
+    public void setHighestScoreFrameIndex(Integer highestScoreFrameIndex) {
+        this.highestScoreFrameIndex = highestScoreFrameIndex;
+    }
+
     public Integer getHighestScoreFrameSecond() {
         return highestScoreFrameSecond;
     }
@@ -139,5 +152,13 @@ public class ModerationResult {
 
     public void setTotalFramesAnalyzed(Integer totalFramesAnalyzed) {
         this.totalFramesAnalyzed = totalFramesAnalyzed;
+    }
+
+    public Double getFps() {
+        return fps;
+    }
+
+    public void setFps(Double fps) {
+        this.fps = fps;
     }
 }

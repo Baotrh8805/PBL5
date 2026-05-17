@@ -15,6 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="/js/auth-interceptor.js"></script>
 </head>
 <body>
     <!-- Header Navigation -->
@@ -102,15 +103,19 @@
 
             <!-- User Avatar -->
             <div class="user-avatar-btn" onclick="window.location.href='/html/profile.html'">
+<<<<<<< HEAD
                 <img src="/uploads/default-avatar.png" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'" style="cursor:pointer;">
+=======
+                <img src="https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'" style="cursor:pointer;">
+>>>>>>> origin/Mondetar/Home
             </div>
         </div>
     </header>
 
     <!-- Profile Container -->
-    <div class="profile-container container">
-        <!-- Profile Header Card (Cover, Avatar, Name) -->
-        <div class="card profile-header-card">
+    <!-- Profile Header (Full Width) -->
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        <div class="card profile-header-card" style="margin-top: 20px;">
             <div class="cover-photo">
                 <img src="https://images.unsplash.com/photo-1707343843437-caacff5cfa74?q=80&w=2000&auto=format&fit=crop" alt="Cover Photo" id="profile-cover">
                 <input type="file" id="cover-upload-input" accept="image/*" style="display:none;" onchange="uploadImage('cover', event)"><button class="edit-cover-btn" onclick="document.getElementById('cover-upload-input').click()"><i class="fa-solid fa-camera"></i> Thêm ảnh bìa</button>
@@ -118,12 +123,17 @@
             
             <div class="profile-info-section">
                 <div class="profile-avatar-wrapper">
-                    <img src="/uploads/default-avatar.png" alt="Avatar" id="profile-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                    <img src="https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff" alt="Avatar" id="profile-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
                     <input type="file" id="avatar-upload-input" accept="image/*" style="display:none;" onchange="uploadImage('avatar', event)"><button class="edit-avatar-btn" onclick="document.getElementById('avatar-upload-input').click()"><i class="fa-solid fa-camera"></i></button>
                 </div>
                 
                 <div class="profile-name-section">
                     <h1 id="profile-name">Đang tải...</h1>
+                    <div class="profile-stats">
+                        <div class="stat-item"><strong>0</strong> bài viết</div>
+                        <div class="stat-item"><strong>0</strong> người theo dõi</div>
+                        <div class="stat-item"><strong>0</strong> đang theo dõi</div>
+                    </div>
                 </div>
                 
                 <div class="profile-actions">
@@ -137,43 +147,76 @@
                 <a href="#" class="active">Bài viết</a>
             </div>
         </div>
-
-        <!-- Profile Body (Left: Intro, Right: Feed) -->
-        <div class="profile-body">
-            <!-- Left Sidebar -->
-            <div class="profile-left">
-                <div class="card intro-card">
-                    <h3>Giới thiệu</h3>
-                    <div class="bio-section">
-                        <p class="bio-text" id="profile-bio">Chưa có tiểu sử.</p>
-                    </div>
-                    <ul class="intro-list">
-                        <li><i class="fa-solid fa-heart"></i> Mối quan hệ: <span id="profile-relationship">---</span></li>
-                        <li><i class="fa-solid fa-envelope"></i> <span id="profile-email">---</span></li>
-                        <li><i class="fa-solid fa-phone"></i> SĐT: <span id="profile-phone">---</span></li>
-                        <li><i class="fa-solid fa-cake-candles"></i> Sinh ngày: <span id="profile-dob">---</span></li>
-                        <li><i class="fa-solid fa-mars-and-venus"></i> Giới tính: <span id="profile-gender">---</span></li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Right Content (Feed) -->
-            <div class="profile-right">
-                <!-- Create Post Box -->
-                <div class="card create-post-box">
-                    <div class="create-post-top">
-                        <img src="/uploads/default-avatar.png" id="create-post-avatar" alt="Avatar" class="avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
-                        <input type="text" id="post-content-input" placeholder="Bạn đang nghĩ gì?" class="post-input" readonly onclick="openPostModal()">
-                    </div>
-                </div>
-
-                <!-- Posts Feed -->
-                <div class="posts-container" id="profile-posts-container">
-                    <p style="text-align: center; color: #65676B; padding: 20px;">Đang tải bài viết...</p>
-                </div>
-            </div>
-        </div>
     </div>
+
+    <!-- Main Content Area -->
+    <main class="container" style="margin-top: 20px; max-width: 1200px; margin-left: auto; margin-right: auto; padding: 0 20px;">
+
+        <!-- Center Content (Profile Body) -->
+        <section class="feed-section">
+            <div class="profile-body-wrapper">
+                <!-- Left: Intro -->
+                <div class="profile-left">
+                    <div class="card intro-card">
+                        <h3>Giới thiệu</h3>
+                        <div class="bio-section">
+                            <p class="bio-text" id="profile-bio">Chưa có tiểu sử.</p>
+                        </div>
+                        <ul class="intro-list">
+                            <li><i class="fa-solid fa-heart"></i> Mối quan hệ: <span id="profile-relationship">---</span></li>
+                            <li><i class="fa-solid fa-envelope"></i> <span id="profile-email">---</span></li>
+                            <li><i class="fa-solid fa-phone"></i> SĐT: <span id="profile-phone">---</span></li>
+                            <li><i class="fa-solid fa-cake-candles"></i> Sinh ngày: <span id="profile-dob">---</span></li>
+                            <li><i class="fa-solid fa-mars-and-venus"></i> Giới tính: <span id="profile-gender">---</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="card photos-card">
+                        <div class="card-header">
+                            <h3>Ảnh</h3>
+                            <a href="#">Xem tất cả</a>
+                        </div>
+                        <div class="photos-grid" id="profile-photos-grid">
+                            <!-- JS will populate -->
+                            <div class="photo-item empty"></div>
+                            <div class="photo-item empty"></div>
+                            <div class="photo-item empty"></div>
+                            <div class="photo-item empty"></div>
+                            <div class="photo-item empty"></div>
+                            <div class="photo-item empty"></div>
+                        </div>
+                    </div>
+
+                    <div class="card friends-card">
+                        <div class="card-header">
+                            <h3>Bạn bè</h3>
+                            <a href="/html/friends.html">Xem tất cả</a>
+                        </div>
+                        <div class="friends-grid" id="profile-friends-grid">
+                            <!-- JS will populate -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Feed -->
+                <div class="profile-right">
+                    <!-- Create Post Box -->
+                    <div class="card create-post-box">
+                        <div class="create-post-top">
+                            <img src="https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff" id="create-post-avatar" alt="Avatar" class="avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                            <input type="text" id="post-content-input" placeholder="Bạn đang nghĩ gì?" class="post-input" readonly onclick="openPostModal()">
+                        </div>
+                    </div>
+
+                    <!-- Posts Feed -->
+                    <div class="posts-container" id="profile-posts-container">
+                        <p style="text-align: center; color: #65676B; padding: 20px;">Đang tải bài viết...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
 
     <!-- Create Post Modal (Reused) -->
     <div id="create-post-modal" class="modal-overlay" style="display: none;">
@@ -259,6 +302,39 @@
         </div>
     </div>
 
+<<<<<<< HEAD
+=======
+    <!-- Toast notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Report Modal -->
+    <div id="report-modal" class="modal-overlay" style="display: none; z-index: 3000;">
+        <div class="modal-content" style="max-width: 400px; padding: 25px;">
+            <div class="modal-header" style="border-bottom: 1px solid #e4e6eb; padding-bottom: 15px; margin-bottom: 20px;">
+                <h2 id="report-modal-title" style="font-size: 20px; font-weight: 700;">Báo cáo bài viết</h2>
+                <button class="close-modal" onclick="closeReportModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #65676b; margin-bottom: 15px; font-size: 14px;">Tại sao bạn muốn báo cáo nội dung này?</p>
+                <select id="report-category" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none;">
+                    <option value="SPAM">Spam / Nội dung rác</option>
+                    <option value="VIOLENCE">Bạo lực</option>
+                    <option value="HARASSMENT">Quấy rối</option>
+                    <option value="HATE_SPEECH">Ngôn từ thù ghét</option>
+                    <option value="NSFW">Nội dung nhạy cảm</option>
+                    <option value="FALSE_INFO">Thông tin sai lệch</option>
+                    <option value="OTHER" selected>Khác</option>
+                </select>
+                <textarea id="report-reason" placeholder="Nhập lý do chi tiết..." style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; resize: none; margin-bottom: 20px; font-family: inherit; outline: none;"></textarea>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="closeReportModal()">Hủy</button>
+                    <button class="btn btn-primary" id="confirm-report-btn">Gửi báo cáo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+>>>>>>> origin/Mondetar/Home
     <script src="/js/post-creation.js"></script>
     <script src="/js/profile.js"></script>
     <script src="/js/chat.js"></script>

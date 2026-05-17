@@ -10,8 +10,14 @@ public class CommentResponse {
     private String authorAvatar;
     private LocalDateTime createdAt;
     private boolean isMine;
+    private String imageUrl;
+    private String videoUrl;
+    private long likeCount;
+    private boolean isLiked;
+    private java.util.List<CommentResponse> replies = new java.util.ArrayList<>();
 
-    public CommentResponse(Long id, String content, Long authorId, String authorName, String authorAvatar, LocalDateTime createdAt, boolean isMine) {
+    public CommentResponse(Long id, String content, Long authorId, String authorName, String authorAvatar, 
+                           LocalDateTime createdAt, boolean isMine, String imageUrl, String videoUrl) {
         this.id = id;
         this.content = content;
         this.authorId = authorId;
@@ -19,6 +25,8 @@ public class CommentResponse {
         this.authorAvatar = authorAvatar;
         this.createdAt = createdAt;
         this.isMine = isMine;
+        this.imageUrl = imageUrl;
+        this.videoUrl = videoUrl;
     }
 
     public Long getId() { return id; }
@@ -28,4 +36,12 @@ public class CommentResponse {
     public String getAuthorAvatar() { return authorAvatar; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public boolean isMine() { return isMine; }
+    public String getImageUrl() { return imageUrl; }
+    public String getVideoUrl() { return videoUrl; }
+    public long getLikeCount() { return likeCount; }
+    public void setLikeCount(long likeCount) { this.likeCount = likeCount; }
+    public boolean isLiked() { return isLiked; }
+    public void setLiked(boolean isLiked) { this.isLiked = isLiked; }
+    public java.util.List<CommentResponse> getReplies() { return replies; }
+    public void setReplies(java.util.List<CommentResponse> replies) { this.replies = replies; }
 }

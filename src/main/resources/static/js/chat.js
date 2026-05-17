@@ -81,6 +81,24 @@ function toggleInboxDropdown() {
     }
 }
 
+<<<<<<< HEAD
+=======
+let currentMessengerFilter = 'all';
+let messengerSearchQuery = '';
+
+function handleMessengerSearch(val) {
+    messengerSearchQuery = val.toLowerCase().trim();
+    loadInboxDropdown();
+}
+
+function setMessengerFilter(filter, btn) {
+    currentMessengerFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
+    btn.classList.add('active');
+    loadInboxDropdown();
+}
+
+>>>>>>> origin/Mondetar/Home
 async function loadInboxDropdown() {
     const token = localStorage.getItem('token');
     const inboxList = document.getElementById('inbox-list');
@@ -104,11 +122,32 @@ async function loadInboxDropdown() {
                 mergedMap.set(u.id, { ...u, isFriend: true, lastMessage: 'Các bạn đã trở thành bạn bè', lastMessageTime: null });
             }
         });
+<<<<<<< HEAD
         const contacts = Array.from(mergedMap.values());
 
         inboxList.innerHTML = '';
         if(contacts.length === 0) {
             inboxList.innerHTML = '<div style="padding: 15px; color:#65676B; font-size:14px; text-align:center;">Chưa có đoạn chat nào.</div>';
+=======
+        let contacts = Array.from(mergedMap.values());
+
+        // Apply filters
+        if (currentMessengerFilter === 'unread') {
+            contacts = contacts.filter(c => c.unreadCount > 0);
+        }
+        
+        if (messengerSearchQuery) {
+            contacts = contacts.filter(c => c.fullName.toLowerCase().includes(messengerSearchQuery));
+        }
+
+        inboxList.innerHTML = '';
+        if(contacts.length === 0) {
+            let emptyMsg = 'Chưa có đoạn chat nào.';
+            if (currentMessengerFilter === 'unread') emptyMsg = 'Không có tin nhắn chưa đọc.';
+            if (messengerSearchQuery) emptyMsg = 'Không tìm thấy kết quả phù hợp.';
+            
+            inboxList.innerHTML = `<div style="padding: 15px; color:#65676B; font-size:14px; text-align:center;">${emptyMsg}</div>`;
+>>>>>>> origin/Mondetar/Home
             return;
         }
 
@@ -118,10 +157,19 @@ async function loadInboxDropdown() {
                  avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff`;
             }
             let msgStr = f.lastMessage || 'Bạn bè';
+<<<<<<< HEAD
 
             const item = document.createElement('div');
             item.className = 'notification-item';
             item.style.cursor = 'pointer';
+=======
+            let isUnread = f.unreadCount > 0;
+
+            const item = document.createElement('div');
+            item.className = 'notification-item' + (isUnread ? ' unread' : '');
+            item.style.cursor = 'pointer';
+            item.style.position = 'relative';
+>>>>>>> origin/Mondetar/Home
             item.onclick = () => {
                 const dropdown = document.getElementById('inbox-dropdown');
                 if (dropdown) dropdown.style.display = 'none'; // hide dropdown
@@ -132,9 +180,16 @@ async function loadInboxDropdown() {
             item.innerHTML = `
                 <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff'">
                 <div class="notification-content">
+<<<<<<< HEAD
                     <div style="font-weight: 600; font-size: 15px; color: #050505;">${f.fullName}</div>
                     <div class="notification-msg" style="color: #65676b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
                 </div>
+=======
+                    <div style="font-weight: ${isUnread ? '700' : '600'}; font-size: 15px; color: #050505;">${f.fullName}</div>
+                    <div class="notification-msg" style="color: ${isUnread ? '#050505' : '#65676b'}; font-weight: ${isUnread ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
+                </div>
+                ${isUnread ? '<div class="notification-dot" style="background-color: #00d1b2; width: 10px; height: 10px; border-radius: 50%; margin-left: auto;"></div>' : ''}
+>>>>>>> origin/Mondetar/Home
             `;
             inboxList.appendChild(item);
         });
@@ -359,6 +414,7 @@ function openChatBox(userId, name, avatar) {
     .then(res => res.json())
     .then(messages => {
         messagesDiv.innerHTML = '';
+        lastMessageTimestamp = null; // Reset tracker
         messages.forEach(msg => {
             appendMessageToUI(msg);
         });
@@ -392,8 +448,39 @@ function handleIncomingMessage(msg) {
     }
 }
 
+// Track last message timestamp for date separator logic
+let lastMessageTimestamp = null;
+
+function formatDateSeparator(date) {
+    const hours = ('0' + date.getHours()).slice(-2);
+    const minutes = ('0' + date.getMinutes()).slice(-2);
+    const day = date.getDate();
+    const monthNames = [
+        'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${hours}:${minutes} ${day} ${month}, ${year}`;
+}
+
 function appendMessageToUI(msg) {
     const messagesDiv = document.getElementById('chat-messages-container');
+    
+    // Check if we need a date separator (>24h gap)
+    const currentMsgDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
+    if (lastMessageTimestamp) {
+        const gap = Math.abs(currentMsgDate.getTime() - lastMessageTimestamp.getTime());
+        const twentyFourHours = 24 * 60 * 60 * 1000;
+        if (gap >= twentyFourHours) {
+            const separator = document.createElement('div');
+            separator.className = 'chat-date-separator';
+            separator.innerHTML = `<span>${formatDateSeparator(currentMsgDate)}</span>`;
+            messagesDiv.appendChild(separator);
+        }
+    }
+    lastMessageTimestamp = currentMsgDate;
+    
     const div = document.createElement('div');
     const isSent = (msg.senderId == myUserId);
     
@@ -408,16 +495,12 @@ function appendMessageToUI(msg) {
     }
     
     div.className = `chat-message-wrapper ${isSent ? 'sent' : 'received'}`;
-    const targetAvatarHtml = !isSent ? `<img src="${window.chatTargetAvatarUrl || '/uploads/default-avatar.png'}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; margin-right:8px;" onerror="this.style.display='none'">` : '';
-
-    div.style.display = 'flex';
-    div.style.flexDirection = isSent ? 'row-reverse' : 'row';
-    div.style.alignItems = 'flex-end';
+    const targetAvatarHtml = !isSent ? `<img src="${window.chatTargetAvatarUrl || '/uploads/default-avatar.png'}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'">` : '';
 
     div.innerHTML = `
         ${targetAvatarHtml}
-        <div style="display:flex; flex-direction:column; align-items: ${isSent ? 'flex-end' : 'flex-start'};">
-            <div class="chat-message ${isSent ? 'sent' : 'received'}" style="margin: 0;">${msg.content}</div>
+        <div class="chat-msg-content">
+            <div class="chat-message ${isSent ? 'sent' : 'received'}">${msg.content}</div>
             <div class="chat-message-time">${timeStr}</div>
         </div>
     `;

@@ -15,12 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Fetch User Info
     fetchUserProfile();
+    fetchSidebarSuggestions(token);
 });
 
 function fetchUserProfile() {
     const token = localStorage.getItem('token');
     
-    // First fetch current user logic to populate header and compare IDs
     fetch('/api/users/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -31,11 +31,33 @@ function fetchUserProfile() {
     .then(currentUser => {
         currentUserId = currentUser.id;
         
-        // Update header for current user
-        const headerAvatar = document.getElementById('header-avatar');
-        if (headerAvatar && currentUser.avatar) {
-            headerAvatar.src = currentUser.avatar;
+        // --- Populate Global Sidebars and Header ---
+        document.querySelectorAll('.user-name').forEach(el => {
+            el.textContent = currentUser.fullName || 'Người dùng';
+        });
+        
+        let avatarUrl = currentUser.avatar;
+        if (!avatarUrl && currentUser.fullName) {
+            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=00d1b2&color=fff`;
         }
+
+        document.querySelectorAll('#header-avatar, .avatar-large, .avatar-small, #modal-avatar').forEach(img => {
+            img.src = avatarUrl;
+        });
+
+        // Admin/Moderator Menu
+        if (currentUser.role === 'ADMIN' || currentUser.role === 'MODERATOR') {
+            const adminContainer = document.getElementById('admin-menu-container');
+            if (adminContainer) {
+                adminContainer.innerHTML = `
+                    <a href="/html/admin.html" id="admin-menu-item" class="menu-item admin-menu-item">
+                        <i class="fa-solid ${currentUser.role === 'ADMIN' ? 'fa-shield-halved' : 'fa-user-shield'}"></i>
+                        <span>${currentUser.role === 'ADMIN' ? 'Quản trị hệ thống' : 'Kiểm duyệt'}</span>
+                    </a>
+                `;
+            }
+        }
+        // --- End Sidebar Population ---
 
         if (targetUserId && targetUserId !== currentUserId) {
             // Xem trang của người khác
@@ -92,18 +114,24 @@ function fillProfileData(user, isCurrentUser) {
     const genderEl = document.getElementById('profile-gender');
     if (genderEl) genderEl.innerText = user.gender || '---';
     
-    document.querySelectorAll('.modal-user-name').forEach(el => {
-        el.textContent = user.fullName || 'Người dùng';
+    // Luôn hiển thị tên của CHÍNH MÌNH (currentUser) trong các modal tạo bài viết hoặc chỉnh sửa
+    // Tuy nhiên, ở trang cá nhân người khác, user truyền vào fillProfileData là targetUser.
+    // Chúng ta cần lấy fullName của currentUser đã lưu trước đó.
+    const token = localStorage.getItem('token');
+    fetch('/api/users/profile', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(curr => {
+        document.querySelectorAll('.modal-user-name').forEach(el => {
+            el.textContent = curr.fullName || 'Người dùng';
+        });
+        const modalAvt = document.getElementById('modal-avatar');
+        if (modalAvt) modalAvt.src = curr.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(curr.fullName)}&background=00d1b2&color=fff`;
     });
 
     if (isCurrentUser) {
         // Setup placeholders
-        const pcInput = document.getElementById('post-content-input');
-        if (pcInput) pcInput.placeholder = `Bạn đang nghĩ gì?`;
-        const modalPostContent = document.getElementById('modal-post-content');
-        if (modalPostContent) {
-            modalPostContent.placeholder = `${user.fullName} ơi, bạn đang nghĩ gì thế?`;
-        }
     } else {
         // Ẩn các nút chỉnh sửa
         const btnEdit = document.getElementById('btn-edit-profile');
@@ -152,12 +180,90 @@ function fillProfileData(user, isCurrentUser) {
             };
         }
     }
+
+    // Fetch and display Photos and Friends
+    fetchAndDisplayPhotos(user.id);
+    fetchAndDisplayFriends(user.id);
 }
 
 function formatDate(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+}
+
+/**
+ * Lấy danh sách ảnh từ bài viết của user
+ */
+async function fetchAndDisplayPhotos(userId) {
+    const token = localStorage.getItem('token');
+    const container = document.getElementById('profile-photos-grid');
+    if (!container) return;
+
+    try {
+        const res = await fetch(`/api/posts/user/${userId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const posts = await res.json();
+            const photos = posts.filter(p => p.imageUrl).slice(0, 9);
+            
+            if (photos.length > 0) {
+                container.innerHTML = photos.map(p => `
+                    <div class="photo-item" onclick="window.location.href = '/html/post.html?id=${p.id}'">
+                        <img src="${p.imageUrl}" alt="Post photo" onerror="this.parentElement.style.display='none'">
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div style="grid-column: span 3; padding: 20px; text-align: center; color: #65676b; font-size: 13px;">Chưa có ảnh nào.</div>';
+            }
+            
+            // Cập nhật số bài viết trong stats
+            const statPosts = document.querySelector('.stat-item:nth-child(1) strong');
+            if (statPosts) statPosts.innerText = posts.length;
+        }
+    } catch (err) {
+        console.error("Lỗi lấy ảnh:", err);
+    }
+}
+
+/**
+ * Lấy danh sách bạn bè
+ */
+async function fetchAndDisplayFriends(userId) {
+    const token = localStorage.getItem('token');
+    const container = document.getElementById('profile-friends-grid');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/friends', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const friends = await res.json();
+            const displayedFriends = friends.slice(0, 9);
+            
+            if (displayedFriends.length > 0) {
+                container.innerHTML = displayedFriends.map(f => {
+                    const avt = f.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff`;
+                    return `
+                        <a href="/html/profile.html?userId=${f.id}" class="friend-item">
+                            <img src="${avt}" alt="${f.fullName}" class="friend-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff'">
+                            <span class="friend-name">${f.fullName}</span>
+                        </a>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<div style="grid-column: span 3; padding: 20px; text-align: center; color: #65676b; font-size: 13px;">Chưa có bạn bè.</div>';
+            }
+            
+            // Cập nhật số người theo dõi (tạm thời dùng số bạn bè)
+            const statFollowers = document.querySelector('.stat-item:nth-child(2) strong');
+            if (statFollowers) statFollowers.innerText = friends.length;
+        }
+    } catch (err) {
+        console.error("Lỗi lấy bạn bè:", err);
+    }
 }
 
 function fetchMyPosts(endpointUrl) {
@@ -207,13 +313,32 @@ function renderProfilePosts(posts) {
         else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
         const isMine = post.mine ?? post.isMine ?? false;
 
+        const isRejected = post.status === 'AUTO_REJECTED';
+        const isDeleted = post.status === 'DELETED';
+        const rejectedHtml = isRejected ? `
+            <div style="background-color: #ffebe9; border: 1px solid #ff8182; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: #d1293f; font-weight: 500;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 18px;"></i>
+                <span>Bài viết này đã bị gỡ khỏi hệ thống do vi phạm tiêu chuẩn cộng đồng. Chỉ có bạn mới có thể nhìn thấy nội dung này.</span>
+            </div>
+        ` : '';
+
+        const deletedHtml = isDeleted ? `
+            <div style="background-color: #f0f2f5; border: 1px solid #ccc; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 10px; color: #65676B;">
+                    <i class="fa-solid fa-trash-can" style="font-size: 18px;"></i>
+                    <span>Bài viết đã được chuyển vào thùng rác (sẽ bị xóa vĩnh viễn sau 1 ngày).</span>
+                </div>
+                <button onclick="restorePost(${post.id})" style="background: var(--primary-color); color: #fff; border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer;">Khôi phục</button>
+            </div>
+        ` : '';
+
         let postHtml = `
-        <article class="card post" id="post-${post.id}">
+        <article class="card post" id="post-${post.id}" ${(isRejected || isDeleted) ? 'style="opacity: 0.8; border: 1px solid ' + (isRejected ? '#ff8182' : '#ccc') + ';"' : ''}>
             <div class="post-header">
                 <img src="${post.authorAvatar || '/uploads/default-avatar.png'}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
-                    <span class="post-time">${timeSince(post.createdAt)} ${visibilityIcon}</span>
+                    <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">${timeSince(post.createdAt)}</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
                 </div>
             </div>
             
@@ -223,11 +348,13 @@ function renderProfilePosts(posts) {
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
                     ${isMine ? `
+                        ${!isDeleted ? `
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
                         <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
                         <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        ` : ''}
                     ` : `
                         <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
@@ -236,36 +363,43 @@ function renderProfilePosts(posts) {
             </div>
 
             <div class="post-content">
+                ${rejectedHtml}
+                ${deletedHtml}
                 <p>${escapeHtml(post.content || '')}</p>
             </div>
         `;
 
         if (post.imageUrl) {
             postHtml += `
-            <div class="post-image-placeholder text-center">
-                <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
-            </div>
+            <a href="/html/post.html?id=${post.id}" class="post-image-link">
+                <div class="post-image-placeholder text-center">
+                    <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+                </div>
+            </a>
             `;
         }
 
         if (post.videoUrl) {
             postHtml += `
-            <div class="post-video-placeholder text-center">
-                <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;" controls></video>
-            </div>
+            <a href="/html/post.html?id=${post.id}" class="post-video-link">
+                <div class="post-video-placeholder text-center">
+                    <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;"></video>
+                </div>
+            </a>
             `;
         }
 
         const likeIcon = post.likedByCurrentUser ? 'fa-solid text-red' : 'fa-regular';
         const likeStyle = post.likedByCurrentUser ? 'color: var(--red-icon);' : '';
 
-        postHtml += `
+        if (!isRejected && !isDeleted) {
+            postHtml += `
             <div class="post-actions-bar">
-                <button class="interaction-btn" onclick="toggleLike(${post.id})" style="${likeStyle}">
-                    <i class="${likeIcon} fa-heart"></i> Mọi người (${post.likeCount})
+                <button id="like-btn-${post.id}" class="interaction-btn" onclick="toggleLike(${post.id})" style="${likeStyle}">
+                    <i id="like-icon-${post.id}" class="${likeIcon} fa-heart"></i> <span id="like-count-${post.id}">Mọi người (${post.likeCount})</span>
                 </button>
                 <button class="interaction-btn" onclick="toggleComments(${post.id})">
-                    <i class="fa-regular fa-comment"></i> Bình luận (${post.commentCount})
+                    <i class="fa-regular fa-comment"></i> <span id="comment-count-${post.id}">Bình luận (${post.commentCount})</span>
                 </button>
                 <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
             </div>
@@ -281,6 +415,10 @@ function renderProfilePosts(posts) {
                     <!-- Nơi bình luận hiển thị -->
                 </div>
             </div>
+            `;
+        }
+
+        postHtml += `
         </article>
         `;
 
@@ -302,13 +440,44 @@ function escapeHtml(unsafe) {
 
 async function toggleLike(postId) {
     const token = localStorage.getItem('token');
+    
+    // UI Cập nhật tức thì (Optimistic UI)
+    const likeBtn = document.getElementById(`like-btn-${postId}`);
+    const likeIcon = document.getElementById(`like-icon-${postId}`);
+    const likeCountSpan = document.getElementById(`like-count-${postId}`);
+    
+    if (likeBtn && likeIcon && likeCountSpan) {
+        const isLiked = likeIcon.classList.contains('fa-solid');
+        
+        let currentCount = 0;
+        const countMatch = likeCountSpan.innerText.match(/\d+/);
+        if (countMatch) {
+            currentCount = parseInt(countMatch[0], 10);
+        }
+
+        if (isLiked) {
+            // Đổi thành chưa like
+            likeIcon.classList.remove('fa-solid', 'text-red');
+            likeIcon.classList.add('fa-regular');
+            likeBtn.style.color = '';
+            likeCountSpan.innerText = `Mọi người (${Math.max(0, currentCount - 1)})`;
+        } else {
+            // Đổi thành đã like
+            likeIcon.classList.remove('fa-regular');
+            likeIcon.classList.add('fa-solid', 'text-red');
+            likeBtn.style.color = 'var(--red-icon)';
+            likeCountSpan.innerText = `Mọi người (${currentCount + 1})`;
+        }
+    }
+
     try {
         const res = await fetch(`/api/posts/${postId}/like`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (res.ok) {
-            fetchMyPosts(); // Load lại để update số like
+        
+        if (!res.ok) {
+            console.error("Lỗi khi cập nhật like trên server");
         }
     } catch (err) {
         console.error(err);
@@ -335,7 +504,7 @@ window.onclick = function(event) {
 }
 
 async function deletePost(postId) {
-    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) return;
+    if (!confirm('Bạn có chắc chắn muốn chuyển bài viết này vào thùng rác?')) return;
     
     const token = localStorage.getItem('token');
     try {
@@ -344,8 +513,30 @@ async function deletePost(postId) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
-            // Xóa khỏi giao diện
-            document.getElementById('post-' + postId).remove();
+            // Tải lại để hiển thị trạng thái đã xóa
+            if (typeof loadUserPosts === 'function') loadUserPosts();
+            else window.location.reload();
+        } else {
+            const txt = await res.text();
+            alert("Lỗi: " + txt);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function restorePost(postId) {
+    if (!confirm('Bạn có chắc chắn muốn khôi phục bài viết này không?')) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${postId}/restore`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            if (typeof loadUserPosts === 'function') loadUserPosts();
+            else window.location.reload();
         } else {
             const txt = await res.text();
             alert("Lỗi: " + txt);
@@ -357,6 +548,20 @@ async function deletePost(postId) {
 
 async function changeVisibility(postId, level) {
     const token = localStorage.getItem('token');
+    
+    // Optimistic UI update: thay đổi icon hiển thị ngay lập tức
+    const visibilityIconSpan = document.getElementById(`visibility-icon-${postId}`);
+    if (visibilityIconSpan) {
+        if (level === 'PUBLIC') visibilityIconSpan.innerHTML = '<i class="fa-solid fa-earth-americas" title="Công khai"></i>';
+        else if (level === 'FRIENDS') visibilityIconSpan.innerHTML = '<i class="fa-solid fa-user-group" title="Bạn bè"></i>';
+        else visibilityIconSpan.innerHTML = '<i class="fa-solid fa-lock" title="Chỉ mình tôi"></i>';
+    }
+
+    const dropdown = document.getElementById(`dropdown-${postId}`);
+    if (dropdown) {
+        dropdown.classList.remove('show');
+    }
+
     try {
         // level: PUBLIC, FRIENDS, PRIVATE
         const res = await fetch(`/api/posts/${postId}/visibility?level=${level}`, {
@@ -364,9 +569,7 @@ async function changeVisibility(postId, level) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (res.ok) {
-            fetchMyPosts(); // Load lại ds bài viết để hiện chế độ mới
-        } else {
+        if (!res.ok) {
             const txt = await res.text();
             alert("Lỗi: " + txt);
         }
@@ -375,14 +578,117 @@ async function changeVisibility(postId, level) {
     }
 }
 
-function hidePost(postId) {
-    document.getElementById('post-' + postId).style.display = 'none';
+async function hidePost(postId) {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${postId}/hide`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            document.getElementById('post-' + postId).style.display = 'none';
+            showToast('Đã ẩn bài viết vĩnh viễn.', 'info');
+        }
+    } catch (err) {
+        console.error(err);
+    }
 }
 
+let activeReportPostId = null;
+let activeReportCommentId = null;
+
 function reportPost(postId) {
-    alert('Đã gửi báo cáo vi phạm nội dung!');
-    // Ẩn luôn sau khi báo cáo như FB
-    document.getElementById('post-' + postId).style.display = 'none';
+    activeReportPostId = postId;
+    activeReportCommentId = null;
+    const titleEl = document.getElementById('report-modal-title');
+    if(titleEl) titleEl.innerText = "Báo cáo bài viết";
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    
+    // Bind confirm button
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    confirmBtn.onclick = () => submitReport();
+}
+
+function reportComment(commentId) {
+    activeReportCommentId = commentId;
+    activeReportPostId = null;
+    const titleEl = document.getElementById('report-modal-title');
+    if(titleEl) titleEl.innerText = "Báo cáo bình luận";
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    
+    // Bind confirm button
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    confirmBtn.onclick = () => submitReport();
+}
+
+function closeReportModal() {
+    document.getElementById('report-modal').style.display = 'none';
+    activeReportPostId = null;
+    activeReportCommentId = null;
+}
+
+async function submitReport() {
+    const reason = document.getElementById('report-reason').value.trim();
+    const categoryEl = document.getElementById('report-category');
+    const category = categoryEl ? categoryEl.value : 'OTHER';
+    if (!reason) {
+        showToast('Vui lòng nhập lý do báo cáo.', 'error');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+        let endpoint = '';
+        if (activeReportPostId) {
+            endpoint = `/api/posts/${activeReportPostId}/report`;
+        } else if (activeReportCommentId) {
+            endpoint = `/api/posts/comments/${activeReportCommentId}/report`;
+        } else {
+            return;
+        }
+
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ reason: reason, category: category })
+        });
+
+        if (res.ok) {
+            if (activeReportPostId) {
+                const postEl = document.getElementById('post-' + activeReportPostId);
+                if (postEl) postEl.style.display = 'none';
+            } else if (activeReportCommentId) {
+                const commentEl = document.getElementById('comment-' + activeReportCommentId);
+                if (commentEl) commentEl.style.display = 'none';
+            }
+            closeReportModal();
+            showToast('Cảm ơn bạn! Báo cáo đã được gửi.', 'success');
+        } else {
+            const txt = await res.text();
+            showToast(txt, 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Lỗi khi gửi báo cáo.', 'error');
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+
+    toast.innerText = message;
+    toast.className = 'toast ' + type;
+    toast.classList.remove('hidden');
+
+    setTimeout(() => {
+        toast.classList.add('hidden');
+    }, 3000);
 }
 
 // ======================= CHỨC NĂNG BÌNH LUẬN =======================
@@ -423,6 +729,7 @@ async function fetchComments(postId) {
                             <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
                             <div style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
                         </div>
+                        <div style="margin-top: 5px; cursor: pointer; color: #65676b;" onclick="reportComment(${c.id})" title="Báo cáo bình luận"><i class="fa-regular fa-flag"></i></div>
                     </div>
                     <div style="font-size: 11px; color: #65676b; margin-left: 45px; margin-top: 2px;">${timeStr}</div>
                 </div>
@@ -445,6 +752,15 @@ async function submitComment(postId) {
     if (!content) return;
 
     const token = localStorage.getItem('token');
+    
+    // Optimistic UI update: cộng số bình luận
+    const commentCountSpan = document.getElementById(`comment-count-${postId}`);
+    if (commentCountSpan) {
+        const countMatch = commentCountSpan.innerText.match(/\d+/);
+        let currentCount = countMatch ? parseInt(countMatch[0], 10) : 0;
+        commentCountSpan.innerText = `Bình luận (${currentCount + 1})`;
+    }
+
     try {
         const res = await fetch(`/api/posts/${postId}/comments`, {
             method: 'POST',
@@ -457,8 +773,7 @@ async function submitComment(postId) {
         
         if (res.ok) {
             input.value = '';
-            fetchComments(postId);
-            fetchMyPosts(); // Refresh để udpate số lượng bình luận
+            fetchComments(postId); // Chỉ tải lại đúng danh sách bình luận của bài này
         } else {
             alert('Lỗi gửi bình luận');
         }
@@ -697,3 +1012,103 @@ async function saveCroppedImage() {
 window.uploadImage = uploadImage;
 window.closeCropperModal = closeCropperModal;
 window.saveCroppedImage = saveCroppedImage;
+
+// Alias cho post-creation.js
+window.fetchPosts = function() {
+    fetchMyPosts();
+};
+
+// Hàm thêm bài viết mới vào đầu feed (để post-creation.js gọi)
+window.prependCreatedPostToFeed = function(post) {
+    const container = document.getElementById('profile-posts-container');
+    if (!container || !post) return false;
+
+    // Chỉ hiển thị bài mới nếu đang ở trang cá nhân của CHÍNH MÌNH 
+    // Hoặc nếu không có targetUserId (nghĩa là trang của mình)
+    if (targetUserId && targetUserId !== currentUserId) {
+        // Đang xem profile người khác, không nên tự chèn bài mình vừa đăng vào đây 
+        // trừ khi logic app cho phép. Thông thường là không.
+        return false; 
+    }
+
+    // Nếu đang có thông báo "Đang tải" hoặc "Chưa có bài viết", xóa đi
+    if (container.innerHTML.includes('Chưa có bài viết') || container.innerHTML.includes('Đang tải')) {
+        container.innerHTML = '';
+    }
+
+    let visibilityIcon = '';
+    if (post.visibility === 'PUBLIC') visibilityIcon = '<i class="fa-solid fa-earth-americas" style="margin-left: 5px; font-size: 11px;"></i>';
+    else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
+    else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
+    
+    const isMine = true; // Bài mới tạo chắc chắn là của mình
+
+    let authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff`;
+    let postHtml = `
+    <article class="card post" id="post-${post.id}">
+        <div class="post-header">
+            <img src="${authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff'">
+            <div class="post-meta">
+                <h4 class="post-author"><a href="/html/profile.html" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
+                <span class="post-time">Vừa xong <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
+            </div>
+        </div>
+        
+        <div class="post-options">
+            <button class="options-btn" onclick="toggleDropdown(${post.id})">
+                <i class="fa-solid fa-ellipsis"></i>
+            </button>
+            <div id="dropdown-${post.id}" class="dropdown-content">
+                <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
+                <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
+                <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
+                <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
+                <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+            </div>
+        </div>
+
+        <div class="post-content">
+            <p>${escapeHtml(post.content || '')}</p>
+        </div>
+    `;
+
+    if (post.imageUrl) {
+        postHtml += `
+        <div class="post-image-placeholder text-center">
+            <img src="${post.imageUrl}" alt="Post image" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto;">
+        </div>
+        `;
+    }
+
+    if (post.videoUrl) {
+        postHtml += `
+        <div class="post-video-placeholder text-center">
+            <video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; background: #000; max-height: 400px;" controls></video>
+        </div>
+        `;
+    }
+
+    postHtml += `
+        <div class="post-actions-bar">
+            <button id="like-btn-${post.id}" class="interaction-btn" onclick="toggleLike(${post.id})">
+                <i id="like-icon-${post.id}" class="fa-regular fa-heart"></i> <span id="like-count-${post.id}">Mọi người (0)</span>
+            </button>
+            <button class="interaction-btn" onclick="toggleComments(${post.id})">
+                <i class="fa-regular fa-comment"></i> <span id="comment-count-${post.id}">Bình luận (0)</span>
+            </button>
+            <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
+        </div>
+        <div id="comments-${post.id}" class="comments-section" style="display: none; padding: 15px; border-top: 1px solid #ced0d4;">
+            <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <img src="${document.getElementById('header-avatar') ? document.getElementById('header-avatar').src : 'https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'}" alt="Avatar" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." onkeypress="handleCommentKeyPress(event, ${post.id})">
+                <button class="btn btn-primary" onclick="submitComment(${post.id})"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+            <div id="comment-list-${post.id}" class="comment-list"></div>
+        </div>
+    </article>
+    `;
+
+    container.insertAdjacentHTML('afterbegin', postHtml);
+    return true;
+};

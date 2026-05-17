@@ -7,6 +7,12 @@ let selectedMediaFile = null;
 let selectedMediaType = null; // 'image' or 'video'
 
 function showPostNotification(message, isError = false) {
+    // Nếu là lỗi cấm (chứa chữ "vui lòng quay lại"), chúng ta dùng modal lớn
+    if (isError && (message.includes("cấm đăng bài") || message.includes("cấm bình luận"))) {
+        showBanModal(message);
+        return;
+    }
+    
     let notification = document.getElementById('post-notification');
     if (!notification) {
         notification = document.createElement('div');
@@ -36,6 +42,45 @@ function showPostNotification(message, isError = false) {
     window.__postNotificationTimer = setTimeout(() => {
         notification.style.display = 'none';
     }, 3200);
+}
+
+function showBanModal(message) {
+    // Xóa modal cũ nếu có
+    const oldModal = document.getElementById('ban-alert-modal');
+    if (oldModal) oldModal.remove();
+
+    const modalHtml = `
+        <div id="ban-alert-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 10000; animation: modalFadeIn 0.3s ease-out;">
+            <div style="background: #ffffff; border-radius: 20px; width: 480px; max-width: 92vw; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative; animation: modalSlideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                <!-- Nút X đóng modal -->
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="position: absolute; top: 15px; right: 15px; background: #f0f2f5; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: #1c1e21; font-size: 22px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10;">&times;</button>
+                
+                <div style="padding: 45px 35px; text-align: center;">
+                    <div style="background: #fff0f0; width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; box-shadow: 0 10px 20px rgba(228, 30, 63, 0.1);">
+                        <i class="fa-solid fa-user-slash" style="font-size: 40px; color: #e41e3f;"></i>
+                    </div>
+                    
+                    <h2 style="margin: 0 0 15px 0; font-size: 26px; color: #1c1e21; font-weight: 800; letter-spacing: -0.5px;">Thông báo vi phạm</h2>
+                    
+                    <div style="background: #fff5f5; padding: 25px; border-radius: 15px; margin-bottom: 30px; border: 1px solid #ffebeb; position: relative;">
+                        <p style="margin: 0; font-size: 17px; color: #333; line-height: 1.6; font-weight: 500;">
+                            ${message}
+                        </p>
+                    </div>
+                    
+                    <button onclick="document.getElementById('ban-alert-modal').remove()" style="background: linear-gradient(135deg, #e41e3f 0%, #c11732 100%); color: #fff; border: none; width: 100%; padding: 15px; border-radius: 12px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 20px rgba(228, 30, 63, 0.3);">
+                        Tôi đã hiểu và cam kết tuân thủ
+                    </button>
+                </div>
+            </div>
+            <style>
+                @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes modalSlideUp { from { transform: translateY(40px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+                #ban-alert-modal button:active { transform: scale(0.98); }
+            </style>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
 function parseErrorMessage(errorData, fallbackMessage) {
@@ -264,7 +309,8 @@ async function submitModalPost() {
             
             // Xử lý các lỗi khác nhau
             if (res.status === 403) {
-                showPostNotification(parseErrorMessage(errorData, 'Bài đăng vi phạm chính sách cộng đồng.'), true);
+                const errorMessage = parseErrorMessage(errorData, 'Bạn đang bị cấm đăng bài do vi phạm chính sách cộng đồng.');
+                showBanModal(errorMessage);
                 closePostModal();
             } else if (res.status === 202) {
                 showPostNotification('Bài đăng của bạn đang chờ duyệt bởi moderator.');

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* Post View Split Layout */
 .post-page-body {
     overflow: hidden; /* Prevent body scroll, layout handles internal scroll */
@@ -33,12 +34,71 @@
 .post-media-section {
     flex: 1; /* Cân đối chiều rộng tối đa */
     background: #000;
+=======
+:root {
+    --bg-dark: #18191a;
+    --bg-sidebar: #ffffff;
+    --text-main: #050505;
+    --text-muted: #65676b;
+    --border-color: #ced0d4;
+    --accent-blue: #1877f2;
+}
+
+body.post-detail-page {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    height: 100vh;
+    overflow: hidden;
+}
+
+.post-detail-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.close-post-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    cursor: pointer;
+    z-index: 100;
+    font-size: 20px;
+    transition: 0.2s;
+}
+
+.close-post-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.post-detail-layout {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+/* Media Viewer (Left) */
+.post-media-viewer {
+    flex: 1;
+    background-color: #000;
+>>>>>>> origin/Mondetar/Home
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
 }
 
+<<<<<<< HEAD
 .post-close-btn {
     position: absolute;
     top: 20px;
@@ -84,11 +144,87 @@
 }
 
 .post-interaction-content {
+=======
+.media-placeholder {
+    max-width: 100%;
+    max-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.media-placeholder img {
+    max-width: 100%;
+    max-height: 100vh;
+    object-fit: contain;
+}
+
+.media-placeholder video {
+    max-width: 100%;
+    max-height: 100vh;
+}
+
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    display: none; /* Show if multiple media */
+}
+
+.nav-arrow:hover { background: rgba(255, 255, 255, 0.2); }
+.nav-arrow.prev { left: 20px; }
+.nav-arrow.next { right: 20px; }
+
+/* Sidebar (Right) */
+.post-info-sidebar {
+    width: 360px;
+    background-color: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+}
+
+.post-sidebar-header {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.author-info {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.author-meta h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.author-meta span {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.post-sidebar-content {
+>>>>>>> origin/Mondetar/Home
     flex: 1;
     overflow-y: auto;
     padding: 16px;
 }
 
+<<<<<<< HEAD
 .post-author-header {
     display: flex;
     align-items: center;
@@ -132,10 +268,85 @@
 /* Comment Styling */
 .comments-list {
     margin-top: 16px;
+=======
+.post-text {
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    white-space: pre-wrap;
+}
+
+.post-stats {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.stat-likes i {
+    color: #f02849;
+    margin-right: 4px;
+}
+
+.post-actions-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 0 -16px;
+}
+
+.post-actions-detail {
+    display: flex;
+    padding: 4px 0;
+}
+
+.action-btn-detail {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.action-btn-detail:hover {
+    background-color: #f2f2f2;
+}
+
+.action-btn-detail.active {
+    color: var(--accent-blue);
+}
+
+/* Comments section */
+.comments-container-detail {
+    margin-top: 12px;
+}
+
+.comments-filter {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+
+.comments-list-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+>>>>>>> origin/Mondetar/Home
 }
 
 .comment-item {
     display: flex;
+<<<<<<< HEAD
     gap: 10px;
     margin-bottom: 12px;
 }
@@ -212,4 +423,166 @@
     .post-page-body {
         overflow-y: auto;
     }
+=======
+    gap: 8px;
+}
+
+.comment-bubble {
+    background-color: #f0f2f5;
+    padding: 8px 12px;
+    border-radius: 18px;
+    max-width: calc(100% - 40px);
+}
+
+.comment-user {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 2px;
+    display: block;
+    color: var(--text-main);
+    text-decoration: none;
+}
+
+.comment-user:hover { text-decoration: underline; }
+
+.comment-text {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Sidebar Footer */
+.post-sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.comment-input-area-detail {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.input-wrapper-detail {
+    flex: 1;
+    background-color: #f0f2f5;
+    border-radius: 20px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper-detail input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 14px;
+}
+
+.input-icons {
+    display: flex;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+.input-icons i { cursor: pointer; }
+.input-icons i:hover { color: var(--text-main); }
+#send-comment-btn { color: var(--accent-blue); }
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left-color: var(--accent-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .post-detail-layout {
+        flex-direction: column;
+    }
+    .post-media-viewer {
+        height: 50vh;
+    }
+    .post-info-sidebar {
+        width: 100%;
+        height: 50vh;
+    }
+}
+/* Comment Menu Dropdown */
+.comment-item {
+    position: relative;
+}
+
+.comment-menu-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.comment-menu-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: 0.2s;
+    opacity: 0; /* Hide by default, show on hover */
+}
+
+.comment-item:hover .comment-menu-btn {
+    opacity: 1;
+}
+
+.comment-menu-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.comment-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 120px;
+    padding: 6px 0;
+    display: none; /* Controlled by JS */
+}
+
+.comment-dropdown.show {
+    display: block;
+}
+
+.comment-dropdown-item {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.comment-dropdown-item:hover {
+    background-color: #f2f2f2;
+}
+
+.comment-dropdown-item i {
+    width: 16px;
+    text-align: center;
+>>>>>>> origin/Mondetar/Home
 }

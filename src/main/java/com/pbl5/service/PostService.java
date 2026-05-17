@@ -59,7 +59,7 @@ public class PostService {
         post.setHateSpeechScore(0.0);
         post.setNsfwBox(null);
         post.setViolenBox(null);
-        post.setHateSpeechWord(null);
+        post.setHateSpeechWord("(Video:) (Content:)");
         post.setViolationRate(0.0);
 
         // Lưu bài đăng
@@ -105,6 +105,7 @@ public class PostService {
                 commentCount,
                 false,
                 true,
-                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC");
+                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
+                post.getStatus() != null ? post.getStatus().name() : "ACTIVE");
     }
 }

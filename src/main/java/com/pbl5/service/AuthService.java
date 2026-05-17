@@ -131,8 +131,27 @@ public class AuthService {
             // Tài khoản chưa xác thực email
             throw new RuntimeException("Tài khoản chưa được kích hoạt, vui lòng kiểm tra email.");
         } else if (user.getStatus() == UserStatus.BANNED) {
-            // Tài khoản bị khoá bởi admin
-            throw new RuntimeException("Từ chối truy cập: Tài khoản đã bị khoá.");
+            LocalDateTime lockExpiry = user.getLockExpiresAt();
+            if (lockExpiry != null) {
+                // Kiểm tra khóa vĩnh viễn (mốc 0 - 1970)
+                if (lockExpiry.getYear() <= 1970) {
+                    throw new RuntimeException("Tài khoản của bạn đã bị khóa VĨNH VIỄN do vi phạm tiêu chuẩn cộng đồng nghiêm trọng.");
+                }
+                
+                // Kiểm tra khóa tạm thời
+                if (lockExpiry.isAfter(LocalDateTime.now())) {
+                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
+                    String expiryStr = lockExpiry.format(formatter);
+                    throw new RuntimeException("Tài khoản của bạn đang bị KHÓA TẠM THỜI do vi phạm tiêu chuẩn cộng đồng. Vui lòng quay lại vào " + expiryStr);
+                } else {
+                    // Đã hết hạn khóa, tự động mở khóa cho user
+                    user.setStatus(UserStatus.ACTIVE);
+                    user.setLockExpiresAt(null);
+                    userRepository.save(user);
+                }
+            } else {
+                throw new RuntimeException("Từ chối truy cập: Tài khoản đã bị khoá.");
+            }
         }
         // Lưu ý: UserStatus.WARNING vẫn được phép đăng nhập bình thường
 

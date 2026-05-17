@@ -1,6 +1,8 @@
 package com.pbl5.controller;
 
 import com.pbl5.dto.ChatMessage;
+import com.pbl5.enums.FriendshipStatus;
+import com.pbl5.model.Friendship;
 import com.pbl5.model.Message;
 import com.pbl5.model.User;
 import com.pbl5.repository.MessageRepository;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -34,6 +37,9 @@ public class ChatController {
     @Autowired
     private JwtTokenProvider tokenProvider;
 
+    @Autowired
+    private com.pbl5.repository.FriendshipRepository friendshipRepository;
+
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatMessage chatMessage) {
         User sender = userRepository.findById(chatMessage.getSenderId()).orElse(null);
@@ -48,6 +54,7 @@ public class ChatController {
 
             chatMessage.setId(savedMsg.getId());
             chatMessage.setTimestamp(savedMsg.getTimestamp());
+            chatMessage.setSenderName(sender.getFullName());
 
             // Gửi tin nhắn đến người nhận
             messagingTemplate.convertAndSend(
@@ -61,7 +68,7 @@ public class ChatController {
 
     @GetMapping("/api/messages/{userId}")
     public ResponseEntity<?> getChatHistory(
-            @PathVariable Long userId, 
+            @PathVariable("userId") Long userId, 
             @RequestHeader(value="Authorization", required=false) String authHeader) {
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -83,6 +90,9 @@ public class ChatController {
 
         List<Message> history = messageRepository.findChatHistory(currentUser, targetUser);
         
+        // Mark as read
+        messageRepository.markAsRead(targetUser, currentUser);
+        
         List<ChatMessage> dtos = history.stream().map(m -> {
             ChatMessage dto = new ChatMessage();
             dto.setId(m.getId());
@@ -90,6 +100,7 @@ public class ChatController {
             dto.setReceiverId(m.getReceiver().getId());
             dto.setContent(m.getContent());
             dto.setTimestamp(m.getTimestamp());
+            dto.setSenderName(m.getSender().getFullName());
             return dto;
         }).collect(Collectors.toList());
 
@@ -127,7 +138,15 @@ public class ChatController {
             item.put("id", partner.getId());
             item.put("fullName", partner.getFullName());
             item.put("avatar", partner.getAvatar());
-            item.put("isFriend", false);
+            
+            // Kiểm tra trạng thái bạn bè
+            Optional<com.pbl5.model.Friendship> friendship = friendshipRepository.findByUsers(currentUser, partner);
+            boolean isFriend = friendship.isPresent() && friendship.get().getStatus() == com.pbl5.enums.FriendshipStatus.ACCEPTED;
+            item.put("isFriend", isFriend);
+            
+            long unreadCount = messageRepository.countUnreadMessages(partner, currentUser);
+            item.put("unreadCount", unreadCount);
+            
             result.add(item);
         }
 

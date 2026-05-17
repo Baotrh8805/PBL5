@@ -264,9 +264,24 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             window.location.href = '/html/home.html';
         }
     } catch (err) {
-        showNotification(err.message, true);
+        if (err.message.includes("KHÓA TẠM THỜI") || err.message.includes("khóa VĨNH VIỄN")) {
+            showBanModal(err.message);
+        } else {
+            showNotification(err.message, true);
+        }
     }
 });
+
+function showBanModal(message) {
+    const modal = document.getElementById('login-ban-modal');
+    const msgEl = document.getElementById('ban-modal-message');
+    if (modal && msgEl) {
+        msgEl.innerText = message;
+        modal.style.display = 'flex';
+    } else {
+        alert(message);
+    }
+}
 
 document.getElementById('forgot-password-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -332,6 +347,9 @@ window.onload = async () => {
         localStorage.setItem('token', t);
         window.history.replaceState({}, document.title, window.location.pathname);
         await redirectByRole(t);
+    } else if (urlParams.has('error') && urlParams.get('error') === 'banned') {
+        showNotification('Từ chối truy cập: Tài khoản đã bị khoá.', true);
+        window.history.replaceState({}, document.title, window.location.pathname);
     } else if (urlParams.has('token')) {
         document.getElementById('reset-token').value = urlParams.get('token');
         showSection('reset-password-section');

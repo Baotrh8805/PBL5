@@ -49,16 +49,26 @@ public class Post {
     @Column(columnDefinition = "TEXT")
     private String hateSpeechWord;
 
+    @Column(name = "highest_score_frame_index")
+    private Integer highestScoreFrameIndex;
+
     @Column(name = "highest_score_frame_second")
     private Integer highestScoreFrameSecond;
+
 
     @Column(name = "total_frames_analyzed")
     private Integer totalFramesAnalyzed;
 
     private Double violationRate = 0.0;
 
+    @Column(name = "video_fps")
+    private Double fps;
+
+
     // Thời điểm một moderator bắt đầu xử lý vi phạm của bài viết
     private LocalDateTime moderationStartedAt;
+
+    private LocalDateTime reviewedAt;
 
     // Moderator hiện đang phụ trách duyệt vi phạm
     @ManyToOne(fetch = FetchType.EAGER)
@@ -187,6 +197,14 @@ public class Post {
         this.hateSpeechWord = hateSpeechWord;
     }
 
+    public Integer getHighestScoreFrameIndex() {
+        return highestScoreFrameIndex;
+    }
+
+    public void setHighestScoreFrameIndex(Integer highestScoreFrameIndex) {
+        this.highestScoreFrameIndex = highestScoreFrameIndex;
+    }
+
     public Integer getHighestScoreFrameSecond() {
         return highestScoreFrameSecond;
     }
@@ -194,6 +212,7 @@ public class Post {
     public void setHighestScoreFrameSecond(Integer highestScoreFrameSecond) {
         this.highestScoreFrameSecond = highestScoreFrameSecond;
     }
+
 
     public Integer getTotalFramesAnalyzed() {
         return totalFramesAnalyzed;
@@ -258,4 +277,19 @@ public class Post {
     public void setComments(List<Comment> comments) {
         this.comments = comments;
     }
-}
+    public LocalDateTime getReviewedAt() {
+        return reviewedAt;
+    }
+
+    public void setReviewedAt(LocalDateTime reviewedAt) {
+        this.reviewedAt = reviewedAt;
+    }
+
+    public Double getFps() {
+        return fps;
+    }
+
+    public void setFps(Double fps) {
+        this.fps = fps;
+    }
+}

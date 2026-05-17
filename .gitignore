@@ -30,6 +30,8 @@ buildNumber.properties
 ehthumbs.db
 Thumbs.db
 
-#model
-*.pt
-*.pth
+# AI Agents & ECC
+.agent/
+.gemini/
+src/main/model/*.pt
+src/main/model/*.pth

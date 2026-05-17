@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderator Control Panel - LC Network</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../css/home.css">
+    <link rel="stylesheet" href="../css/moderator.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/auth-interceptor.js"></script>
+</head>
+<body class="mod-layout">
+
+    <header class="mod-topbar">
+        <div class="topbar-left">
+            <div class="staff-menu-wrap">
+                <button id="staff-menu-toggle" class="logo home-link staff-menu-toggle" type="button" aria-expanded="false" aria-controls="staff-menu-dropdown">
+                    <img id="header-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=00d1b2&color=fff" alt="Avatar" class="staff-avatar">
+                    <span id="staff-display-name">Nhân viên điều phối</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div id="staff-menu-dropdown" class="dropdown-menu staff-menu-dropdown" role="menu" aria-hidden="true">
+                    <button class="dropdown-item-btn" type="button" id="profile-info-btn">
+                        <i class="fa-solid fa-id-card"></i> Chỉnh sửa thông tin cá nhân
+                    </button>
+                    <button class="dropdown-item-btn" type="button" id="change-avatar-btn">
+                        <i class="fa-solid fa-image"></i> Thay ảnh đại diện
+                    </button>
+                    <button class="dropdown-item-btn" type="button" id="change-password-btn">
+                        <i class="fa-solid fa-key"></i> Đổi mật khẩu
+                    </button>
+                    <button class="dropdown-item-btn" type="button" id="staff-logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+                <input type="file" id="staff-avatar-upload" accept="image/*" hidden>
+            </div>
+        </div>
+        
+        <div class="topbar-right">
+            <button type="button" class="topbar-btn" id="toggle-right-rail" title="Ẩn/Hiện thanh bên">
+                <i class="fa-solid fa-bars-staggered"></i>
+            </button>
+            <button type="button" class="topbar-logout-btn" id="topbar-logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </button>
+        </div>
+    </header>
+
+    <div class="mod-container">
+
+        <aside class="mod-sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-shield-halved"></i> Mod Panel</h2>
+            </div>
+            
+            <nav class="main-nav">
+                <a href="moderator.html" class="nav-link" id="nav-overview-view">
+                    <i class="fa-solid fa-chart-pie"></i> Tổng quan
+                </a>
+                <a href="moderator_review.html" class="nav-link" id="nav-review-posts-view">
+                    <i class="fa-solid fa-check-double"></i> Duyệt bài viết
+                </a>
+                <a href="moderator_manage_posts.html" class="nav-link" id="nav-manage-posts-view">
+                    <i class="fa-solid fa-layer-group"></i> Quản lý bài viết
+                </a>
+                <a href="moderator_users.html" class="nav-link" id="nav-manage-users-view">
+                    <i class="fa-solid fa-users-gear"></i> Quản lý người dùng
+                </a>
+                <a href="moderator_reports.html" class="nav-link" id="nav-reports-view" class="nav-link active" class="nav-link">
+                    <i class="fa-solid fa-flag"></i> Báo cáo vi phạm
+                </a>
+                <a href="moderator_logs.html" class="nav-link" id="nav-statistics-view">
+                    <i class="fa-solid fa-chart-simple"></i> Lịch sử hoạt động
+                </a>
+            </nav>
+        </aside>
+
+        <main class="mod-main-content">
+
+            <section id="reports-view" class="mod-section active">
+                <!-- Header chuẩn Admin -->
+                <div class="mod-page-header">
+                    <div>
+                        <h1 class="mod-page-title">Báo cáo vi phạm</h1>
+                        <p class="mod-page-subtitle">Xử lý các khiếu nại và nội dung vi phạm từ người dùng</p>
+                    </div>
+                    <div class="mod-header-actions">
+                        <button class="mod-btn-refresh" onclick="loadReports()" title="Làm mới">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Thống kê báo cáo -->
+                <div class="mod-stats-row">
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-icon yellow"><i class="fa-solid fa-flag"></i></div>
+                        <div class="mod-stat-info">
+                            <div class="mod-stat-value" id="report-stat-total">--</div>
+                            <div class="mod-stat-label">Tổng báo cáo</div>
+                        </div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-icon red"><i class="fa-solid fa-clock"></i></div>
+                        <div class="mod-stat-info">
+                            <div class="mod-stat-value" id="report-stat-pending">--</div>
+                            <div class="mod-stat-label">Đang chờ xử lý</div>
+                        </div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="mod-stat-info">
+                            <div class="mod-stat-value" id="report-stat-resolved">--</div>
+                            <div class="mod-stat-label">Đã giải quyết</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thanh công cụ bộ lọc được đẩy xuống dưới -->
+                <div class="mod-filter-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
+                    <div class="mod-search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="report-search-input" placeholder="Tìm theo ID, lý do..." oninput="filterReports()">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <select class="mod-filter-select" id="report-filter-status" onchange="filterReports()">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="PENDING">Chờ xử lý</option>
+                            <option value="RESOLVED">Đã giải quyết</option>
+                            <option value="DISMISSED">Bỏ qua</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="report-tabs" style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); display: flex; gap: 20px;">
+                    <button class="report-tab-btn active" data-report-type="POST" style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid var(--mod-primary); color: var(--mod-primary);">Bài viết bị báo cáo</button>
+                    <button class="report-tab-btn" data-report-type="COMMENT" style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; color: var(--text-secondary);">Bình luận bị báo cáo</button>
+                </div>
+
+                <div class="mod-table-card" id="report-post-container">
+                    <div class="mod-table-header">
+                        <span id="report-post-count">Đang tải...</span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="mod-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Tickets</th>
+                                    <th>Người báo cáo</th>
+                                    <th>Đối tượng bị báo cáo</th>
+                                    <th>Nguyên nhân</th>
+                                    <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-post-list">
+                                <tr><td colspan="7" class="table-loading">Đang tải danh sách báo cáo...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mod-table-card" id="report-comment-container" style="display: none;">
+                    <div class="mod-table-header">
+                        <span id="report-comment-count">Đang tải...</span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="mod-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Tickets</th>
+                                    <th>Người báo cáo</th>
+                                    <th>Đối tượng bị báo cáo</th>
+                                    <th>Nguyên nhân</th>
+                                    <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-comment-list">
+                                <tr><td colspan="7" class="table-loading">Đang tải danh sách báo cáo...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+</main>
+
+        <aside class="mod-chat-sidebar">
+            <div class="right-rail-header">
+                <button class="right-rail-tab active" type="button" data-rail-tab="notifications">
+                    <i class="fa-solid fa-bell"></i> Thông báo
+                </button>
+                <button class="right-rail-tab" type="button" data-rail-tab="messages">
+                    <i class="fa-solid fa-comments"></i> Tin nhắn
+                </button>
+            </div>
+
+            <div class="right-rail-body">
+                <div class="rail-panel active" id="rail-notifications-panel">
+                    <div class="rail-panel-header">
+                        <h3>Thông báo gần đây</h3>
+                        <button type="button" id="mark-all-notifications-read" class="rail-link-btn">Đánh dấu đã đọc</button>
+                    </div>
+                    <div class="rail-list" id="notifications-list">
+                        <div class="table-loading">Đang tải thông báo...</div>
+                    </div>
+                </div>
+
+                <div class="rail-panel" id="rail-messages-panel">
+                    <div class="rail-panel-header">
+                        <h3>Cuộc trò chuyện</h3>
+                    </div>
+                    <div class="rail-list" id="messages-list">
+                        <div class="table-loading">Đang tải tin nhắn...</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <div id="profile-edit-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
+        <div class="modal-card profile-modal">
+            <div class="modal-header">
+                <h2>Chỉnh sửa thông tin cá nhân</h2>
+                <button type="button" id="close-profile-modal" class="close-modal" aria-label="Đóng">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-modal-avatar-row">
+                    <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=00d1b2&color=fff" alt="Avatar">
+                    <div>
+                        <button type="button" id="profile-modal-change-avatar" class="btn btn-secondary">Đổi ảnh đại diện</button>
+                        <input type="file" id="profile-modal-avatar-upload" accept="image/*" hidden>
+                    </div>
+                </div>
+
+                <form id="profile-edit-form" class="profile-edit-form">
+                    <label>
+                        <span>Họ và tên</span>
+                        <input type="text" id="profile-fullName" placeholder="Nhập họ và tên">
+                    </label>
+                    <label>
+                        <span>Số điện thoại</span>
+                        <input type="text" id="profile-phoneNumber" placeholder="Nhập số điện thoại">
+                    </label>
+                    <label>
+                        <span>Ngày sinh</span>
+                        <input type="date" id="profile-dateOfBirth">
+                    </label>
+                    <label>
+                        <span>Giới tính</span>
+                        <select id="profile-gender">
+                            <option value="">Chọn giới tính</option>
+                            <option value="MALE">Nam</option>
+                            <option value="FEMALE">Nữ</option>
+                            <option value="OTHER">Khác</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Tiểu sử</span>
+                        <textarea id="profile-bio" rows="4" placeholder="Viết vài dòng giới thiệu"></textarea>
+                    </label>
+                    <label>
+                        <span>Trạng thái quan hệ</span>
+                        <select id="profile-relationshipStatus">
+                            <option value="">Chọn trạng thái</option>
+                            <option value="SINGLE">Độc thân</option>
+                            <option value="MARRIED">Đã kết hôn</option>
+                            <option value="COMPLICATED">Phức tạp</option>
+                            <option value="IN_RELATIONSHIP">Đang hẹn hò</option>
+                        </select>
+                    </label>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancel-profile-edit">Hủy</button>
+                <button type="button" class="btn btn-primary" id="save-profile-edit">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mod-post-detail-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
+        <div class="modal-card" style="width: 800px; max-width: 95vw; padding: 0; background: #242526; color: #e4e6eb; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
+            <div class="modal-header" style="border-bottom: 1px solid #3e4042; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="mod-post-modal-title" style="font-size: 18px; margin: 0; text-align: center; flex: 1;">Chi tiết nội dung</h2>
+                <button type="button" onclick="closeModPostDetailModal()" class="close-modal" aria-label="Đóng" style="background: #3a3b3c; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #e4e6eb; border: none; cursor: pointer;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 15px 20px; overflow-y: auto; max-height: 85vh;">
+                <!-- Post Author Header & Actions -->
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img id="mod-post-modal-avatar" src="" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+                        <div>
+                            <div id="mod-post-modal-author" style="font-weight: 600; font-size: 15px;"></div>
+                            <div style="font-size: 12px; color: #b0b3b8; display: flex; align-items: center; gap: 5px;">
+                                <span id="mod-post-modal-time"></span>
+                                <i class="fa-solid fa-earth-americas" style="font-size: 10px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="mod-post-modal-actions"></div>
+                </div>
+                
+                <!-- Scores -->
+                <div id="mod-post-modal-scores"></div>
+
+                <!-- Post Content -->
+                <div id="mod-post-modal-content" style="font-size: 15px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-word;"></div>
+                
+                <!-- Post Media -->
+                <div id="mod-post-modal-media" style="margin-bottom: 15px; display: flex; justify-content: center; background: #18191a; border-radius: 8px; overflow: hidden;">
+                </div>
+
+                <!-- Interactions -->
+                <div id="mod-post-modal-interactions"></div>
+            </div>
+        </div>
+    </div>
+
+    
+    <script src="../js/moderator_core.js"></script>
+    <script src="../js/moderator_dashboard.js"></script>
+    <script src="../js/moderator_review.js"></script>
+    <script src="../js/moderator_manage_posts.js"></script>
+    <script src="../js/moderator_users.js"></script>
+    <script src="../js/moderator_reports.js"></script>
+    <script src="../js/moderator_logs.js"></script>
+
+    <!-- Modal Chi tiết Báo cáo -->
+    <div id="mod-report-detail-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
+        <div class="modal-card profile-modal" style="width: 1000px; max-width: 98vw; height: 90vh;">
+            <div class="modal-header">
+                <h2>Chi tiết báo cáo vi phạm</h2>
+                <button type="button" onclick="closeReportDetailModal()" class="close-modal" aria-label="Đóng">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="display: grid; grid-template-columns: 380px 1fr; gap: 25px; padding: 25px; overflow-y: auto;">
+                <!-- Cột trái: Các bên liên quan và Nội dung khiếu nại -->
+                <div class="modal-left-col" style="display: flex; flex-direction: column; gap: 20px;">
+                    
+                    <!-- Thông tin Người báo cáo -->
+                    <div class="report-detail-section" style="padding: 15px; background: #f0f7ff; border-radius: 12px; border: 1px solid #cce3ff;">
+                        <h3 style="font-size: 12px; color: #0056b3; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-bullhorn"></i> Người báo cáo
+                        </h3>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img id="rd-reporter-avatar" src="" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div>
+                                <div id="rd-reporter-name" style="font-weight: 700; font-size: 16px; color: var(--text-primary);">---</div>
+                                <div id="rd-reporter-id" style="font-size: 12px; color: #0056b3; font-weight: 600; background: #e0efff; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 2px;">ID: ---</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MŨI TÊN CHỈ XUỐNG -->
+                    <div style="text-align: center; color: var(--border-color); margin: -10px 0;"><i class="fa-solid fa-chevron-down"></i></div>
+
+                    <!-- Thông tin Tác giả bị báo cáo -->
+                    <div class="report-detail-section" style="padding: 15px; background: #fff5f5; border-radius: 12px; border: 1px solid #feb2b2;">
+                        <h3 style="font-size: 12px; color: #c53030; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-user-shield"></i> Tác giả bị báo cáo (Chủ post)
+                        </h3>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img id="rd-author-avatar" src="" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div>
+                                <div id="rd-author-name" style="font-weight: 700; font-size: 16px; color: var(--text-primary);">---</div>
+                                <div id="rd-author-id-badge" style="font-size: 12px; color: #c53030; font-weight: 600; background: #fff1f1; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 2px;">ID: ---</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="report-detail-section" style="padding: 15px; background: #fff; border: 1px solid var(--border-color); border-radius: 12px;">
+                        <h3 style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px; font-weight: 700;">Lý do khiếu nại</h3>
+                        <div id="rd-category-badge" class="mod-badge" style="margin-bottom: 10px;">---</div>
+                        <div id="rd-reason" style="font-size: 14px; line-height: 1.5; color: var(--text-primary); min-height: 60px;">---</div>
+                        <div id="rd-time" style="font-size: 11px; color: var(--text-secondary); margin-top: 10px; border-top: 1px solid #eee; padding-top: 8px;">---</div>
+                    </div>
+
+                    <div class="report-detail-section" style="padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; font-weight: 700;">Mã bài viết</h3>
+                        <div id="rd-target-id" style="font-weight: 700; color: var(--text-primary); font-family: monospace; font-size: 16px;">#---</div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Xem trước nội dung và AI Moderation -->
+                <div class="modal-right-col" style="display: flex; flex-direction: column; gap: 20px;">
+                    <h3 style="font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Phân tích nội dung & AI</h3>
+                    
+                    <div id="rd-ai-status-row" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div class="ai-stat-item" style="padding: 12px; background: #fff; border: 1px solid var(--border-color); border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; color: #65676b; margin-bottom: 5px; text-transform: uppercase; font-weight: 700;">NSFW</div>
+                            <div id="rd-ai-nsfw" style="font-weight: 800; font-size: 18px; color: #00d1b2;">0%</div>
+                        </div>
+                        <div class="ai-stat-item" style="padding: 12px; background: #fff; border: 1px solid var(--border-color); border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; color: #65676b; margin-bottom: 5px; text-transform: uppercase; font-weight: 700;">Bạo lực</div>
+                            <div id="rd-ai-violence" style="font-weight: 800; font-size: 18px; color: #00d1b2;">0%</div>
+                        </div>
+                        <div class="ai-stat-item" style="padding: 12px; background: #fff; border: 1px solid var(--border-color); border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; color: #65676b; margin-bottom: 5px; text-transform: uppercase; font-weight: 700;">Thù ghét</div>
+                            <div id="rd-ai-hate" style="font-weight: 800; font-size: 18px; color: #00d1b2;">0%</div>
+                        </div>
+                    </div>
+
+                    <div id="rd-content-preview-box" style="background: #fff; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; flex-grow: 1; display: flex; flex-direction: column;">
+                        <div style="padding: 10px 15px; background: #f8fafc; border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-eye"></i> Nội dung bị báo cáo
+                        </div>
+                        <div id="rd-content-body" style="padding: 15px; font-size: 14px; line-height: 1.6; overflow-y: auto;">
+                            Đang tải...
+                        </div>
+                        <div id="rd-content-media" style="background: #000; text-align: center; flex-shrink: 0; display: none;"></div>
+                    </div>
+
+                    <div id="rd-evidence-section" style="background: #fff5f5; border: 1px solid #feb2b2; border-radius: 12px; padding: 15px;">
+                        <h4 style="font-size: 13px; color: #c53030; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> Bằng chứng OCR (Trích xuất văn bản)
+                        </h4>
+                        <div id="rd-ocr-content" style="font-size: 13px; color: #742a2a; line-height: 1.5; font-style: italic; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 8px;">
+                            Không phát hiện vi phạm chữ viết.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 15px 25px; background: #f8fafc; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" id="rd-dismiss-btn" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600; padding: 10px 25px;">Bỏ qua báo cáo</button>
+                <button type="button" id="rd-resolve-btn" class="btn btn-danger" style="background: var(--danger-color); color: #fff; border: none; padding: 10px 35px; border-radius: 8px; font-weight: 800; font-size: 15px; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(241, 70, 104, 0.3);">XỬ LÝ VI PHẠM</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

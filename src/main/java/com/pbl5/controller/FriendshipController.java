@@ -138,7 +138,7 @@ public class FriendshipController {
 
     // 5. Accept friend request
     @PostMapping("/accept/{userId}")
-    public ResponseEntity<?> acceptRequest(@PathVariable Long userId, @RequestHeader(value="Authorization", required=false) String authHeader) {
+    public ResponseEntity<?> acceptRequest(@PathVariable("userId") Long userId, @RequestHeader(value="Authorization", required=false) String authHeader) {
         User currentUser = getAuthenticatedUser(authHeader);
         if (currentUser == null) return ResponseEntity.status(401).body("Unauthorized");
 
@@ -162,17 +162,56 @@ public class FriendshipController {
                 notifEntity.setLink("/html/friends.html");
                 notifEntity = notificationRepository.save(notifEntity);
 
-                // Notify both that request was accepted
+                // Notify requester
                 Map<String, Object> notification = new HashMap<>();
                 notification.put("id", notifEntity.getId());
                 notification.put("type", "FRIEND_REQUEST_ACCEPTED");
                 notification.put("message", currentUser.getFullName() + " đã chấp nhận lời mời kết bạn của bạn.");
                 notification.put("senderId", currentUser.getId());
-                notification.put("senderFullName", currentUser.getFullName());
+                notification.put("senderName", currentUser.getFullName());
                 notification.put("link", notifEntity.getLink());
                 messagingTemplate.convertAndSend("/topic/notifications/" + requester.getId(), notification);
                 
                 return ResponseEntity.ok("Request accepted");
+            }
+        }
+        return ResponseEntity.badRequest().body("No pending request from this user");
+    }
+
+    // 5.5 Refuse friend request
+    @PostMapping("/refuse/{userId}")
+    public ResponseEntity<?> refuseRequest(@PathVariable("userId") Long userId, @RequestHeader(value="Authorization", required=false) String authHeader) {
+        User currentUser = getAuthenticatedUser(authHeader);
+        if (currentUser == null) return ResponseEntity.status(401).body("Unauthorized");
+
+        User requester = userRepository.findById(userId).orElse(null);
+        if (requester == null) return ResponseEntity.badRequest().body("User not found");
+
+        Optional<Friendship> opt = friendshipRepository.findByUsers(requester, currentUser);
+        if (opt.isPresent()) {
+            Friendship f = opt.get();
+            if (f.getReceiver().getId().equals(currentUser.getId()) && f.getStatus() == FriendshipStatus.PENDING) {
+                friendshipRepository.delete(f);
+
+                // Save DB notification
+                notificationRepository.deleteByUserIdAndSenderIdAndType(requester.getId(), currentUser.getId(), "FRIEND_REQUEST_REFUSED");
+                com.pbl5.model.Notification notifEntity = new com.pbl5.model.Notification();
+                notifEntity.setUser(requester);
+                notifEntity.setSender(currentUser);
+                notifEntity.setType("FRIEND_REQUEST_REFUSED");
+                notifEntity.setMessage(currentUser.getFullName() + " đã từ chối lời mời kết bạn của bạn.");
+                notifEntity.setLink("/html/friends.html");
+                notificationRepository.save(notifEntity);
+
+                // Notify requester
+                Map<String, Object> notification = new HashMap<>();
+                notification.put("type", "FRIEND_REQUEST_REFUSED");
+                notification.put("message", currentUser.getFullName() + " đã từ chối lời mời kết bạn của bạn.");
+                notification.put("senderId", currentUser.getId());
+                notification.put("senderName", currentUser.getFullName());
+                messagingTemplate.convertAndSend("/topic/notifications/" + requester.getId(), notification);
+                
+                return ResponseEntity.ok("Request refused");
             }
         }
         return ResponseEntity.badRequest().body("No pending request from this user");

@@ -42,6 +42,13 @@ public class CreatePostController {
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
         }
 
+        // Kiểm tra cảnh cáo chặn đăng bài
+        if (user.getPostWarningExpiresAt() != null && user.getPostWarningExpiresAt().isAfter(java.time.LocalDateTime.now())) {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
+            String expiryStr = user.getPostWarningExpiresAt().format(formatter);
+            return ResponseEntity.status(403).body("Bạn đang bị cấm đăng bài do vi phạm. Vui lòng quay lại sau " + expiryStr);
+        }
+
         // Chỉ từ chối khi cả nội dung lẫn media đều trống
         boolean hasContent = request.getContent() != null && !request.getContent().trim().isEmpty();
         boolean hasMedia = (request.getImageUrl() != null && !request.getImageUrl().trim().isEmpty())

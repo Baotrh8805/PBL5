@@ -25,6 +25,7 @@ function setupNavigation() {
             if (page === 'posts') loadPosts();
             if (page === 'stats') loadStats();
             if (page === 'moderators') loadModerators();
+            if (page === 'reports') loadReports();
         });
     });
 }
@@ -146,6 +147,7 @@ async function loadStats() {
         document.getElementById('big-total-posts').textContent = data.totalPosts ?? '--';
         document.getElementById('big-banned').textContent = data.bannedUsers ?? '--';
         document.getElementById('big-moderators').textContent = data.moderators ?? '--';
+        document.getElementById('big-pending-reports').textContent = data.pendingReports ?? '--';
     } catch (e) {}
 }
 
@@ -331,24 +333,36 @@ function closeModal(id) {
 
 // ===== DANH SÁCH BÀI VIẾT =====
 let allPosts = [];
+let postsCurrentPage = 0;
+let postsTotalPages = 0;
+let postsTotalElements = 0;
+const POSTS_PAGE_SIZE = 30;
+let _postSearchTimer = null;
 
-async function loadPosts() {
+async function loadPosts(page = 0) {
     document.getElementById('posts-tbody').innerHTML =
-        '<tr><td colspan="8" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>';
+        '<tr><td colspan="9" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>';
     try {
-        const res = await fetch('/api/admin/posts', { headers: { 'Authorization': 'Bearer ' + token } });
+        const res = await fetch(`/api/admin/posts?page=${page}&size=${POSTS_PAGE_SIZE}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
         if (!res.ok) { showToast('Không thể tải danh sách bài viết.', 'error'); return; }
-        allPosts = await res.json();
-        updatePostStatCards(allPosts);
+        const data = await res.json();
+        allPosts = data.content || [];
+        postsTotalElements = data.totalElements || 0;
+        postsTotalPages = data.totalPages || 0;
+        postsCurrentPage = data.currentPage || 0;
+        updatePostStatCards(allPosts, postsTotalElements);
         renderPosts(allPosts);
+        renderPostsPagination();
     } catch (e) {
         document.getElementById('posts-tbody').innerHTML =
-            '<tr><td colspan="8" class="loading-cell">Lỗi khi tải dữ liệu.</td></tr>';
+            '<tr><td colspan="9" class="loading-cell">Lỗi khi tải dữ liệu.</td></tr>';
     }
 }
 
-function updatePostStatCards(posts) {
-    document.getElementById('post-stat-total').textContent = posts.length;
+function updatePostStatCards(posts, total) {
+    document.getElementById('post-stat-total').textContent = total ?? posts.length;
     document.getElementById('post-stat-public').textContent = posts.filter(p => p.visibility === 'PUBLIC').length;
     document.getElementById('post-stat-friends').textContent = posts.filter(p => p.visibility === 'FRIENDS').length;
     document.getElementById('post-stat-private').textContent = posts.filter(p => p.visibility === 'PRIVATE').length;
@@ -356,9 +370,11 @@ function updatePostStatCards(posts) {
 
 function renderPosts(posts) {
     const tbody = document.getElementById('posts-tbody');
-    document.getElementById('post-table-count').textContent = posts.length + ' bài viết';
+    const showing = posts.length;
+    document.getElementById('post-table-count').textContent =
+        `Hiển thị ${showing} / ${postsTotalElements} bài viết (trang ${postsCurrentPage + 1}/${Math.max(1, postsTotalPages)})`;
     if (!posts.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="loading-cell">Không có bài viết nào.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="loading-cell">Không có bài viết nào.</td></tr>';
         return;
     }
     tbody.innerHTML = posts.map(p => `
@@ -373,6 +389,8 @@ function renderPosts(posts) {
                 </div>
             </td>
             <td class="post-content-cell">${escapeHtml(p.content || '(không có nội dung)')}</td>
+            <td>${postStatusBadge(p.status)}</td>
+            <td>${violationScoreBadge(p.bestScore)}</td>
             <td>${visibilityBadge(p.visibility)}</td>
             <td style="text-align:center;">
                 <span style="color:var(--red);font-weight:600;"><i class="fa-solid fa-heart"></i> ${p.likeCount ?? 0}</span>
@@ -395,15 +413,52 @@ function renderPosts(posts) {
     `).join('');
 }
 
+function renderPostsPagination() {
+    let pagEl = document.getElementById('posts-pagination');
+    if (!pagEl) {
+        pagEl = document.createElement('div');
+        pagEl.id = 'posts-pagination';
+        pagEl.className = 'pagination-bar';
+        const tableCard = document.getElementById('posts-tbody').closest('.table-card');
+        tableCard.appendChild(pagEl);
+    }
+    if (postsTotalPages <= 1) { pagEl.innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" ${postsCurrentPage === 0 ? 'disabled' : ''} onclick="loadPosts(${postsCurrentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    const maxBtns = 5;
+    let start = Math.max(0, postsCurrentPage - Math.floor(maxBtns / 2));
+    let end = Math.min(postsTotalPages, start + maxBtns);
+    if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+    for (let i = start; i < end; i++) {
+        html += `<button class="page-btn${i === postsCurrentPage ? ' active' : ''}" onclick="loadPosts(${i})">${i + 1}</button>`;
+    }
+    html += `<button class="page-btn" ${postsCurrentPage >= postsTotalPages - 1 ? 'disabled' : ''} onclick="loadPosts(${postsCurrentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    pagEl.innerHTML = html;
+}
+
+function postStatusBadge(s) {
+    const map = {
+        ACTIVE:         ['badge-active',   'fa-circle-check',           'Hoạt động'],
+        PUBLISHED:      ['badge-active',   'fa-circle-check',           'Đã duyệt'],
+        PENDING_REVIEW: ['badge-warning',  'fa-clock',                  'Chờ duyệt'],
+        AUTO_REJECTED:  ['badge-banned',   'fa-triangle-exclamation',   'Tự động ẩn'],
+    };
+    const [cls, icon, label] = map[s] || ['badge-inactive', 'fa-circle', s || '--'];
+    return `<span class="badge ${cls}"><i class="fa-solid ${icon}"></i> ${label}</span>`;
+}
+
 function filterPosts() {
-    const q = document.getElementById('post-search-input').value.toLowerCase();
-    const visibility = document.getElementById('post-filter-visibility').value;
-    const filtered = allPosts.filter(p => {
-        const matchText = (p.content || '').toLowerCase().includes(q) || (p.user?.fullName || '').toLowerCase().includes(q);
-        const matchVis = !visibility || p.visibility === visibility;
-        return matchText && matchVis;
-    });
-    renderPosts(filtered);
+    clearTimeout(_postSearchTimer);
+    _postSearchTimer = setTimeout(() => {
+        const q = document.getElementById('post-search-input').value.toLowerCase();
+        const visibility = document.getElementById('post-filter-visibility').value;
+        const filtered = allPosts.filter(p => {
+            const matchText = (p.content || '').toLowerCase().includes(q) || (p.user?.fullName || '').toLowerCase().includes(q);
+            const matchVis = !visibility || p.visibility === visibility;
+            return matchText && matchVis;
+        });
+        renderPosts(filtered);
+    }, 300);
 }
 
 function visibilityBadge(v) {
@@ -416,57 +471,101 @@ function visibilityBadge(v) {
     return `<span class="badge ${cls}"><i class="fa-solid ${icon}"></i> ${label}</span>`;
 }
 
-function openPostDetail(id) {
-    const p = allPosts.find(p => p.id === id);
-    if (!p) return;
-
-    document.getElementById('post-detail-id').textContent = '#' + p.id;
-
-    // Avatar tác giả
-    const avatarEl = document.getElementById('post-detail-avatar');
-    avatarEl.innerHTML = p.user?.avatar ? `<img src="${p.user.avatar}" alt="">` : (p.user?.fullName?.charAt(0).toUpperCase() || '?');
-
-    document.getElementById('post-detail-author').textContent = p.user?.fullName || '--';
-    document.getElementById('post-detail-meta').textContent = formatDate(p.createdAt) + (p.user?.email ? '  •  ' + p.user.email : '');
-    document.getElementById('post-detail-visibility-badge').innerHTML = visibilityBadge(p.visibility);
-
-    // Nội dung
-    const contentEl = document.getElementById('post-detail-content');
-    contentEl.textContent = p.content || '(không có nội dung)';
-    contentEl.className = 'post-content-box' + (p.content ? '' : ' empty');
-
-    // Hình ảnh
-    const imgWrap = document.getElementById('post-detail-image-wrap');
-    imgWrap.innerHTML = p.imageUrl ? `<img src="${p.imageUrl}" class="post-detail-img" alt="Ảnh bài viết">` : '';
-
-    // Thống kê
-    document.getElementById('post-detail-likes').textContent = p.likeCount ?? 0;
-    document.getElementById('post-detail-comment-count').textContent = p.commentCount ?? 0;
-
-    // Bình luận
-    const commentsEl = document.getElementById('post-detail-comments');
-    if (p.comments && p.comments.length > 0) {
-        commentsEl.innerHTML = `<div class="comments-title"><i class="fa-solid fa-comment"></i> Bình luận (${p.comments.length})</div>` +
-            p.comments.map(c => `
-                <div class="comment-item">
-                    <div class="comment-avatar">
-                        ${c.user?.avatar ? `<img src="${c.user.avatar}" alt="">` : (c.user?.fullName?.charAt(0).toUpperCase() || '?')}
-                    </div>
-                    <div class="comment-body">
-                        <span class="comment-author">${escapeHtml(c.user?.fullName || 'Ẩn danh')}</span>
-                        <span class="comment-time">${formatDate(c.createdAt)}</span>
-                        <div class="comment-text">${escapeHtml(c.content || '')}</div>
-                    </div>
-                </div>
-            `).join('');
-    } else {
-        commentsEl.innerHTML = '<div class="no-comments">Chưa có bình luận nào.</div>';
-    }
-
-    // Nút xoá
-    document.getElementById('post-detail-delete-btn').onclick = () => deletePost(p.id);
-
+async function openPostDetail(id, highlightCommentId = null) {
+    // Show modal immediately with loading state
+    document.getElementById('post-detail-id').textContent = '#' + id;
+    document.getElementById('post-detail-author').textContent = 'Đang tải...';
+    document.getElementById('post-detail-meta').textContent = '';
+    document.getElementById('post-detail-content').textContent = '';
+    document.getElementById('post-detail-image-wrap').innerHTML = '';
+    document.getElementById('post-detail-likes').textContent = '-';
+    document.getElementById('post-detail-comment-count').textContent = '-';
+    document.getElementById('post-detail-comments').innerHTML = '';
     document.getElementById('post-detail-modal').classList.remove('hidden');
+
+    try {
+        const res = await fetch(`/api/admin/posts/${id}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) {
+            showToast('Không thể tải bài viết', 'error');
+            closeModal('post-detail-modal');
+            return;
+        }
+        const p = await res.json();
+
+        document.getElementById('post-detail-avatar').innerHTML = p.user?.avatar
+            ? `<img src="${p.user.avatar}" alt="">`
+            : (p.user?.fullName?.charAt(0).toUpperCase() || '?');
+        
+        document.getElementById('post-detail-author').textContent = p.user?.fullName || 'Ẩn danh';
+        document.getElementById('post-detail-meta').innerHTML = 
+            `@${p.user?.username || 'unknown'} • ${formatDate(p.createdAt)}`;
+        
+        document.getElementById('post-detail-visibility-badge').innerHTML = visibilityBadge(p.visibility);
+
+        const contentEl = document.getElementById('post-detail-content');
+        contentEl.textContent = p.content || '(không có nội dung)';
+        contentEl.className = 'post-content-box' + (p.content ? '' : ' empty');
+
+        const imgWrap = document.getElementById('post-detail-image-wrap');
+        imgWrap.innerHTML = p.imageUrl ? `<img src="${p.imageUrl}" class="post-detail-img" alt="Ảnh bài viết">` : '';
+
+        document.getElementById('post-detail-likes').textContent = p.likeCount ?? 0;
+        document.getElementById('post-detail-comment-count').textContent = p.commentCount ?? 0;
+
+        const commentsEl = document.getElementById('post-detail-comments');
+        if (p.comments && p.comments.length > 0) {
+            commentsEl.innerHTML = `<div class="comments-title"><i class="fa-solid fa-comment"></i> Bình luận (${p.comments.length})</div>` +
+                p.comments.map(c => {
+                    const isHighlighted = (highlightCommentId && c.id == highlightCommentId);
+                    return `
+                    <div class="comment-item ${isHighlighted ? 'highlighted-comment' : ''}" style="${isHighlighted ? 'border: 1px solid var(--danger); background: rgba(220, 53, 69, 0.05);' : ''}">
+                        <div class="comment-avatar">
+                            ${c.user?.avatar ? `<img src="${c.user.avatar}" alt="">` : (c.user?.fullName?.charAt(0).toUpperCase() || '?')}
+                        </div>
+                        <div class="comment-body" style="flex: 1;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <span class="comment-author">${escapeHtml(c.user?.fullName || 'Ẩn danh')}</span>
+                                    <span class="comment-time">${formatDate(c.createdAt)}</span>
+                                    ${isHighlighted ? '<span class="badge badge-banned" style="margin-left: 8px; font-size: 10px;">Bị báo cáo</span>' : ''}
+                                </div>
+                                <button class="action-btn danger" style="padding: 4px 8px; font-size: 12px; height: auto;" title="Xóa bình luận" onclick="deleteComment(${c.id}, ${p.id})">
+                                    <i class="fa-solid fa-trash"></i> Xóa
+                                </button>
+                            </div>
+                            <div class="comment-text">${escapeHtml(c.content || '')}</div>
+                        </div>
+                    </div>
+                `}).join('');
+            
+            // Scroll to highlighted comment after a short delay
+            if (highlightCommentId) {
+                setTimeout(() => {
+                    const highlightedEl = commentsEl.querySelector('.highlighted-comment');
+                    if (highlightedEl) {
+                        highlightedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 300);
+            }
+        } else {
+            commentsEl.innerHTML = '<div class="no-comments">Chưa có bình luận nào.</div>';
+        }
+
+        document.getElementById('post-detail-delete-btn').onclick = () => deletePost(p.id);
+
+        let scoresHtml = `
+            <div class="ai-scores-container">
+                <div class="ai-score-item"><span class="score-label">NSFW:</span> <span class="score-value">${((p.nsfwScore || 0) * 100).toFixed(1)}%</span></div>
+                <div class="ai-score-item"><span class="score-label">Bạo lực:</span> <span class="score-value">${((p.violenceScore || 0) * 100).toFixed(1)}%</span></div>
+                <div class="ai-score-item"><span class="score-label">Hate Speech:</span> <span class="score-value">${((p.hateSpeechScore || 0) * 100).toFixed(1)}%</span></div>
+            </div>
+        `;
+        document.getElementById('post-detail-meta').innerHTML += '<br>' + scoresHtml;
+    } catch (e) {
+        showToast('Lỗi kết nối.', 'error');
+    }
 }
 
 async function deletePost(id) {
@@ -480,13 +579,44 @@ async function deletePost(id) {
         if (res.ok) {
             showToast(`Đã xoá bài viết #${id}.`, 'success');
             closeModal('post-detail-modal');
-            loadPosts();
+            loadPosts(postsCurrentPage);
         } else {
             showToast(data.message || 'Có lỗi xảy ra.', 'error');
         }
     } catch (e) {
         showToast('Lỗi kết nối.', 'error');
     }
+}
+
+async function deleteComment(commentId, postId) {
+    if (!confirm(`Xoá bình luận #${commentId}? Hành động này không thể hoàn tác!`)) return;
+    try {
+        const res = await fetch(`/api/admin/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+            showToast(`Đã xoá bình luận #${commentId}.`, 'success');
+            // Tải lại chi tiết bài viết để cập nhật bình luận
+            fetchPostAndOpenDetail(postId);
+        } else {
+            showToast(data.message || 'Có lỗi xảy ra.', 'error');
+        }
+    } catch (e) {
+        showToast('Lỗi kết nối.', 'error');
+    }
+}
+
+function violationScoreBadge(score) {
+    const s = score || 0;
+    let cls = 'badge-active';
+    let label = (s * 100).toFixed(1) + '%';
+    
+    if (s > 0.8) cls = 'badge-banned';
+    else if (s > 0.4) cls = 'badge-warning';
+    
+    return `<span class="badge ${cls}">${label}</span>`;
 }
 
 // ===== UTILS =====
@@ -790,6 +920,246 @@ async function createModerator() {
     } catch (e) {
         showToast('Lỗi kết nối.', 'error');
     }
+}
+
+// ===== QUẢN LÝ BÁO CÁO =====
+let allReports = [];
+
+async function loadReports() {
+    const postTbody = document.getElementById('reports-post-list');
+    const commentTbody = document.getElementById('reports-comment-list');
+    
+    if (postTbody) postTbody.innerHTML = '<tr><td colspan="7" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>';
+    if (commentTbody) commentTbody.innerHTML = '<tr><td colspan="7" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>';
+
+    try {
+        const res = await fetch('/api/admin/reports', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!res.ok) { showToast('Không thể tải danh sách báo cáo.', 'error'); return; }
+        allReports = await res.json();
+        updateReportStatCards(allReports);
+        renderReports(allReports);
+    } catch (e) {
+        if (postTbody) postTbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Lỗi khi tải dữ liệu.</td></tr>';
+        if (commentTbody) commentTbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Lỗi khi tải dữ liệu.</td></tr>';
+    }
+}
+
+function updateReportStatCards(reports) {
+    document.getElementById('report-stat-total').textContent = reports.length;
+    document.getElementById('report-stat-pending').textContent = reports.filter(r => r.status === 'PENDING').length;
+    document.getElementById('report-stat-resolved').textContent = reports.filter(r => r.status === 'RESOLVED').length;
+}
+
+function renderReports(reports) {
+    const postTbody = document.getElementById('reports-post-list');
+    const commentTbody = document.getElementById('reports-comment-list');
+    
+    document.getElementById('report-table-count').textContent = reports.filter(r => r.targetType === 'POST' || !r.targetType).length + ' báo cáo bài viết';
+    const commentCountEl = document.getElementById('report-comment-table-count');
+    if (commentCountEl) {
+        commentCountEl.textContent = reports.filter(r => r.targetType === 'COMMENT').length + ' báo cáo bình luận';
+    }
+
+    const postReports = reports.filter(r => r.targetType === 'POST' || r.post != null);
+    const commentReports = reports.filter(r => r.targetType === 'COMMENT' || r.comment != null);
+
+    // Render Post Reports
+    if (postReports.length === 0) {
+        postTbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Không có báo cáo bài viết nào.</td></tr>';
+    } else {
+        postTbody.innerHTML = postReports.map(r => `
+            <tr>
+                <td style="color:var(--text-muted);font-size:13px;">#${r.id}</td>
+                <td>
+                    <div class="user-cell">
+                        <div class="user-avatar-sm">
+                            ${r.reporter?.avatar ? `<img src="${r.reporter.avatar}" alt="">` : (r.reporter?.fullName?.charAt(0).toUpperCase() || '?')}
+                        </div>
+                        <div class="user-fullname">${escapeHtml(r.reporter?.fullName || 'Ẩn danh')}</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="post-preview-cell" onclick="openReportedPostDetail(${r.post?.id})" style="cursor:pointer;" title="Nhấn để xem chi tiết bài viết">
+                        <div class="post-id-tag">#${r.post?.id || '--'}</div>
+                        <div class="post-preview-text">${escapeHtml(r.post?.content || '(Không có nội dung)')}</div>
+                        <div class="post-author-name">Tác giả: ${escapeHtml(r.post?.authorName || '--')}</div>
+                    </div>
+                </td>
+                <td class="report-reason-cell">${escapeHtml(r.reason)} <br> <small style="color:var(--text-muted);">${escapeHtml(r.category || '')}</small></td>
+                <td style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${formatDate(r.createdAt)}</td>
+                <td>${reportStatusBadge(r.status)}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="action-btn" style="background:var(--bg-hover);color:var(--primary);" title="Xem chi tiết" onclick="openReportedPostDetail(${r.post?.id})">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                        ${r.status === 'PENDING' ? `
+                            <button class="action-btn success" title="Giải quyết" onclick="updateReportStatus(${r.id}, 'RESOLVED')">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button class="action-btn warning" title="Bỏ qua" onclick="updateReportStatus(${r.id}, 'DISMISSED')">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        ` : ''}
+                        <button class="action-btn danger" title="Xoá báo cáo" onclick="deleteReport(${r.id})">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Render Comment Reports
+    if (commentReports.length === 0) {
+        if (commentTbody) commentTbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Không có báo cáo bình luận nào.</td></tr>';
+    } else {
+        if (commentTbody) {
+            commentTbody.innerHTML = commentReports.map(r => `
+                <tr>
+                    <td style="color:var(--text-muted);font-size:13px;">#${r.id}</td>
+                    <td>
+                        <div class="user-cell">
+                            <div class="user-avatar-sm">
+                                ${r.reporter?.avatar ? `<img src="${r.reporter.avatar}" alt="">` : (r.reporter?.fullName?.charAt(0).toUpperCase() || '?')}
+                            </div>
+                            <div class="user-fullname">${escapeHtml(r.reporter?.fullName || 'Ẩn danh')}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="post-preview-cell" onclick="openReportedPostDetail(${r.comment?.postId}, ${r.comment?.id})" style="cursor:pointer;" title="Nhấn để xem bài viết gốc">
+                            <div class="post-id-tag">Bình luận #${r.comment?.id || '--'}</div>
+                            <div class="post-preview-text">${escapeHtml(r.comment?.content || '(Không có nội dung)')}</div>
+                            <div class="post-author-name">Tác giả: ${escapeHtml(r.comment?.authorName || '--')}</div>
+                        </div>
+                    </td>
+                    <td class="report-reason-cell">${escapeHtml(r.reason)} <br> <small style="color:var(--text-muted);">${escapeHtml(r.category || '')}</small></td>
+                    <td style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${formatDate(r.createdAt)}</td>
+                    <td>${reportStatusBadge(r.status)}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="action-btn" style="background:var(--bg-hover);color:var(--primary);" title="Xem chi tiết gốc" onclick="openReportedPostDetail(${r.comment?.postId}, ${r.comment?.id})">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            ${r.status === 'PENDING' ? `
+                                <button class="action-btn success" title="Giải quyết" onclick="updateReportStatus(${r.id}, 'RESOLVED')">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                                <button class="action-btn warning" title="Bỏ qua" onclick="updateReportStatus(${r.id}, 'DISMISSED')">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            ` : ''}
+                            <button class="action-btn danger" title="Xoá báo cáo" onclick="deleteReport(${r.id})">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+}
+
+// Logic chuyển tab báo cáo
+document.addEventListener('DOMContentLoaded', () => {
+    const reportTabs = document.querySelectorAll('.report-tab-btn');
+    reportTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            reportTabs.forEach(t => {
+                t.classList.remove('active');
+                t.style.borderBottomColor = 'transparent';
+                t.style.color = 'var(--text-muted)';
+            });
+            tab.classList.add('active');
+            tab.style.borderBottomColor = 'var(--primary)';
+            tab.style.color = 'var(--primary)';
+            
+            const type = tab.getAttribute('data-report-type');
+            if (type === 'POST') {
+                document.getElementById('admin-report-post-container').style.display = 'block';
+                document.getElementById('admin-report-comment-container').style.display = 'none';
+            } else {
+                document.getElementById('admin-report-post-container').style.display = 'none';
+                document.getElementById('admin-report-comment-container').style.display = 'block';
+            }
+        });
+    });
+});
+
+function reportStatusBadge(s) {
+    const map = {
+        PENDING:   ['badge-warning', 'fa-clock',        'Chờ xử lý'],
+        RESOLVED:  ['badge-active',  'fa-circle-check', 'Đã giải quyết'],
+        DISMISSED: ['badge-inactive', 'fa-circle-xmark', 'Đã bỏ qua'],
+    };
+    const [cls, icon, label] = map[s] || ['badge-inactive', 'fa-circle', s];
+    return `<span class="badge ${cls}"><i class="fa-solid ${icon}"></i> ${label}</span>`;
+}
+
+async function updateReportStatus(id, status) {
+    const msg = status === 'RESOLVED' ? 'Đánh dấu đã giải quyết báo cáo này?' : 'Bỏ qua báo cáo này?';
+    if (!confirm(msg)) return;
+
+    try {
+        const res = await fetch(`/api/admin/reports/${id}/status`, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+        });
+        if (res.ok) {
+            showToast('Đã cập nhật trạng thái báo cáo.', 'success');
+            loadReports();
+            loadStats();
+        } else {
+            showToast('Có lỗi xảy ra.', 'error');
+        }
+    } catch (e) {
+        showToast('Lỗi kết nối.', 'error');
+    }
+}
+
+async function deleteReport(id) {
+    if (!confirm('Xoá vĩnh viễn báo cáo này?')) return;
+    try {
+        const res = await fetch(`/api/admin/reports/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (res.ok) {
+            showToast('Đã xoá báo cáo.', 'success');
+            loadReports();
+            loadStats();
+        } else {
+            showToast('Có lỗi xảy ra.', 'error');
+        }
+    } catch (e) {
+        showToast('Lỗi kết nối.', 'error');
+    }
+}
+
+function openReportedPostDetail(postId, highlightCommentId = null) {
+    if (!postId) return;
+    // Tận dụng modal chi tiết bài viết có sẵn
+    // Ta cần fetch data bài viết vì allPosts có thể chưa load hoặc không chứa bài này
+    fetchPostAndOpenDetail(postId, highlightCommentId);
+}
+
+async function fetchPostAndOpenDetail(postId, highlightCommentId = null) {
+    openPostDetail(postId, highlightCommentId);
+}
+
+function filterReports() {
+    const q = document.getElementById('report-search-input').value.toLowerCase();
+    const status = document.getElementById('report-filter-status').value;
+
+    const filtered = allReports.filter(r => {
+        const matchText = (r.reason || '').toLowerCase().includes(q) || 
+                         (r.post?.content || '').toLowerCase().includes(q) ||
+                         (r.reporter?.fullName || '').toLowerCase().includes(q);
+        const matchStatus = !status || r.status === status;
+        return matchText && matchStatus;
+    });
+    renderReports(filtered);
 }
 
 // ===== CẬP NHẬT THÔNG TIN KIỂM DUYỆT VIÊN =====

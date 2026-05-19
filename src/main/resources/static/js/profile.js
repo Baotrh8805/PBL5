@@ -342,6 +342,7 @@ function renderProfilePosts(posts) {
                 </div>
             </div>
             
+            ${!isRejected ? `
             <div class="post-options">
                 <button class="options-btn" onclick="toggleDropdown(${post.id})">
                     <i class="fa-solid fa-ellipsis"></i>
@@ -360,7 +361,7 @@ function renderProfilePosts(posts) {
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
                     `}
                 </div>
-            </div>
+            </div>` : ''}
 
             <div class="post-content">
                 ${rejectedHtml}

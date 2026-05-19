@@ -140,12 +140,14 @@
 .chat-message.sent {
     background-color: #0084ff; /* Messenger Blue */
     color: white;
+
     border-radius: 18px 18px 4px 18px;
 }
 
 .chat-message.received {
     background-color: #f0f2f5; /* Messenger Gray */
     color: #050505;
+
     border-radius: 18px 18px 18px 4px;
 }
 

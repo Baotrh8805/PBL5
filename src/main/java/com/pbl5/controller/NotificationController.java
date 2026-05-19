@@ -1,25 +1,22 @@
 package com.pbl5.controller;
 
-import com.pbl5.model.Notification;
 import com.pbl5.model.User;
-import com.pbl5.repository.NotificationRepository;
 import com.pbl5.repository.UserRepository;
 import com.pbl5.security.JwtTokenProvider;
+import com.pbl5.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
     @Autowired
-    private NotificationRepository notificationRepository;
+    private NotificationService notificationService;
 
     @Autowired
     private JwtTokenProvider tokenProvider;
@@ -40,24 +37,7 @@ public class NotificationController {
         User user = getUserFromToken(authHeader);
         if (user == null) return ResponseEntity.status(401).body("Unauthorized");
 
-        List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
-
-        List<Map<String, Object>> result = notifications.stream().map(n -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", n.getId());
-            map.put("type", n.getType());
-            map.put("message", n.getMessage());
-            map.put("link", n.getLink());
-            map.put("isRead", n.isRead());
-            map.put("createdAt", n.getCreatedAt().toString());
-            if (n.getSender() != null) {
-                map.put("senderId", n.getSender().getId());
-                map.put("senderName", n.getSender().getFullName());
-                map.put("senderAvatar", n.getSender().getAvatar());
-            }
-            return map;
-        }).collect(Collectors.toList());
-
+        List<Map<String, Object>> result = notificationService.getNotifications(user);
         return ResponseEntity.ok(result);
     }
 
@@ -66,7 +46,7 @@ public class NotificationController {
         User user = getUserFromToken(authHeader);
         if (user == null) return ResponseEntity.status(401).body(0);
 
-        long count = notificationRepository.countByUserIdAndIsReadFalse(user.getId());
+        long count = notificationService.getUnreadCount(user);
         return ResponseEntity.ok(Map.of("unreadCount", count));
     }
 
@@ -75,11 +55,7 @@ public class NotificationController {
         User user = getUserFromToken(authHeader);
         if (user == null) return ResponseEntity.status(401).body("Unauthorized");
 
-        Notification notification = notificationRepository.findById(id).orElse(null);
-        if (notification != null && notification.getUser().getId().equals(user.getId())) {
-            notification.setRead(true);
-            notificationRepository.save(notification);
-        }
+        notificationService.markAsRead(id, user);
         return ResponseEntity.ok("Marked as read");
     }
 
@@ -88,13 +64,7 @@ public class NotificationController {
         User user = getUserFromToken(authHeader);
         if (user == null) return ResponseEntity.status(401).body("Unauthorized");
 
-        List<Notification> unread = notificationRepository.findByUserIdOrderByCreatedAtDesc(user.getId())
-                .stream().filter(n -> !n.isRead()).collect(Collectors.toList());
-        
-        unread.forEach(n -> n.setRead(true));
-        if (!unread.isEmpty()) {
-            notificationRepository.saveAll(unread);
-        }
+        notificationService.markAllAsRead(user);
         return ResponseEntity.ok("All marked as read");
     }
 }

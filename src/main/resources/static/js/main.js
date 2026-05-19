@@ -313,6 +313,13 @@ window.logout = function() {
 
 window.onload = async () => {
     const urlParams = new URLSearchParams(window.location.search);
+
+    if (urlParams.has('banned')) {
+        showSection('login-section');
+        showNotification('Tài khoản của bạn đã bị khóa bởi quản trị viên. Vui lòng liên hệ hỗ trợ.', true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+    }
     
     if (urlParams.has('code')) {
         try {

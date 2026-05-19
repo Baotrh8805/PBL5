@@ -1,6 +1,26 @@
 // Base API URL
 const API_URL = '/api/v1/auth'; // Update with proper prefix if needed
 
+// Interceptor: tự động logout nếu tài khoản bị khóa (status BANNED)
+(function() {
+    const _fetch = window.fetch;
+    window.fetch = async function(...args) {
+        const res = await _fetch(...args);
+        if (res.status === 401) {
+            const clone = res.clone();
+            try {
+                const data = await clone.json();
+                if (data.reason === 'BANNED') {
+                    localStorage.removeItem('token');
+                    window.location.href = '/?banned=1';
+                    return res;
+                }
+            } catch (_) {}
+        }
+        return res;
+    };
+})();
+
 // Check authentication
 window.onload = () => {
     const token = localStorage.getItem('token');

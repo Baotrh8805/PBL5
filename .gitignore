@@ -1,3 +1,11 @@
+# Python virtual environment (không push lên git, mỗi người tự tạo)
+src/main/model/venv/
+src/main/model/__pycache__/
+src/main/model/*.pyc
+src/main/model/kiem_tra_ocr.txt
+src/main/model/frame_*.png
+src/main/model/crops_frame_*/
+
 # Maven
 target/
 pom.xml.tag

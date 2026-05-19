@@ -553,3 +553,7 @@
 [VIDEO] Total frames analyzed: 11
 [FINAL TEXT] len=10 text='cái lồn má'
 [REQUEST] Complete best_score=0.9864 frames=11 violating_words=cái[O] lồn[B-T] má[I-T] detailed_tags=cái[O] lồn[B-T] má[I-T]
+[MAIN] Flask startup
+[MAIN] Flask startup
+[MAIN] Flask startup
+[MAIN] Flask startup

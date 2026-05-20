@@ -18,13 +18,14 @@ public class ModerationResult {
     private Integer highestScoreFrameSecond;
     private Integer totalFramesAnalyzed;
     private Double fps;
+    private String speechLabels;
 
     public ModerationResult(PostStatus status, Double bestScore, Double nsfwScore,
             Double violenceScore, Double hateSpeechScore,
             Boolean violationDetected, String detectedText, String mediaType,
             String nsfwBox, String violenBox, String hateSpeechWord,
-            Integer highestScoreFrameIndex, Integer highestScoreFrameSecond, 
-            Integer totalFramesAnalyzed, Double fps) {
+            Integer highestScoreFrameIndex, Integer highestScoreFrameSecond,
+            Integer totalFramesAnalyzed, Double fps, String speechLabels) {
         this.status = status;
         this.bestScore = bestScore;
         this.nsfwScore = nsfwScore;
@@ -40,6 +41,15 @@ public class ModerationResult {
         this.highestScoreFrameSecond = highestScoreFrameSecond;
         this.totalFramesAnalyzed = totalFramesAnalyzed;
         this.fps = fps;
+        this.speechLabels = speechLabels;
+    }
+
+    public String getSpeechLabels() {
+        return speechLabels;
+    }
+
+    public void setSpeechLabels(String speechLabels) {
+        this.speechLabels = speechLabels;
     }
 
     public PostStatus getStatus() {

@@ -1,0 +1,32 @@
+{
+  "best_score": 0.8700340986251831,
+  "content_hate_speech": "con[B-T] chó[I-T] ngu[I-T] ngốc[I-T] nhà[O] mày[I-T]",
+  "detected_text": "con chó ngu ngốc nhà mày cái lồn má",
+  "fps": 30.0,
+  "hate_speech_word": "(Video:)cái[O] lồn[B-T] má[I-T] (Content:)con[B-T] chó[I-T] ngu[I-T] ngốc[I-T] nhà[O] mày[I-T]",
+  "hatespeech_score": 0.8700340986251831,
+  "highest_score_frame": 210,
+  "nsfw_box": {
+    "x1": 0,
+    "x2": 1024,
+    "y1": 0,
+    "y2": 576
+  },
+  "nsfw_score": 0.07834634929895401,
+  "speech_label": 1,
+  "speech_probs": {
+    "clean": 0.039057258516550064,
+    "hate": 0.09090863168239594,
+    "offensive": 0.8700340986251831
+  },
+  "speech_score": 0.8700340986251831,
+  "total_frames": 304,
+  "video_hate_speech": "cái[O] lồn[B-T] má[I-T]",
+  "violen_box": {
+    "x1": 0,
+    "x2": 1024,
+    "y1": 0,
+    "y2": 576
+  },
+  "violence_score": 0.04996176436543465
+}

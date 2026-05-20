@@ -57,7 +57,7 @@ public class ContentModerationService {
 
         if (!hasContent && !hasImage && !hasVideo) {
             return new ModerationResult(PostStatus.ACTIVE, 0.0, 0.0, 0.0, 0.0, false, "", mediaType,
-                    null, null, "(Video:) (Content:)", null, null, 0, 30.0);
+                    null, null, "(Video:) (Content:)", null, null, 0, 30.0, null);
         }
 
         try {
@@ -67,16 +67,68 @@ public class ContentModerationService {
             double nsfwScore = ((Number) scores.getOrDefault("nsfw_score", 0.0)).doubleValue();
             double violenceScore = ((Number) scores.getOrDefault("violence_score", 0.0)).doubleValue();
             double hateSpeechScore = ((Number) scores.getOrDefault("hatespeech_score", 0.0)).doubleValue();
+            // speech-specific fields from ViHSD audio model
+            Object speechProbsObj = scores.get("speech_probs");
+            String speechLabel = scores.get("speech_label") != null ? String.valueOf(scores.get("speech_label")) : null;
+            Double speechScore = scores.get("speech_score") != null
+                    ? ((Number) scores.get("speech_score")).doubleValue()
+                    : null;
             double bestScore = ((Number) scores.getOrDefault("best_score", 0.0)).doubleValue();
+            Integer hateSpeechLabel = scores.get("hatespeech_label") != null
+                    ? ((Number) scores.get("hatespeech_label")).intValue()
+                    : null;
             String detectedText = String.valueOf(scores.getOrDefault("detected_text", ""));
             String nsfwBox = normalizeJsonValue(scores.get("nsfw_box"));
             String violenBox = normalizeJsonValue(scores.get("violen_box"));
-            String videoHate = scores.get("video_hate_speech") != null ? normalizeJsonValue(scores.get("video_hate_speech")) : "";
-            String contentHate = scores.get("content_hate_speech") != null ? normalizeJsonValue(scores.get("content_hate_speech")) : "";
+            String videoHate = scores.get("video_hate_speech") != null
+                    ? normalizeJsonValue(scores.get("video_hate_speech"))
+                    : "";
+            String contentHate = scores.get("content_hate_speech") != null
+                    ? normalizeJsonValue(scores.get("content_hate_speech"))
+                    : "";
 
-            // Luôn lưu cả 2 prefix để frontend bóc tách dễ dàng, tránh lỗi khi trường bị null
+            // Choose the hatespeech label and score (text vs speech)
+            int chosenLabelInt = 0;
+            double chosenHateScore = hateSpeechScore;
+
+            if (speechLabel != null && speechScore != null) {
+                int speechLabelInt = 0;
+                if ("1".equals(speechLabel) || "offensive".equalsIgnoreCase(speechLabel)) {
+                    speechLabelInt = 1;
+                } else if ("2".equals(speechLabel) || "hate".equalsIgnoreCase(speechLabel)) {
+                    speechLabelInt = 2;
+                }
+
+                int textLabelInt = (hateSpeechLabel != null) ? hateSpeechLabel : 0;
+
+                if (textLabelInt > speechLabelInt) {
+                    chosenLabelInt = textLabelInt;
+                    chosenHateScore = hateSpeechScore;
+                } else if (speechLabelInt > textLabelInt) {
+                    chosenLabelInt = speechLabelInt;
+                    chosenHateScore = speechScore;
+                } else {
+                    if (hateSpeechScore >= speechScore) {
+                        chosenLabelInt = textLabelInt;
+                        chosenHateScore = hateSpeechScore;
+                    } else {
+                        chosenLabelInt = speechLabelInt;
+                        chosenHateScore = speechScore;
+                    }
+                }
+            } else {
+                chosenLabelInt = (hateSpeechLabel != null) ? hateSpeechLabel : 0;
+                chosenHateScore = hateSpeechScore;
+            }
+
+            // Always format speechLabelsStr with the chosen hatespeech label and score
+            String speechLabelsStr = chosenLabelInt + ":" + String.format(java.util.Locale.US, "%.6f", chosenHateScore);
+
+            // Luôn lưu cả 2 prefix để frontend bóc tách dễ dàng, tránh lỗi khi trường bị
+            // null
             String hateSpeechWord = (String) scores.get("hate_speech_word");
-            if (hateSpeechWord == null || (!hateSpeechWord.contains("(Video:)") && !hateSpeechWord.contains("(Content:)"))) {
+            if (hateSpeechWord == null
+                    || (!hateSpeechWord.contains("(Video:)") && !hateSpeechWord.contains("(Content:)"))) {
                 hateSpeechWord = "(Video:)" + videoHate + " (Content:)" + contentHate;
             }
 
@@ -97,8 +149,46 @@ public class ContentModerationService {
                 detectedText = "";
             }
 
-            // Xác định status dựa trên điểm
-            PostStatus status = determinePostStatus(bestScore);
+            // Decide status and bestScore:
+            PostStatus status = PostStatus.ACTIVE;
+            try {
+                PostStatus hateStatus = PostStatus.ACTIVE;
+                if (chosenLabelInt == 2) {
+                    if (chosenHateScore >= 0.50) {
+                        hateStatus = PostStatus.AUTO_REJECTED;
+                    } else {
+                        hateStatus = PostStatus.PENDING_REVIEW;
+                    }
+                } else if (chosenLabelInt == 1) {
+                    if (chosenHateScore >= 0.50) {
+                        hateStatus = PostStatus.PENDING_REVIEW;
+                    } else {
+                        hateStatus = PostStatus.ACTIVE;
+                    }
+                }
+
+                double nonHateBest = Math.max(nsfwScore, violenceScore);
+                PostStatus nonHateStatus = determinePostStatus(nonHateBest);
+
+                status = getMoreSevereStatus(hateStatus, nonHateStatus);
+
+                if (chosenLabelInt == 0) {
+                    bestScore = nonHateBest;
+                } else {
+                    bestScore = Math.max(nonHateBest, chosenHateScore);
+                }
+
+                hateSpeechScore = chosenHateScore;
+            } catch (Exception e) {
+                logger.error("[MODERATION] Error in custom status determination: ", e);
+                if (chosenLabelInt == 0) {
+                    bestScore = Math.max(nsfwScore, violenceScore);
+                } else {
+                    bestScore = Math.max(Math.max(nsfwScore, violenceScore), chosenHateScore);
+                }
+                status = determinePostStatus(bestScore);
+            }
+
             boolean violationDetected = status == PostStatus.PENDING_REVIEW;
 
             logger.info(
@@ -114,14 +204,14 @@ public class ContentModerationService {
 
             return new ModerationResult(status, bestScore, nsfwScore, violenceScore, hateSpeechScore,
                     violationDetected, detectedText, mediaType, nsfwBox, violenBox, hateSpeechWord,
-                    null, highestScoreFrame, totalFrames, fps);
+                    null, highestScoreFrame, totalFrames, fps, speechLabelsStr);
 
         } catch (Exception e) {
             // Nếu có lỗi, cho phép đăng bài (fail-open approach)
             logger.error("[MODERATION] Lỗi kiểm tra nội dung: {}", e.getMessage(), e);
             // Vẫn trả về cấu trúc prefix rỗng để không lỗi UI
             return new ModerationResult(PostStatus.ACTIVE, 0.0, 0.0, 0.0, 0.0, false, "", mediaType,
-                    null, null, "(Video:) (Content:)", null, null, 0, 30.0);
+                    null, null, "(Video:) (Content:)", null, null, 0, 30.0, null);
         }
     }
 
@@ -164,6 +254,7 @@ public class ContentModerationService {
             post.setNsfwScore(moderationResult.getNsfwScore());
             post.setViolenceScore(moderationResult.getViolenceScore());
             post.setHateSpeechScore(moderationResult.getHateSpeechScore());
+            post.setSpeechLabels(moderationResult.getSpeechLabels());
 
             post.setViolationRate(Math.max(0.0, Math.min(100.0, moderationResult.getBestScore() * 100.0)));
             post.setNsfwBox(moderationResult.getNsfwBox());
@@ -176,13 +267,14 @@ public class ContentModerationService {
 
             postRepository.save(post);
             logger.info(
-                    "[MODERATION] Hoàn tất kiểm duyệt nền postId={} status={} bestScore={} nsfw={} violence={} hateSpeech={} nsfwBox={} violenBox={} hateSpeechWord={} frameSecond={}",
+                    "[MODERATION] Hoàn tất kiểm duyệt nền postId={} status={} bestScore={} nsfw={} violence={} hateSpeech={} speechLabels={} nsfwBox={} violenBox={} hateSpeechWord={} frameSecond={}",
                     postId,
                     post.getStatus(),
                     String.format("%.4f", post.getBestScore()),
                     String.format("%.4f", post.getNsfwScore()),
                     String.format("%.4f", post.getViolenceScore()),
                     String.format("%.4f", post.getHateSpeechScore()),
+                    post.getSpeechLabels(),
                     post.getNsfwBox(),
                     post.getViolenBox(),
                     post.getHateSpeechWord(),
@@ -236,6 +328,16 @@ public class ContentModerationService {
         } else {
             return PostStatus.ACTIVE; // < 30% → cho phép
         }
+    }
+
+    private PostStatus getMoreSevereStatus(PostStatus status1, PostStatus status2) {
+        if (status1 == PostStatus.AUTO_REJECTED || status2 == PostStatus.AUTO_REJECTED) {
+            return PostStatus.AUTO_REJECTED;
+        }
+        if (status1 == PostStatus.PENDING_REVIEW || status2 == PostStatus.PENDING_REVIEW) {
+            return PostStatus.PENDING_REVIEW;
+        }
+        return PostStatus.ACTIVE;
     }
 
     /**

@@ -36,6 +36,9 @@ public class Post extends BaseContent {
     private Double violenceScore = 0.0;
     private Double hateSpeechScore = 0.0;
 
+    @Column(name = "speech_labels", columnDefinition = "TEXT")
+    private String speechLabels;
+
     @Column(columnDefinition = "TEXT")
     private String nsfwBox;
 
@@ -51,7 +54,6 @@ public class Post extends BaseContent {
     @Column(name = "highest_score_frame_second")
     private Integer highestScoreFrameSecond;
 
-
     @Column(name = "total_frames_analyzed")
     private Integer totalFramesAnalyzed;
 
@@ -59,7 +61,6 @@ public class Post extends BaseContent {
 
     @Column(name = "video_fps")
     private Double fps;
-
 
     // Thời điểm một moderator bắt đầu xử lý vi phạm của bài viết
     private LocalDateTime moderationStartedAt;
@@ -71,8 +72,6 @@ public class Post extends BaseContent {
     @JoinColumn(name = "processing_moderator_id")
     private User processingModerator;
 
-
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -82,10 +81,6 @@ public class Post extends BaseContent {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
-
-
-
-
 
     public String getContent() {
         return content;
@@ -159,6 +154,14 @@ public class Post extends BaseContent {
         this.hateSpeechScore = hateSpeechScore;
     }
 
+    public String getSpeechLabels() {
+        return speechLabels;
+    }
+
+    public void setSpeechLabels(String speechLabels) {
+        this.speechLabels = speechLabels;
+    }
+
     public String getNsfwBox() {
         return nsfwBox;
     }
@@ -199,7 +202,6 @@ public class Post extends BaseContent {
         this.highestScoreFrameSecond = highestScoreFrameSecond;
     }
 
-
     public Integer getTotalFramesAnalyzed() {
         return totalFramesAnalyzed;
     }
@@ -232,8 +234,6 @@ public class Post extends BaseContent {
         this.processingModerator = processingModerator;
     }
 
-
-
     public User getUser() {
         return user;
     }
@@ -257,6 +257,7 @@ public class Post extends BaseContent {
     public void setComments(List<Comment> comments) {
         this.comments = comments;
     }
+
     public LocalDateTime getReviewedAt() {
         return reviewedAt;
     }
@@ -272,4 +273,4 @@ public class Post extends BaseContent {
     public void setFps(Double fps) {
         this.fps = fps;
     }
-}
+}

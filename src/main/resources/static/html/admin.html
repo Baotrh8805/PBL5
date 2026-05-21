@@ -9,51 +9,118 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/home.css">
+    <link rel="stylesheet" href="/css/moderator.css">
     <script src="/js/auth-interceptor.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .staff-menu-dropdown.show { display: block !important; }
+        .staff-menu-dropdown { display: none; position: absolute; top: 100%; right: 0; background: #242526; border: 1px solid #3e4042; border-radius: 8px; padding: 8px 0; min-width: 220px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .dropdown-item-btn { width: 100%; text-align: left; padding: 10px 16px; background: none; border: none; color: #e4e6eb; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .dropdown-item-btn:hover { background: #5a5a68; }
+        /* Giải thích đoạn ghi đè màu sắc:
+           Vì file admin.css cũ được thiết kế cho nền trắng chữ đen (Light Mode).
+           Nên đoạn CSS dưới đây dùng để "nhuộm" lại màu cho giao diện Admin,
+           giúp nó đồng bộ với giao diện Dark Mode xám đen của phần Moderator.
+        */
+        body.mod-layout {
+            color: var(--text-primary);
+        }
+        .mod-main-content .page-title,
+        .mod-main-content .stat-value,
+        .mod-main-content .data-table th,
+        .mod-main-content .data-table td {
+            color: #121313;
+        }
+        .mod-main-content .page-subtitle,
+        .mod-main-content .stat-label {
+            color: #0c0c0d;
+        }
+        .mod-main-content .stat-card,
+        .mod-main-content .table-card,
+        .mod-main-content .search-box,
+        .mod-main-content .filter-select,
+        .mod-main-content .btn-refresh {
+            background: #ffffff;
+            border-color: #3e4042;
+            color: #0a0a0a;
+        }
+        .mod-main-content .search-box input {
+            background: #ffff;
+            color: #0e0e0e;
+        }
+        .mod-main-content .data-table th,
+        .mod-main-content .data-table td {
+            border-bottom: 1px solid #161617;
+            border-top: none;
+        }
+        .mod-main-content .data-table th {
+            background: #838080;
+        }
+        .mod-main-content .data-table tr:hover td {
+            background: #9ad7cd;
+        }
+    </style>
 </head>
-<body>
+<body class="mod-layout">
 
-<!-- Sidebar -->
-<aside class="sidebar">
-    <div class="sidebar-brand">
-        <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i>
-        <span>LC Network</span>
-    </div>
-    <div class="sidebar-label">QUẢN TRỊ</div>
-    <nav class="sidebar-nav">
-        <a href="#" class="nav-item active" data-page="users">
-            <i class="fa-solid fa-users"></i> Người dùng
-        </a>
-        <a href="#" class="nav-item" data-page="posts">
-            <i class="fa-solid fa-newspaper"></i> Bài viết
-        </a>
-        <a href="#" class="nav-item" data-page="moderators">
-            <i class="fa-solid fa-shield-halved"></i> Kiểm duyệt viên
-        </a>
-        <a href="#" class="nav-item" data-page="reports">
-            <i class="fa-solid fa-flag"></i> Báo cáo
-        </a>
-        <a href="#" class="nav-item" data-page="stats">
-            <i class="fa-solid fa-chart-bar"></i> Thống kê
-        </a>
-    </nav>
-    <div class="sidebar-bottom">
-        <div class="admin-info" style="cursor:pointer;" onclick="openAdminProfile()" title="Xem thông tin cá nhân">
-            <div class="admin-avatar" id="sidebar-avatar">A</div>
-            <div>
-                <div class="admin-name" id="sidebar-name">Admin</div>
-                <div class="admin-role">Quản trị viên</div>
+    <!-- PHẦN ĐẦU TRANG (TOPBAR): Chứa logo, nút xổ menu user, và nút Đăng xuất -->
+    <header class="mod-topbar">
+        <div class="topbar-left">
+            <div class="staff-menu-wrap" style="position: relative;">
+                <button id="staff-menu-toggle" class="logo home-link staff-menu-toggle" type="button" onclick="document.getElementById('staff-menu-dropdown').classList.toggle('show')">
+                    <div class="admin-avatar" id="sidebar-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #ea580c; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 8px; font-size: 14px;">A</div>
+                    <span id="sidebar-name">Admin</span>
+                    <i class="fa-solid fa-chevron-down" style="margin-left: 8px;"></i>
+                </button>
+                <div id="staff-menu-dropdown" class="dropdown-menu staff-menu-dropdown">
+                    <button class="dropdown-item-btn" type="button" onclick="openAdminProfile()">
+                        <i class="fa-solid fa-id-card"></i> Thông tin cá nhân
+                    </button>
+                    <button class="dropdown-item-btn" type="button" onclick="logout()">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
             </div>
         </div>
-        <button class="logout-btn" onclick="logout()">
-            <i class="fa-solid fa-right-from-bracket"></i>
-        </button>
-    </div>
-</aside>
+        
+        <div class="topbar-right">
+            <button type="button" class="topbar-logout-btn" onclick="logout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </button>
+        </div>
+    </header>
 
-<!-- Main Content -->
-<main class="main-content">
+    <!-- PHẦN KHUNG CHÍNH (CONTAINER): Chứa thanh điều hướng bên trái và nội dung bên phải -->
+    <div class="mod-container">
+        <!-- THANH ĐIỀU HƯỚNG (SIDEBAR) -->
+        <aside class="mod-sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-crown" style="color: #ea580c;"></i> Admin Panel</h2>
+            </div>
+            
+            <nav class="main-nav sidebar-nav" style="padding: 15px;">
+                <a href="#" class="nav-item nav-link active" data-page="users">
+                    <i class="fa-solid fa-users"></i> Người dùng
+                </a>
+                <a href="#" class="nav-item nav-link" data-page="posts">
+                    <i class="fa-solid fa-newspaper"></i> Bài viết
+                </a>
+                <a href="#" class="nav-item nav-link" data-page="moderators">
+                    <i class="fa-solid fa-shield-halved"></i> Kiểm duyệt viên
+                </a>
+                <a href="#" class="nav-item nav-link" data-page="reports">
+                    <i class="fa-solid fa-flag"></i> Báo cáo
+                </a>
+                <a href="#" class="nav-item nav-link" data-page="stats">
+                    <i class="fa-solid fa-chart-bar"></i> Thống kê
+                </a>
+            </nav>
+        </aside>
+
+<!-- PHẦN NỘI DUNG CHÍNH (MAIN CONTENT): Đây là nơi hiển thị các trang (users, posts, stats...) -->
+<!-- Các trang sẽ được JavaScript bật/tắt (ẩn đi/hiện lên) tùy vào nút bạn bấm trên Sidebar -->
+<main class="mod-main-content" style="overflow-y: auto; padding: 24px;">
 
     <!-- Page: Users -->
     <div class="page" id="page-users">
@@ -67,10 +134,6 @@
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" id="search-input" placeholder="Tìm kiếm theo tên..." oninput="filterUsers()">
                 </div>
-                <select class="filter-select" id="filter-role" onchange="filterUsers()">
-                    <option value="">Tất cả role</option>
-                    <option value="USER">User</option>
-                </select>
                 <select class="filter-select" id="filter-status" onchange="filterUsers()">
                     <option value="">Tất cả trạng thái</option>
                     <option value="ACTIVE">Hoạt động</option>
@@ -121,14 +184,14 @@
                             <th>ID</th>
                             <th>Người dùng</th>
                             <th>Email</th>
-                            <th>Role</th>
                             <th>Trạng thái</th>
-                            <th>Đăng nhập qua</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
+                    <!-- Phần <tbody> này để trống hoặc chứa chữ "Đang tải". 
+                         Khi file admin.js chạy hàm renderUsers(), nó sẽ tự động bơm (inject) dữ liệu vào đây -->
                     <tbody id="users-tbody">
-                        <tr><td colspan="7" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        <tr><td colspan="5" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -470,6 +533,7 @@
     </div>
 
 </main>
+    </div>
 
 <!-- Modal chi tiết bài viết -->
 <div class="modal-overlay hidden" id="post-detail-modal">
@@ -555,31 +619,6 @@
         </div>
         <div class="modal-footer">
             <button class="btn-cancel" onclick="closeModal('login-history-modal')">Đóng</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal đổi role -->
-<div class="modal-overlay hidden" id="role-modal">
-    <div class="modal">
-        <div class="modal-header">
-            <h3>Thay đổi Role</h3>
-            <button class="modal-close" onclick="closeModal('role-modal')"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="modal-body">
-            <p>Người dùng: <strong id="modal-username"></strong></p>
-            <div class="input-group" style="margin-top: 16px;">
-                <label>Chọn role mới</label>
-                <select class="filter-select full-width" id="modal-role-select">
-                    <option value="USER">User</option>
-                    <option value="MODERATOR">Moderator</option>
-                    <option value="ADMIN">Admin</option>
-                </select>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-cancel" onclick="closeModal('role-modal')">Huỷ</button>
-            <button class="btn-confirm" onclick="confirmChangeRole()">Xác nhận</button>
         </div>
     </div>
 </div>
@@ -818,5 +857,16 @@
 </div>
 
 <script src="/js/admin.js"></script>
+<script>
+    // Đóng dropdown khi click ra ngoài
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.staff-menu-wrap')) {
+            const dropdown = document.getElementById('staff-menu-dropdown');
+            if (dropdown && dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+        }
+    });
+</script>
 </body>
 </html>

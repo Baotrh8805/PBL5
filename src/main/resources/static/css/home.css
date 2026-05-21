@@ -469,6 +469,20 @@ button {
 .menu-item.logout-btn:hover {
     background-color: #ffebe8;
 }
+.menu-item.active i {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.menu-item.logout-btn {
+    color: var(--red-icon);
+}
+.menu-item.logout-btn i {
+    color: var(--red-icon);
+}
+.menu-item.logout-btn:hover {
+    background-color: #ffebe8;
+}
 
 .admin-menu-item {
     background: linear-gradient(135deg, rgba(0,209,178,0.12), rgba(0,209,178,0.06));

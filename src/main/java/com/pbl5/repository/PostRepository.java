@@ -41,3 +41,4 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                      "ORDER BY p.createdAt DESC")
        List<Post> searchPosts(@Param("query") String query);
 }
+

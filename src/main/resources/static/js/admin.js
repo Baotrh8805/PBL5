@@ -1,4 +1,6 @@
 const token = localStorage.getItem('token');
+// Mảng dùng để lưu trữ TOÀN BỘ dữ liệu người dùng/kiểm duyệt viên tải từ Server về.
+// Giúp việc tìm kiếm (filter) diễn ra ngay trên máy khách mà không cần gọi lại Server.
 let allUsers = [];
 let allModerators = [];
 let selectedUserId = null;
@@ -68,10 +70,11 @@ function showAlert(title, message, type = 'info', onClose = null) {
 }
 
 // ===== KHỞI TẠO =====
+// Sự kiện DOMContentLoaded chạy ngay khi khung HTML vừa load xong
 document.addEventListener('DOMContentLoaded', () => {
     if (!token) { window.location.href = '/index.html'; return; }
     loadAdminInfo();
-    loadUsers();
+    loadUsers(); // Tự động gọi hàm lấy dữ liệu người dùng từ server ngay lập tức
     loadStats();
     setupNavigation();
 
@@ -343,18 +346,24 @@ async function loadStats() {
 }
 
 // ===== DANH SÁCH NGƯỜI DÙNG =====
+// Hàm này gọi API để lấy cục dữ liệu khổng lồ từ Java Backend
 async function loadUsers() {
     document.getElementById('users-tbody').innerHTML =
-        '<tr><td colspan="7" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>';
+        '<tr><td colspan="5" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>';
     try {
+        // Gửi request Fetch đến backend
         const res = await fetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token } });
         if (res.status === 403) { showToast('Bạn không có quyền xem danh sách người dùng.', 'error'); return; }
+        
+        // Gán toàn bộ dữ liệu trả về vào mảng allUsers (lưu vào RAM)
         allUsers = await res.json();
+        
+        // Đem dữ liệu đó đi vẽ lên giao diện
         renderUsers(allUsers);
         updateStatCards(allUsers);
     } catch (e) {
         document.getElementById('users-tbody').innerHTML =
-            '<tr><td colspan="7" class="loading-cell">Lỗi khi tải dữ liệu.</td></tr>';
+            '<tr><td colspan="5" class="loading-cell">Lỗi khi tải dữ liệu.</td></tr>';
     }
 }
 
@@ -364,12 +373,13 @@ function updateStatCards(users) {
     document.getElementById('stat-banned').textContent = users.filter(u => u.status === 'BANNED').length;
 }
 
+// Hàm này làm nhiệm vụ "nhặt" thông tin từ mảng dữ liệu và tạo ra các thẻ HTML <td>
 function renderUsers(users) {
     const tbody = document.getElementById('users-tbody');
     document.getElementById('table-count').textContent = users.length + ' người dùng';
 
     if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Không tìm thấy người dùng nào.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Không tìm thấy người dùng nào.</td></tr>';
         return;
     }
 
@@ -390,14 +400,9 @@ function renderUsers(users) {
                 </div>
             </td>
             <td style="font-size:13px;color:var(--text-muted);">${escapeHtml(u.email)}</td>
-            <td>${roleBadge(u.role)}</td>
             <td>${statusBadge(u.status)}</td>
-            <td>${providerIcon(u.provider)}</td>
             <td>
                 <div class="action-btns">
-                    <button class="action-btn" title="Đổi role" onclick="openRoleModal(${u.id}, '${escapeHtml(u.fullName)}', '${u.role}')">
-                        <i class="fa-solid fa-user-shield"></i>
-                    </button>
                     ${u.status !== 'BANNED'
                         ? `<button class="action-btn danger" title="Khoá tài khoản" onclick="banUser(${u.id}, '${escapeHtml(u.fullName)}')">
                                <i class="fa-solid fa-ban"></i>
@@ -449,17 +454,19 @@ function providerIcon(provider) {
 }
 
 // ===== LỌC =====
+// Hàm này chạy mỗi khi bạn gõ chữ vào ô tìm kiếm hoặc chọn dropdown
 function filterUsers() {
     const q = document.getElementById('search-input').value.toLowerCase();
-    const role = document.getElementById('filter-role').value;
     const status = document.getElementById('filter-status').value;
 
+    // Lọc trực tiếp từ mảng allUsers đang lưu sẵn trong bộ nhớ (Rất nhanh, không cần gọi Server)
     const filtered = allUsers.filter(u => {
         const matchName = u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
-        const matchRole = !role || u.role === role;
         const matchStatus = !status || u.status === status;
-        return matchName && matchRole && matchStatus;
+        return matchName && matchStatus;
     });
+    
+    // Đem danh sách đã lọc đi vẽ lại lên bảng
     renderUsers(filtered);
 }
 
@@ -588,20 +595,6 @@ async function adminAction(url, method, successMsg, body = null) {
     } catch (e) {
         showToast('Lỗi kết nối.', 'error');
     }
-}
-
-// ===== MODAL ĐỔI ROLE =====
-function openRoleModal(id, name, currentRole) {
-    selectedUserId = id;
-    document.getElementById('modal-username').textContent = name;
-    document.getElementById('modal-role-select').value = currentRole;
-    document.getElementById('role-modal').classList.remove('hidden');
-}
-
-async function confirmChangeRole() {
-    const newRole = document.getElementById('modal-role-select').value;
-    closeModal('role-modal');
-    await adminAction(`/api/admin/users/${selectedUserId}/role`, 'PUT', `Đã cập nhật role thành ${newRole}`, { role: newRole });
 }
 
 function closeModal(id) {

@@ -47,7 +47,8 @@
             </a>
             <div class="search-bar">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Tìm mọi người hoặc bài viết...">
+                <input type="text" id="global-search-input" placeholder="Tìm mọi người hoặc bài viết..." oninput="handleGlobalSearch(this.value)">
+                <div id="global-search-results" class="search-results-dropdown" style="display: none;"></div>
             </div>
         </div>
 

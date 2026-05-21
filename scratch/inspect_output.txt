@@ -1,0 +1,48 @@
+Type of obj: <class 'dict'>
+Keys: ['description', 'weights']
+Description: Trọng số mạng MFCC LSTM 3 lớp chuyển đổi từ Keras
+Weights type: <class 'list'>
+Weights length: 43
+Weight 0: shape=(50000, 128), dtype=float32
+Weight 1: shape=(8, 128, 128), dtype=float32
+Weight 2: shape=(128,), dtype=float32
+Weight 3: shape=(128,), dtype=float32
+Weight 4: shape=(128,), dtype=float32
+Weight 5: shape=(128,), dtype=float32
+Weight 6: shape=(128,), dtype=float32
+Weight 7: shape=(8, 128, 128), dtype=float32
+Weight 8: shape=(128,), dtype=float32
+Weight 9: shape=(128,), dtype=float32
+Weight 10: shape=(128,), dtype=float32
+Weight 11: shape=(128,), dtype=float32
+Weight 12: shape=(128,), dtype=float32
+Weight 13: shape=(4, 128, 64), dtype=float32
+Weight 14: shape=(64,), dtype=float32
+Weight 15: shape=(64,), dtype=float32
+Weight 16: shape=(64,), dtype=float32
+Weight 17: shape=(64,), dtype=float32
+Weight 18: shape=(64,), dtype=float32
+Weight 19: shape=(4, 64, 32), dtype=float32
+Weight 20: shape=(32,), dtype=float32
+Weight 21: shape=(32,), dtype=float32
+Weight 22: shape=(32,), dtype=float32
+Weight 23: shape=(32,), dtype=float32
+Weight 24: shape=(32,), dtype=float32
+Weight 25: shape=(32, 512), dtype=float32
+Weight 26: shape=(128, 512), dtype=float32
+Weight 27: shape=(512,), dtype=float32
+Weight 28: shape=(32, 512), dtype=float32
+Weight 29: shape=(128, 512), dtype=float32
+Weight 30: shape=(512,), dtype=float32
+Weight 31: shape=(256, 256), dtype=float32
+Weight 32: shape=(64, 256), dtype=float32
+Weight 33: shape=(256,), dtype=float32
+Weight 34: shape=(256, 256), dtype=float32
+Weight 35: shape=(64, 256), dtype=float32
+Weight 36: shape=(256,), dtype=float32
+Weight 37: shape=(128, 64), dtype=float32
+Weight 38: shape=(64,), dtype=float32
+Weight 39: shape=(64, 16), dtype=float32
+Weight 40: shape=(16,), dtype=float32
+Weight 41: shape=(16, 3), dtype=float32
+Weight 42: shape=(3,), dtype=float32

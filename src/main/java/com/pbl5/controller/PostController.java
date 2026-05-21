@@ -101,7 +101,7 @@ public class PostController {
             return true;
 
         // Admins and moderators can see all posts
-        if ("ADMIN".equals(currentUser.getRole()) || "MODERATOR".equals(currentUser.getRole()))
+        if (currentUser.getRole() == com.pbl5.enums.Role.ADMIN || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR)
             return true;
 
         // Other users cannot see rejected or pending review posts
@@ -192,7 +192,10 @@ public class PostController {
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
         List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
-        List<PostResponse> responses = convertToResponses(posts, currentUser);
+        List<Post> filteredPosts = posts.stream()
+                .filter(p -> p.getStatus() != PostStatus.DELETED)
+                .collect(Collectors.toList());
+        List<PostResponse> responses = convertToResponses(filteredPosts, currentUser);
         return ResponseEntity.ok(responses);
     }
 
@@ -835,6 +838,7 @@ public class PostController {
             return ResponseEntity.status(403).body("Bạn không có quyền xóa bình luận này");
         }
 
+        commentLikeRepository.deleteByCommentId(commentId);
         commentRepository.delete(comment);
         return ResponseEntity.ok(Map.of("message", "Đã xóa bình luận"));
     }

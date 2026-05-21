@@ -17,6 +17,9 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> 
     
     long countByCommentId(Long commentId);
 
+    @org.springframework.transaction.annotation.Transactional
+    void deleteByCommentId(Long commentId);
+
     @Query("SELECT cl.comment.id, COUNT(cl.id) FROM CommentLike cl WHERE cl.comment.id IN :commentIds GROUP BY cl.comment.id")
     List<Object[]> countLikesByCommentIds(@Param("commentIds") List<Long> commentIds);
 

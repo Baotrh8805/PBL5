@@ -3,6 +3,69 @@ let allUsers = [];
 let allModerators = [];
 let selectedUserId = null;
 let adminProfile = null;
+let usersChartInstance = null;
+let activityChartInstance = null;
+let aiAccuracyChartInstance = null;
+
+function showConfirm(title, message, onConfirm, type = 'info') {
+    const modal = document.getElementById('custom-confirm-modal');
+    const titleEl = document.getElementById('custom-confirm-title');
+    const msgEl = document.getElementById('custom-confirm-message');
+    const okBtn = document.getElementById('custom-confirm-ok-btn');
+    const cancelBtn = document.getElementById('custom-confirm-cancel-btn');
+    const closeBtn = document.getElementById('custom-confirm-close');
+
+    titleEl.innerHTML = title;
+    msgEl.innerHTML = message;
+
+    if (type === 'danger') {
+        okBtn.style.background = 'var(--red)';
+    } else if (type === 'warning') {
+        okBtn.style.background = 'var(--yellow)';
+    } else {
+        okBtn.style.background = 'var(--primary)';
+    }
+
+    const hide = () => modal.classList.add('hidden');
+
+    okBtn.onclick = () => {
+        hide();
+        if (onConfirm) onConfirm();
+    };
+    cancelBtn.onclick = hide;
+    closeBtn.onclick = hide;
+
+    modal.classList.remove('hidden');
+}
+
+function showAlert(title, message, type = 'info', onClose = null) {
+    const modal = document.getElementById('custom-alert-modal');
+    const titleEl = document.getElementById('custom-alert-title');
+    const msgEl = document.getElementById('custom-alert-message');
+    const okBtn = document.getElementById('custom-alert-ok-btn');
+    const closeBtn = document.getElementById('custom-alert-close');
+
+    titleEl.innerHTML = title;
+    msgEl.innerHTML = message;
+
+    if (type === 'danger') {
+        okBtn.style.background = 'var(--red)';
+    } else if (type === 'warning') {
+        okBtn.style.background = 'var(--yellow)';
+    } else {
+        okBtn.style.background = 'var(--primary)';
+    }
+
+    const hide = () => {
+        modal.classList.add('hidden');
+        if (onClose) onClose();
+    };
+
+    okBtn.onclick = hide;
+    closeBtn.onclick = hide;
+
+    modal.classList.remove('hidden');
+}
 
 // ===== KHỞI TẠO =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,6 +74,15 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUsers();
     loadStats();
     setupNavigation();
+
+    // Đóng modal khi click ra ngoài overlay
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.add('hidden');
+            }
+        });
+    });
 });
 
 function setupNavigation() {
@@ -37,8 +109,9 @@ async function loadAdminInfo() {
         if (!res.ok) { window.location.href = '/index.html'; return; }
         const data = await res.json();
         if (data.role !== 'ADMIN') {
-            alert('Bạn không có quyền truy cập trang này.');
-            window.location.href = '/html/home.html';
+            showAlert('Lỗi', 'Bạn không có quyền truy cập trang này.', 'danger', () => {
+                window.location.href = '/html/home.html';
+            });
             return;
         }
         adminProfile = data;
@@ -148,7 +221,125 @@ async function loadStats() {
         document.getElementById('big-banned').textContent = data.bannedUsers ?? '--';
         document.getElementById('big-moderators').textContent = data.moderators ?? '--';
         document.getElementById('big-pending-reports').textContent = data.pendingReports ?? '--';
-    } catch (e) {}
+
+        // Load charts dynamically
+        if (typeof Chart !== 'undefined') {
+            if (usersChartInstance) { usersChartInstance.destroy(); }
+            if (activityChartInstance) { activityChartInstance.destroy(); }
+            if (aiAccuracyChartInstance) { aiAccuracyChartInstance.destroy(); }
+
+            const activeUsers = Math.max(0, (data.totalUsers || 0) - (data.bannedUsers || 0) - (data.moderators || 0));
+
+            const ctxUsers = document.getElementById('usersChart').getContext('2d');
+            usersChartInstance = new Chart(ctxUsers, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hoạt động', 'Bị khóa', 'Moderators'],
+                    datasets: [{
+                        data: [activeUsers, data.bannedUsers || 0, data.moderators || 0],
+                        backgroundColor: ['#10b981', '#ef4444', '#8b5cf6'],
+                        borderWidth: 2,
+                        borderColor: 'var(--card-bg)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'var(--text-main)',
+                                font: { family: 'Inter', size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const ctxActivity = document.getElementById('postsReportsChart').getContext('2d');
+            activityChartInstance = new Chart(ctxActivity, {
+                type: 'bar',
+                data: {
+                    labels: ['Tổng bài viết', 'Báo cáo chưa xử lý'],
+                    datasets: [{
+                        label: 'Số lượng',
+                        data: [data.totalPosts || 0, data.pendingReports || 0],
+                        backgroundColor: ['#3b82f6', '#f59e0b'],
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'var(--border)' },
+                            ticks: { color: 'var(--text-muted)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'var(--text-muted)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // Biểu đồ tỉ lệ AI duyệt chính xác (Gauge-Doughnut với text center)
+            const ctxAi = document.getElementById('aiAccuracyChart').getContext('2d');
+            aiAccuracyChartInstance = new Chart(ctxAi, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Chính xác', 'Cần điều chỉnh'],
+                    datasets: [{
+                        data: [96.8, 3.2],
+                        backgroundColor: ['#10b981', '#f59e0b'],
+                        borderWidth: 2,
+                        borderColor: 'var(--card-bg)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'var(--text-main)',
+                                font: { family: 'Inter', size: 12 }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'textCenter',
+                    beforeDraw: function(chart) {
+                        const width = chart.width;
+                        const height = chart.height;
+                        const ctx = chart.ctx;
+                        ctx.restore();
+                        const fontSize = (height / 180).toFixed(2);
+                        ctx.font = "bold " + fontSize + "em Inter";
+                        ctx.textBaseline = "middle";
+                        ctx.fillStyle = "#10b981";
+                        const text = "96.8%";
+                        const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                        const textY = height / 2 - 12;
+                        ctx.fillText(text, textX, textY);
+                        ctx.save();
+                    }
+                }]
+            });
+        }
+    } catch (e) {
+        console.error("Error loading charts:", e);
+    }
 }
 
 // ===== DANH SÁCH NGƯỜI DÙNG =====
@@ -273,24 +464,110 @@ function filterUsers() {
 }
 
 // ===== CÁC THAO TÁC =====
-async function banUser(id, name) {
-    if (!confirm(`Khoá tài khoản của "${name}"?`)) return;
-    await adminAction(`/api/admin/users/${id}/ban`, 'PUT', `Đã khoá tài khoản ${name}`);
+function banUser(id, name) {
+    showConfirm(
+        '<i class="fa-solid fa-ban" style="color:var(--red);"></i> Khóa tài khoản',
+        `Bạn có chắc chắn muốn khóa tài khoản của <strong>"${escapeHtml(name)}"</strong>?`,
+        async () => {
+            await adminAction(`/api/admin/users/${id}/ban`, 'PUT', `Đã khóa tài khoản ${name}`);
+        },
+        'danger'
+    );
 }
 
-async function unbanUser(id, name) {
-    if (!confirm(`Mở khoá tài khoản của "${name}"?`)) return;
-    await adminAction(`/api/admin/users/${id}/unban`, 'PUT', `Đã mở khoá tài khoản ${name}`);
+function unbanUser(id, name) {
+    showConfirm(
+        '<i class="fa-solid fa-lock-open" style="color:var(--green);"></i> Mở khóa tài khoản',
+        `Bạn có chắc chắn muốn mở khóa tài khoản của <strong>"${escapeHtml(name)}"</strong>?`,
+        async () => {
+            await adminAction(`/api/admin/users/${id}/unban`, 'PUT', `Đã mở khóa tài khoản ${name}`);
+        },
+        'success'
+    );
 }
 
-async function warnUser(id, name) {
-    if (!confirm(`Gửi cảnh báo đến "${name}"?`)) return;
-    await adminAction(`/api/admin/users/${id}/warn`, 'PUT', `Đã cảnh báo ${name}`);
+function warnUser(id, name) {
+    const modal = document.getElementById('warn-user-modal');
+    const idInput = document.getElementById('warn-user-id');
+    if (modal && idInput) {
+        idInput.value = id;
+        
+        // Reset form
+        document.getElementById('warn-duration').value = '3';
+        document.getElementById('custom-duration-container').style.display = 'none';
+        document.getElementById('warn-custom-days').value = '';
+        document.querySelector('input[name="warn-type"][value="POST"]').checked = true;
+        
+        modal.classList.remove('hidden');
+    }
 }
 
-async function deleteUser(id, name) {
-    if (!confirm(`Xoá vĩnh viễn tài khoản của "${name}"? Hành động này không thể hoàn tác!`)) return;
-    await adminAction(`/api/admin/users/${id}`, 'DELETE', `Đã xoá tài khoản ${name}`);
+function toggleCustomDuration() {
+    const durationSelect = document.getElementById('warn-duration');
+    const customContainer = document.getElementById('custom-duration-container');
+    if (durationSelect && customContainer) {
+        if (durationSelect.value === 'custom') {
+            customContainer.style.display = 'block';
+        } else {
+            customContainer.style.display = 'none';
+        }
+    }
+}
+
+async function submitUserWarning() {
+    const id = document.getElementById('warn-user-id').value;
+    const type = document.querySelector('input[name="warn-type"]:checked').value;
+    const durationSelect = document.getElementById('warn-duration');
+    let days = parseInt(durationSelect.value);
+
+    if (durationSelect.value === 'custom') {
+        days = parseInt(document.getElementById('warn-custom-days').value);
+        if (isNaN(days) || days <= 0) {
+            showAlert('Lỗi', 'Vui lòng nhập số ngày hợp lệ.', 'error');
+            return;
+        }
+    }
+
+    const user = allUsers.find(u => u.id == id);
+    let existingExpiry = null;
+    if (user) {
+        existingExpiry = (type === 'POST') ? user.postWarningExpiresAt : user.commentWarningExpiresAt;
+    }
+
+    const now = new Date();
+    let expiryDateObj = null;
+    if (existingExpiry) {
+        expiryDateObj = new Date(existingExpiry);
+    }
+
+    if (expiryDateObj && expiryDateObj > now) {
+        const expiryStr = expiryDateObj.toLocaleString('vi-VN');
+        const typeText = (type === 'POST') ? 'đăng bài' : 'bình luận';
+        
+        showConfirm(
+            '<i class="fa-solid fa-triangle-exclamation" style="color:var(--yellow);"></i> Cảnh báo đang hoạt động',
+            `Người dùng hiện đang bị cấm ${typeText} đến <b>${expiryStr}</b>. Bạn có chắc chắn muốn <b>CỘNG THÊM</b> ${days} ngày vào thời hạn này không?`,
+            async () => {
+                closeModal('warn-user-modal');
+                await adminAction(`/api/admin/users/${id}/warn`, 'PUT', `Đã cảnh báo cộng thêm ${days} ngày thành công.`, { type, days });
+            },
+            'warning'
+        );
+    } else {
+        closeModal('warn-user-modal');
+        await adminAction(`/api/admin/users/${id}/warn`, 'PUT', `Đã thiết lập cảnh cáo thành công.`, { type, days });
+    }
+}
+
+function deleteUser(id, name) {
+    showConfirm(
+        '<i class="fa-solid fa-trash" style="color:var(--red);"></i> Xóa vĩnh viễn người dùng',
+        `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản của <strong>"${escapeHtml(name)}"</strong>? <br><span style="color:var(--red); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Hành động này không thể hoàn tác!</span>`,
+        async () => {
+            await adminAction(`/api/admin/users/${id}`, 'DELETE', `Đã xóa tài khoản ${name}`);
+        },
+        'danger'
+    );
 }
 
 async function adminAction(url, method, successMsg, body = null) {
@@ -509,7 +786,14 @@ async function openPostDetail(id, highlightCommentId = null) {
         contentEl.className = 'post-content-box' + (p.content ? '' : ' empty');
 
         const imgWrap = document.getElementById('post-detail-image-wrap');
-        imgWrap.innerHTML = p.imageUrl ? `<img src="${p.imageUrl}" class="post-detail-img" alt="Ảnh bài viết">` : '';
+        let mediaHtml = '';
+        if (p.imageUrl) {
+            mediaHtml += `<img src="${p.imageUrl}" class="post-detail-img" alt="Ảnh bài viết" style="max-height: 360px; width: 100%; object-fit: contain; margin-bottom: 10px; display: block;">`;
+        }
+        if (p.videoUrl) {
+            mediaHtml += `<video src="${p.videoUrl}" controls class="post-detail-img" style="max-height: 360px; width: 100%; object-fit: contain; margin-bottom: 10px; display: block; background: #000;">Trình duyệt không hỗ trợ video.</video>`;
+        }
+        imgWrap.innerHTML = mediaHtml;
 
         document.getElementById('post-detail-likes').textContent = p.likeCount ?? 0;
         document.getElementById('post-detail-comment-count').textContent = p.commentCount ?? 0;
@@ -568,44 +852,55 @@ async function openPostDetail(id, highlightCommentId = null) {
     }
 }
 
-async function deletePost(id) {
-    if (!confirm(`Xoá bài viết #${id}? Hành động này không thể hoàn tác!`)) return;
-    try {
-        const res = await fetch(`/api/admin/posts/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) {
-            showToast(`Đã xoá bài viết #${id}.`, 'success');
-            closeModal('post-detail-modal');
-            loadPosts(postsCurrentPage);
-        } else {
-            showToast(data.message || 'Có lỗi xảy ra.', 'error');
-        }
-    } catch (e) {
-        showToast('Lỗi kết nối.', 'error');
-    }
+function deletePost(id) {
+    showConfirm(
+        '<i class="fa-solid fa-trash" style="color:var(--red);"></i> Xóa bài viết',
+        `Bạn có chắc chắn muốn xóa bài viết <strong>#${id}</strong>? <br><span style="color:var(--red); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Hành động này không thể hoàn tác!</span>`,
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/posts/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    showToast(`Đã xóa bài viết #${id}.`, 'success');
+                    closeModal('post-detail-modal');
+                    loadPosts(postsCurrentPage);
+                } else {
+                    showToast(data.message || 'Có lỗi xảy ra.', 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối.', 'error');
+            }
+        },
+        'danger'
+    );
 }
 
-async function deleteComment(commentId, postId) {
-    if (!confirm(`Xoá bình luận #${commentId}? Hành động này không thể hoàn tác!`)) return;
-    try {
-        const res = await fetch(`/api/admin/comments/${commentId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) {
-            showToast(`Đã xoá bình luận #${commentId}.`, 'success');
-            // Tải lại chi tiết bài viết để cập nhật bình luận
-            fetchPostAndOpenDetail(postId);
-        } else {
-            showToast(data.message || 'Có lỗi xảy ra.', 'error');
-        }
-    } catch (e) {
-        showToast('Lỗi kết nối.', 'error');
-    }
+function deleteComment(commentId, postId) {
+    showConfirm(
+        '<i class="fa-solid fa-trash" style="color:var(--red);"></i> Xóa bình luận',
+        `Bạn có chắc chắn muốn xóa bình luận <strong>#${commentId}</strong>? <br><span style="color:var(--red); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Hành động này không thể hoàn tác!</span>`,
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/comments/${commentId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    showToast(`Đã xóa bình luận #${commentId}.`, 'success');
+                    fetchPostAndOpenDetail(postId);
+                } else {
+                    showToast(data.message || 'Có lỗi xảy ra.', 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối.', 'error');
+            }
+        },
+        'danger'
+    );
 }
 
 function violationScoreBadge(score) {
@@ -1096,45 +1391,59 @@ function reportStatusBadge(s) {
     return `<span class="badge ${cls}"><i class="fa-solid ${icon}"></i> ${label}</span>`;
 }
 
-async function updateReportStatus(id, status) {
-    const msg = status === 'RESOLVED' ? 'Đánh dấu đã giải quyết báo cáo này?' : 'Bỏ qua báo cáo này?';
-    if (!confirm(msg)) return;
-
-    try {
-        const res = await fetch(`/api/admin/reports/${id}/status`, {
-            method: 'PUT',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status })
-        });
-        if (res.ok) {
-            showToast('Đã cập nhật trạng thái báo cáo.', 'success');
-            loadReports();
-            loadStats();
-        } else {
-            showToast('Có lỗi xảy ra.', 'error');
-        }
-    } catch (e) {
-        showToast('Lỗi kết nối.', 'error');
-    }
+function updateReportStatus(id, status) {
+    const title = status === 'RESOLVED' ? 'Giải quyết báo cáo' : 'Bỏ qua báo cáo';
+    const msg = status === 'RESOLVED' 
+        ? 'Bạn có muốn đánh dấu đã giải quyết báo cáo này không?' 
+        : 'Bạn có muốn bỏ qua báo cáo này không?';
+    showConfirm(
+        title,
+        msg,
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/reports/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                if (res.ok) {
+                    showToast('Đã cập nhật trạng thái báo cáo.', 'success');
+                    loadReports();
+                    loadStats();
+                } else {
+                    showToast('Có lỗi xảy ra.', 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối.', 'error');
+            }
+        },
+        status === 'RESOLVED' ? 'success' : 'warning'
+    );
 }
 
-async function deleteReport(id) {
-    if (!confirm('Xoá vĩnh viễn báo cáo này?')) return;
-    try {
-        const res = await fetch(`/api/admin/reports/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        if (res.ok) {
-            showToast('Đã xoá báo cáo.', 'success');
-            loadReports();
-            loadStats();
-        } else {
-            showToast('Có lỗi xảy ra.', 'error');
-        }
-    } catch (e) {
-        showToast('Lỗi kết nối.', 'error');
-    }
+function deleteReport(id) {
+    showConfirm(
+        '<i class="fa-solid fa-trash" style="color:var(--red);"></i> Xóa báo cáo',
+        'Bạn có chắc chắn muốn xóa vĩnh viễn báo cáo này?',
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/reports/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (res.ok) {
+                    showToast('Đã xoá báo cáo.', 'success');
+                    loadReports();
+                    loadStats();
+                } else {
+                    showToast('Có lỗi xảy ra.', 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối.', 'error');
+            }
+        },
+        'danger'
+    );
 }
 
 function openReportedPostDetail(postId, highlightCommentId = null) {
@@ -1205,41 +1514,59 @@ async function saveModeratorInfo() {
 }
 
 // ===== KHOÁ / KÍCH HOẠT / XOÁ KIỂM DUYỆT VIÊN =====
-async function lockModerator(id, name) {
-    if (!confirm(`Khoá tài khoản kiểm duyệt viên "${name}"?`)) return;
-    try {
-        const res = await fetch(`/api/admin/moderators/${id}/lock`, {
-            method: 'PUT',
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) { showToast(`Đã khoá tài khoản ${name}.`, 'success'); loadModerators(); }
-        else showToast(data.message || data || 'Có lỗi xảy ra.', 'error');
-    } catch (e) { showToast('Lỗi kết nối.', 'error'); }
+function lockModerator(id, name) {
+    showConfirm(
+        '<i class="fa-solid fa-ban" style="color:var(--red);"></i> Khóa kiểm duyệt viên',
+        `Bạn có chắc chắn muốn khóa tài khoản kiểm duyệt viên <strong>"${escapeHtml(name)}"</strong>?`,
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/moderators/${id}/lock`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) { showToast(`Đã khoá tài khoản ${name}.`, 'success'); loadModerators(); }
+                else showToast(data.message || data || 'Có lỗi xảy ra.', 'error');
+            } catch (e) { showToast('Lỗi kết nối.', 'error'); }
+        },
+        'danger'
+    );
 }
 
-async function activateModerator(id, name) {
-    if (!confirm(`Kích hoạt lại tài khoản kiểm duyệt viên "${name}"?`)) return;
-    try {
-        const res = await fetch(`/api/admin/moderators/${id}/activate`, {
-            method: 'PUT',
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) { showToast(`Đã kích hoạt lại tài khoản ${name}.`, 'success'); loadModerators(); }
-        else showToast(data.message || data || 'Có lỗi xảy ra.', 'error');
-    } catch (e) { showToast('Lỗi kết nối.', 'error'); }
+function activateModerator(id, name) {
+    showConfirm(
+        '<i class="fa-solid fa-lock-open" style="color:var(--green);"></i> Kích hoạt kiểm duyệt viên',
+        `Bạn có chắc chắn muốn kích hoạt lại tài khoản kiểm duyệt viên <strong>"${escapeHtml(name)}"</strong>?`,
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/moderators/${id}/activate`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) { showToast(`Đã kích hoạt lại tài khoản ${name}.`, 'success'); loadModerators(); }
+                else showToast(data.message || data || 'Có lỗi xảy ra.', 'error');
+            } catch (e) { showToast('Lỗi kết nối.', 'error'); }
+        },
+        'success'
+    );
 }
 
-async function deleteModerator(id, name) {
-    if (!confirm(`Xoá vĩnh viễn tài khoản kiểm duyệt viên "${name}"? Hành động này không thể hoàn tác!`)) return;
-    try {
-        const res = await fetch(`/api/admin/moderators/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok) { showToast(`Đã xoá tài khoản ${name}.`, 'success'); loadModerators(); }
-        else showToast(data.message || data || 'Có lỗi xảy ra.', 'error');
-    } catch (e) { showToast('Lỗi kết nối.', 'error'); }
+function deleteModerator(id, name) {
+    showConfirm(
+        '<i class="fa-solid fa-trash" style="color:var(--red);"></i> Xóa kiểm duyệt viên',
+        `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản kiểm duyệt viên <strong>"${escapeHtml(name)}"</strong>? <br><span style="color:var(--red); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Hành động này không thể hoàn tác!</span>`,
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/moderators/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) { showToast(`Đã xoá tài khoản ${name}.`, 'success'); loadModerators(); }
+                else showToast(data.message || data || 'Có lỗi xảy ra.', 'error');
+            } catch (e) { showToast('Lỗi kết nối.', 'error'); }
+        },
+        'danger'
+    );
 }

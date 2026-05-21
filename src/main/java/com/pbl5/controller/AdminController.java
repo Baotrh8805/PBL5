@@ -15,6 +15,7 @@ import com.pbl5.repository.LoginHistoryRepository;
 import com.pbl5.repository.NotificationRepository;
 import com.pbl5.repository.PostRepository;
 import com.pbl5.repository.UserRepository;
+import com.pbl5.repository.CommentLikeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +34,8 @@ import java.util.stream.Collectors;
 
 import com.pbl5.model.Comment;
 import com.pbl5.model.Report;
+import com.pbl5.security.JwtTokenProvider;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 /**
  * Controller dành riêng cho Admin.
@@ -67,6 +70,15 @@ public class AdminController {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private CommentLikeRepository commentLikeRepository;
+
+    @Autowired
+    private JwtTokenProvider tokenProvider;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
     // ==================== QUẢN LÝ NGƯỜI DÙNG ====================
 
     /** Lấy danh sách người dùng (không bao gồm kiểm duyệt viên) */
@@ -84,6 +96,8 @@ public class AdminController {
                     map.put("provider", u.getProvider());
                     map.put("avatar", u.getAvatar());
                     map.put("score", u.getScore());
+                    map.put("postWarningExpiresAt", u.getPostWarningExpiresAt());
+                    map.put("commentWarningExpiresAt", u.getCommentWarningExpiresAt());
                     return map;
 
                 }).collect(Collectors.toList());
@@ -143,17 +157,79 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Đã mở khoá tài khoản người dùng ID " + id));
     }
 
-    /** Cảnh báo người dùng (đặt status = WARNING) */
+    private User getAuthenticatedUser(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
+        String token = authHeader.substring(7);
+        if (!tokenProvider.validateToken(token)) return null;
+        String email = tokenProvider.getEmailFromJWT(token);
+        return userRepository.findByEmail(email).orElse(null);
+    }
+
+    private void sendNotification(User recipient, User sender, String type, String message, String link) {
+        Notification notifEntity = new Notification();
+        notifEntity.setUser(recipient);
+        notifEntity.setSender(sender);
+        notifEntity.setType(type);
+        notifEntity.setMessage(message);
+        notifEntity.setLink(link);
+        notifEntity = notificationRepository.save(notifEntity);
+
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("id", notifEntity.getId());
+        notification.put("type", type);
+        notification.put("message", message);
+        notification.put("senderId", sender != null ? sender.getId() : null);
+        notification.put("senderName", sender != null ? sender.getFullName() : "Hệ thống");
+        notification.put("senderAvatar", sender != null ? sender.getAvatar() : null);
+        notification.put("link", link);
+
+        messagingTemplate.convertAndSend("/topic/notifications/" + recipient.getId(), notification);
+    }
+
+    /** Cảnh báo người dùng với tùy chọn hình thức và thời hạn */
     @PutMapping("/users/{id}/warn")
-    public ResponseEntity<?> warnUser(@PathVariable Long id) {
+    public ResponseEntity<?> warnUser(@PathVariable Long id, 
+            @RequestBody Map<String, Object> payload,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        User admin = getAuthenticatedUser(authHeader);
+        if (admin == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty())
             return ResponseEntity.status(404).body("Không tìm thấy người dùng");
 
+        String type = (String) payload.get("type"); // "POST" hoặc "COMMENT"
+        Integer days = (Integer) payload.get("days"); // 3, 7 hoặc 30
+
+        if (type == null || days == null) {
+            return ResponseEntity.badRequest().body("Thiếu thông tin hình thức hoặc thời hạn cảnh cáo");
+        }
+
         User user = userOpt.get();
         user.setStatus(UserStatus.WARNING);
+        
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        if ("POST".equals(type)) {
+            java.time.LocalDateTime currentExpiry = user.getPostWarningExpiresAt();
+            java.time.LocalDateTime baseTime = (currentExpiry != null && currentExpiry.isAfter(now)) ? currentExpiry : now;
+            user.setPostWarningExpiresAt(baseTime.plusDays(days));
+        } else if ("COMMENT".equals(type)) {
+            java.time.LocalDateTime currentExpiry = user.getCommentWarningExpiresAt();
+            java.time.LocalDateTime baseTime = (currentExpiry != null && currentExpiry.isAfter(now)) ? currentExpiry : now;
+            user.setCommentWarningExpiresAt(baseTime.plusDays(days));
+        }
+        
         userRepository.save(user);
-        return ResponseEntity.ok(Map.of("message", "Đã gửi cảnh báo đến người dùng ID " + id));
+
+        String typeText = type.equals("POST") ? "đăng bài" : "bình luận";
+        
+        // Gửi thông báo hệ thống cho người dùng
+        String message = "Bạn đã bị cảnh cáo " + typeText + " trong " + days + " ngày do vi phạm tiêu chuẩn cộng đồng.";
+        sendNotification(user, admin, "WARNING", message, "/profile");
+
+        return ResponseEntity.ok(Map.of("message", "Đã thiết lập cảnh cáo " + typeText + " cho người dùng trong " + days + " ngày."));
     }
 
     /** Thay đổi role của người dùng (USER / MODERATOR / ADMIN) */
@@ -180,7 +256,7 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Đã cập nhật role thành " + newRole + " cho người dùng ID " + id));
     }
 
-    /** Xoá tài khoản người dùng */
+    /** Xoá tài khoản người dùng (chuyển thành khóa logic vĩnh viễn) */
     @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         Optional<User> userOpt = userRepository.findById(id);
@@ -191,8 +267,10 @@ public class AdminController {
         if (user.getRole() == Role.ADMIN) {
             return ResponseEntity.status(403).body("Không thể xoá tài khoản Admin");
         }
-        userRepository.deleteById(id);
-        return ResponseEntity.ok(Map.of("message", "Đã xoá tài khoản người dùng ID " + id));
+        user.setStatus(UserStatus.BANNED);
+        user.setLockExpiresAt(LocalDateTime.of(1970, 1, 1, 0, 0));
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "Đã khóa tài khoản người dùng vĩnh viễn ID " + id));
     }
 
     // ==================== QUẢN LÝ BÀI VIẾT ====================
@@ -373,6 +451,7 @@ public class AdminController {
         createNotification(comment.getUser(), null, "REPORT_WARNING",
                 "Bình luận của bạn đã bị quản trị viên xóa do vi phạm tiêu chuẩn cộng đồng.", "/");
 
+        commentLikeRepository.deleteByCommentId(id);
         commentRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Đã xoá bình luận ID " + id));
     }
@@ -662,11 +741,17 @@ public class AdminController {
                 User violator = violatingPost.getUser();
                 if (violator != null && violator.getStatus() != UserStatus.BANNED) {
                     violator.setStatus(UserStatus.WARNING);
+                    
+                    // Tự động gán thời hạn phạt 3 ngày
+                    LocalDateTime now = LocalDateTime.now();
+                    LocalDateTime currentPostExpiry = violator.getPostWarningExpiresAt();
+                    violator.setPostWarningExpiresAt((currentPostExpiry != null && currentPostExpiry.isAfter(now)) ? currentPostExpiry.plusDays(3) : now.plusDays(3));
+                    
                     userRepository.save(violator);
 
                     // Thông báo cho user vi phạm
                     createNotification(violator, null, "REPORT_WARNING",
-                            "Bài viết của bạn đã bị ẩn do vi phạm quy tắc cộng đồng.",
+                            "Bài viết của bạn đã bị ẩn do vi phạm quy tắc cộng đồng. Bạn bị cấm đăng bài trong 3 ngày.",
                             null);
                 }
             }
@@ -677,12 +762,24 @@ public class AdminController {
                 User commentAuthor = violatingComment.getUser();
                 if (commentAuthor != null && commentAuthor.getStatus() != UserStatus.BANNED) {
                     commentAuthor.setStatus(UserStatus.WARNING);
+                    
+                    // Tự động gán thời hạn phạt 3 ngày
+                    LocalDateTime now = LocalDateTime.now();
+                    LocalDateTime currentCommentExpiry = commentAuthor.getCommentWarningExpiresAt();
+                    commentAuthor.setCommentWarningExpiresAt((currentCommentExpiry != null && currentCommentExpiry.isAfter(now)) ? currentCommentExpiry.plusDays(3) : now.plusDays(3));
+                    
                     userRepository.save(commentAuthor);
 
                     createNotification(commentAuthor, null, "REPORT_WARNING",
-                            "Bình luận của bạn đã bị xoá do vi phạm quy tắc cộng đồng.",
+                            "Bình luận của bạn đã bị xoá do vi phạm quy tắc cộng đồng. Bạn bị cấm bình luận trong 3 ngày.",
                             null);
                 }
+                
+                // Xoá comment và comment likes liên quan khỏi DB
+                commentLikeRepository.deleteByCommentId(violatingComment.getId());
+                commentRepository.delete(violatingComment);
+                report.setComment(null); // Tránh lỗi khóa ngoại khi comment bị xoá
+                reportRepository.save(report);
             }
 
             // Thông báo cho reporter

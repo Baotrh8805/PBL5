@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/admin.css">
     <script src="/js/auth-interceptor.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -303,31 +304,65 @@
                 <p class="page-subtitle">Tổng quan hệ thống</p>
             </div>
         </div>
-        <div class="stats-grid">
-            <div class="big-stat-card">
-                <i class="fa-solid fa-users"></i>
-                <div class="big-stat-value" id="big-total-users">--</div>
-                <div class="big-stat-label">Tổng người dùng</div>
+
+        <!-- Biểu đồ lên trên (3 cột) -->
+        <div class="charts-row three-columns">
+            <div class="chart-card">
+                <h3><i class="fa-solid fa-chart-pie" style="color: var(--primary);"></i> Phân bố trạng thái người dùng</h3>
+                <div class="chart-wrapper">
+                    <canvas id="usersChart"></canvas>
+                </div>
             </div>
-            <div class="big-stat-card">
-                <i class="fa-solid fa-newspaper"></i>
-                <div class="big-stat-value" id="big-total-posts">--</div>
-                <div class="big-stat-label">Tổng bài viết</div>
+            <div class="chart-card">
+                <h3><i class="fa-solid fa-chart-bar" style="color: var(--blue);"></i> Hoạt động hệ thống</h3>
+                <div class="chart-wrapper">
+                    <canvas id="postsReportsChart"></canvas>
+                </div>
             </div>
-            <div class="big-stat-card">
-                <i class="fa-solid fa-ban"></i>
-                <div class="big-stat-value" id="big-banned">--</div>
-                <div class="big-stat-label">Tài khoản bị khoá</div>
+            <div class="chart-card">
+                <h3><i class="fa-solid fa-robot" style="color: var(--green);"></i> Hiệu suất kiểm duyệt AI</h3>
+                <div class="chart-wrapper">
+                    <canvas id="aiAccuracyChart"></canvas>
+                </div>
             </div>
-            <div class="big-stat-card">
-                <i class="fa-solid fa-shield-halved"></i>
-                <div class="big-stat-value" id="big-moderators">--</div>
-                <div class="big-stat-label">Moderator</div>
+        </div>
+
+        <!-- Thu nhỏ các board này lại, xếp thành 1 hàng ngang như trang "Người dùng" -->
+        <div class="stats-row five-columns" style="margin-top: 32px;">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="big-total-users">--</div>
+                    <div class="stat-label">Tổng người dùng</div>
+                </div>
             </div>
-            <div class="big-stat-card">
-                <i class="fa-solid fa-flag" style="color:var(--red);"></i>
-                <div class="big-stat-value" id="big-pending-reports">--</div>
-                <div class="big-stat-label">Báo cáo chưa xử lý</div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-newspaper"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="big-total-posts">--</div>
+                    <div class="stat-label">Tổng bài viết</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red"><i class="fa-solid fa-ban"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="big-banned">--</div>
+                    <div class="stat-label">Tài khoản bị khoá</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="big-moderators">--</div>
+                    <div class="stat-label">Moderator</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon yellow"><i class="fa-solid fa-flag"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value" id="big-pending-reports">--</div>
+                    <div class="stat-label">Báo cáo chưa xử lý</div>
+                </div>
             </div>
         </div>
     </div>
@@ -503,7 +538,7 @@
             <h3><i class="fa-solid fa-clock-rotate-left" style="color:var(--primary);margin-right:8px;"></i>Lịch sử đăng nhập — <span id="history-username"></span></h3>
             <button class="modal-close" onclick="closeModal('login-history-modal')"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="modal-body" style="padding:0;">
+        <div class="modal-body" style="padding:0; max-height: 400px; overflow-y: auto;">
             <table class="data-table" id="history-table">
                 <thead>
                     <tr>
@@ -701,8 +736,86 @@
     </div>
 </div>
 
+<!-- Modal Cảnh báo người dùng (Cấm đăng bài / bình luận) -->
+<div class="modal-overlay hidden" id="warn-user-modal" style="z-index: 1050;">
+    <div class="modal modal-md" style="width: 480px;">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-triangle-exclamation" style="color:#faad14;margin-right:8px;"></i>Cảnh báo người dùng</h3>
+            <button class="modal-close" onclick="closeModal('warn-user-modal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="warn-user-id">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px;">Hình thức phạt <span class="required">*</span></label>
+                <div style="display: flex; gap: 20px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+                        <input type="radio" name="warn-type" value="POST" checked style="cursor: pointer;">
+                        Cấm đăng bài (Block Posts)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+                        <input type="radio" name="warn-type" value="COMMENT" style="cursor: pointer;">
+                        Cấm bình luận (Block Comments)
+                    </label>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px;">Thời hạn cấm <span class="required">*</span></label>
+                <select id="warn-duration" class="form-input" onchange="toggleCustomDuration()" style="width: 100%; border-radius: 6px; padding: 10px; border: 1px solid var(--border);">
+                    <option value="3">3 ngày</option>
+                    <option value="7">7 ngày</option>
+                    <option value="30">30 ngày</option>
+                    <option value="custom">Tuỳ chọn số ngày</option>
+                </select>
+            </div>
+            
+            <div id="custom-duration-container" style="display: none; margin-bottom: 20px;">
+                <label style="display: block; font-weight: 600; margin-bottom: 8px;">Nhập số ngày phạt <span class="required">*</span></label>
+                <input type="number" id="warn-custom-days" class="form-input" placeholder="Ví dụ: 5" min="1" style="width: 100%; border-radius: 6px; padding: 10px; border: 1px solid var(--border);">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal('warn-user-modal')">Hủy</button>
+            <button class="btn-confirm" onclick="submitUserWarning()" style="background: #ea580c;"><i class="fa-solid fa-triangle-exclamation"></i> Gửi cảnh cáo</button>
+        </div>
+    </div>
+</div>
+
 <!-- Toast notification -->
 <div class="toast hidden" id="toast"></div>
+
+<!-- Custom Confirm Modal -->
+<div class="modal-overlay hidden" id="custom-confirm-modal" style="z-index: 1100;">
+    <div class="modal" style="width: 400px;">
+        <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+            <h3 id="custom-confirm-title" style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">Xác nhận</h3>
+            <button class="modal-close" id="custom-confirm-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" id="custom-confirm-message" style="padding-top: 12px; font-size: 14px; color: var(--text-main); line-height: 1.5;">
+            Bạn có chắc chắn muốn thực hiện hành động này không?
+        </div>
+        <div class="modal-footer" style="border-top: none; padding-top: 0;">
+            <button class="btn-cancel" id="custom-confirm-cancel-btn">Hủy</button>
+            <button class="btn-confirm" id="custom-confirm-ok-btn" style="background: var(--primary);">Xác nhận</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Alert Modal -->
+<div class="modal-overlay hidden" id="custom-alert-modal" style="z-index: 1200;">
+    <div class="modal" style="width: 400px;">
+        <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+            <h3 id="custom-alert-title" style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">Thông báo</h3>
+            <button class="modal-close" id="custom-alert-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" id="custom-alert-message" style="padding-top: 12px; font-size: 14px; color: var(--text-main); line-height: 1.5;">
+            Thông báo từ hệ thống.
+        </div>
+        <div class="modal-footer" style="border-top: none; padding-top: 0;">
+            <button class="btn-confirm" id="custom-alert-ok-btn" style="background: var(--primary);">Đồng ý</button>
+        </div>
+    </div>
+</div>
 
 <script src="/js/admin.js"></script>
 </body>

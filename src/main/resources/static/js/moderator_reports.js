@@ -188,7 +188,7 @@ window.openReportDetailModal = function(reportId) {
     const modal = document.getElementById('mod-report-detail-modal');
     if (!modal) {
         console.error("CRITICAL: Modal 'mod-report-detail-modal' not found in DOM!");
-        alert("Lỗi hệ thống: Không tìm thấy khung hiển thị báo cáo.");
+        window.showCustomAlert("Lỗi hệ thống", "Không tìm thấy khung hiển thị báo cáo.", "error");
         return;
     }
     

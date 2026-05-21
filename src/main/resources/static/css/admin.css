@@ -639,3 +639,108 @@ body { display: flex; min-height: 100vh; background: var(--bg); color: var(--tex
     .main-content { margin-left: 200px; padding: 20px; }
     .form-grid { grid-template-columns: 1fr; }
 }
+
+/* ===== CUSTOM MODALS & GRAPHICS ===== */
+.modal-overlay {
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.modal {
+    transform: scale(0.9);
+    opacity: 0;
+    animation: modalShow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes modalShow {
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Charts container and items */
+.charts-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.chart-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+
+.chart-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 320px;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Custom 5-column stats row for admin statistics page */
+.stats-row.five-columns {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+/* Custom 3-column charts row for admin statistics page */
+.charts-row.three-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1200px) {
+    .charts-row.three-columns {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .stats-row.five-columns {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .charts-row.three-columns {
+        grid-template-columns: 1fr;
+    }
+    .stats-row.five-columns {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-row.five-columns {
+        grid-template-columns: 1fr;
+    }
+}
+

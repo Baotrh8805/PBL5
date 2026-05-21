@@ -15,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.pbl5.repository.NotificationRepository;
+import com.pbl5.repository.CommentLikeRepository;
 import com.pbl5.model.Notification;
 
 import java.time.LocalDateTime;
@@ -53,6 +54,9 @@ public class ModeratorController {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private CommentLikeRepository commentLikeRepository;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -363,6 +367,7 @@ public class ModeratorController {
         if (!commentRepository.existsById(id)) {
             return ResponseEntity.status(404).body("Không tìm thấy bình luận");
         }
+        commentLikeRepository.deleteByCommentId(id);
         commentRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Đã xoá bình luận ID " + id));
     }
@@ -498,6 +503,7 @@ public class ModeratorController {
                             "/html/home.html");
                 }
                 // Xoá comment khỏi DB
+                commentLikeRepository.deleteByCommentId(comment.getId());
                 commentRepository.delete(comment);
                 report.setComment(null); // Tránh lỗi khóa ngoại khi comment bị xoá
                 reportRepository.save(report);

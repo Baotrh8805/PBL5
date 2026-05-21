@@ -131,11 +131,11 @@ window.viewPostDetail = async function (postId) {
             console.log("DEBUG: Modal opened successfully.");
         } else {
             console.error("DEBUG: Modal element 'mod-post-detail-modal' not found!");
-            alert("Lỗi giao diện: Không tìm thấy khung hiển thị chi tiết.");
+            window.showCustomAlert("Lỗi giao diện", "Không tìm thấy khung hiển thị chi tiết bài viết.", "error");
         }
     } catch (error) {
         console.error("CRITICAL ERROR in viewPostDetail:", error);
-        alert("Lỗi hệ thống khi xem chi tiết: " + error.message);
+        window.showCustomAlert("Lỗi hệ thống", "Không thể hiển thị chi tiết bài viết: " + error.message, "error");
     }
 };
 
@@ -147,7 +147,7 @@ window.onerror = function(message, source, lineno, colno, error) {
 window.approvePost = async function (id) {
     console.log("DEBUG: approvePost triggered for ID:", id);
     if (typeof showCustomConfirm !== 'function') {
-        alert("Lỗi: Hàm showCustomConfirm chưa được tải!");
+        window.showToast("Lỗi hệ thống: Tính năng xác nhận chưa được tải!", "error");
         return;
     }
     showCustomConfirm('Duyệt bài viết', 'Bạn có chắc chắn muốn DUYỆT bài viết này không?', async () => {
@@ -178,7 +178,7 @@ window.approvePost = async function (id) {
 window.deletePost = async function (id) {
     console.log("DEBUG: deletePost triggered for ID:", id);
     if (typeof showCustomConfirm !== 'function') {
-        alert("Lỗi: Hàm showCustomConfirm chưa được tải!");
+        window.showToast("Lỗi hệ thống: Tính năng xác nhận chưa được tải!", "error");
         return;
     }
     showCustomConfirm('Xóa bài viết', 'Bạn có chắc chắn muốn XÓA bài viết này? Hành động này không thể hoàn tác.', async () => {
@@ -497,7 +497,7 @@ async function saveProfileChanges() {
     // Hàm warnUser đã được chuyển sang moderator_core.js để đảm bảo tính toàn cục
 
     if (!fullName) {
-        alert('Tên hiển thị không được để trống.');
+        window.showCustomAlert("Cảnh báo", "Tên hiển thị không được để trống.", "warning");
         return;
     }
 
@@ -526,11 +526,11 @@ async function saveProfileChanges() {
         const staffName = document.getElementById('staff-display-name');
         if (staffName) staffName.textContent = fullName;
 
-        alert('Đã cập nhật thông tin cá nhân thành công!');
+        window.showToast("Đã cập nhật thông tin cá nhân thành công!", "success");
         closeProfileModal();
     } catch (error) {
         console.error('Lỗi cập nhật hồ sơ:', error);
-        alert('Cập nhật thông tin thất bại. Vui lòng thử lại.');
+        window.showCustomAlert("Lỗi cập nhật", "Cập nhật thông tin thất bại. Vui lòng thử lại.", "error");
     }
 }
 
@@ -569,16 +569,16 @@ async function updateAvatarFromFile(file) {
         const avatarImg = document.getElementById('header-avatar');
         if (avatarImg) avatarImg.src = uploadData.imageUrl;
 
-        alert('Đã cập nhật ảnh đại diện thành công!');
+        window.showToast("Đã cập nhật ảnh đại diện thành công!", "success");
     } catch (error) {
         console.error('Lỗi đổi ảnh đại diện:', error);
-        alert('Không thể cập nhật ảnh đại diện. Vui lòng thử lại.');
+        window.showCustomAlert("Lỗi cập nhật", "Không thể cập nhật ảnh đại diện. Vui lòng thử lại.", "error");
     }
 }
 
 async function requestPasswordResetEmail() {
     if (!currentModerator.email) {
-        alert('Không tìm thấy email tài khoản để đổi mật khẩu.');
+        window.showCustomAlert("Thông báo", "Không tìm thấy email tài khoản để đổi mật khẩu.", "warning");
         return;
     }
 
@@ -591,10 +591,10 @@ async function requestPasswordResetEmail() {
             throw new Error('Không thể gửi yêu cầu đổi mật khẩu');
         }
 
-        alert('Đã gửi email hướng dẫn đổi mật khẩu. Vui lòng kiểm tra hộp thư của bạn.');
+        window.showCustomAlert("Thành công", "Đã gửi email hướng dẫn đổi mật khẩu. Vui lòng kiểm tra hộp thư của bạn.", "success");
     } catch (error) {
         console.error('Lỗi đổi mật khẩu:', error);
-        alert('Gửi yêu cầu đổi mật khẩu thất bại. Vui lòng thử lại sau.');
+        window.showCustomAlert("Lỗi hệ thống", "Gửi yêu cầu đổi mật khẩu thất bại. Vui lòng thử lại sau.", "error");
     }
 }
 

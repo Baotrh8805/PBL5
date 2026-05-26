@@ -167,45 +167,79 @@ function renderReviewPostsTable(posts) {
             `;
         }
 
+        const hasMedia = !!(post.imageUrl || post.videoUrl);
+        const cardClass = `review-post-card ${hasMedia ? 'has-media' : 'no-media'} ${isReviewed ? 'reviewed' : 'pending'}`;
+        const severityBorderColor = (postStatus === 'REJECTED' || postStatus === 'AUTO_REJECTED') ? '#ff4d4f' : '#00d1b2';
+        const severityColor = violationRate >= 75 ? '#ff4d4f' : (violationRate >= 50 ? '#faad14' : '#1cc88a');
+        const severityStyle = isReviewed 
+            ? `border-left: 6px solid ${severityBorderColor};` 
+            : `border-left: 6px solid ${severityColor};`;
+
         return `
-        <article class="review-post-card" ${isReviewed ? `style="border-top: 5px solid ${(postStatus === 'REJECTED' || postStatus === 'AUTO_REJECTED') ? '#ff4d4f' : '#00d1b2'};"` : ''}>
+        <article class="${cardClass}" style="${severityStyle} position: relative; margin-bottom: 24px;">
             ${reviewedHeaderHtml}
             ${lockedAlert}
-            <div class="review-post-head">
-                <div>
-                    <div class="review-post-meta">#P-${post.id} • ${escapeHtml(post.authorName || 'Ẩn danh')} (ID User: ${post.authorId || 'Không rõ'})</div>
-                    <h3>${escapeHtml(post.authorName || 'Ẩn danh')}</h3>
-                    <div class="review-post-time">${new Date(post.createdAt).toLocaleString('vi-VN')}</div>
-                </div>
-                <span class="review-media-tag">${mediaLabel}</span>
-            </div>
-
-            ${mediaPreview}
-
-            <div class="review-content-box">
-                <div class="review-content-label">Nội dung bài viết</div>
-                <div class="review-content-text">${contentPreview}</div>
-            </div>
             
-            <div class="review-content-box">
-                <div class="review-content-label">Bằng chứng vi phạm</div>
-                <div class="review-violation-snippet">${evidencePreview}</div>
-            </div>
+            <div class="review-card-grid">
+                ${hasMedia ? `
+                <!-- Column 1: Media Preview -->
+                <div class="review-media-column">
+                    <span class="review-media-tag-floating"><i class="fa-solid fa-photo-film"></i> ${mediaLabel}</span>
+                    <div class="review-media-wrapper">
+                        ${mediaPreview}
+                    </div>
+                </div>
+                ` : ''}
+                
+                <!-- Column 2: Information & Controls Panel -->
+                <div class="review-details-column">
+                    <!-- Author & Post Header -->
+                    <div class="review-author-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName || 'User')}&background=0046a0&color=fff" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color);">
+                            <div>
+                                <div class="review-author-name" style="font-weight: 700; color: var(--text-primary); font-size: 14px;">${escapeHtml(post.authorName || 'Ẩn danh')}</div>
+                                <div class="review-post-time-sub" style="font-size: 11px; color: var(--text-secondary);">${new Date(post.createdAt).toLocaleString('vi-VN')}</div>
+                            </div>
+                        </div>
+                        <div class="review-post-id-badge" style="background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">#P-${post.id}</div>
+                    </div>
+                    
+                    <!-- Content & Evidence -->
+                    <div class="review-text-boxes" style="margin-bottom: 15px;">
+                         <div class="review-content-box-premium" style="margin-bottom: 10px;">
+                              <div class="review-box-title" style="font-size: 11px; font-weight: 800; color: var(--mod-primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;"><i class="fa-solid fa-align-left"></i> Nội dung gốc</div>
+                              <div class="review-box-content" style="font-size: 13.5px; color: var(--text-primary); line-height: 1.5; word-break: break-word;">${contentPreview}</div>
+                         </div>
+                         <div class="review-content-box-premium evidence-box">
+                              <div class="review-box-title" style="font-size: 11px; font-weight: 800; color: var(--caution-color); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;"><i class="fa-solid fa-magnifying-glass-chart"></i> Bằng chứng vi phạm</div>
+                              <div class="review-box-content" style="font-size: 13px; color: var(--text-primary); line-height: 1.5; word-break: break-word;">${evidencePreview}</div>
+                         </div>
+                    </div>
 
-            <div class="review-score-box">
-                ${scoreBarsHtml || '<div style="font-size:0.9rem; color:var(--text-secondary);">Chưa ghi nhận điểm vi phạm.</div>'}
-            </div>
-
-            <div class="review-action-group">
-                ${postStatus === 'PENDING_REVIEW'
-                ? (!post.processingModeratorId || post.processingModeratorId == window.currentModerator.id
-                    ? `<button class="btn-action success" onclick="approvePost('${post.id}')">Duyệt</button>
-                               <button class="btn-action danger" onclick="deletePost(${post.id})">Xóa bài</button>`
-                    : ''
-                )
-                : ''
-            }
-                <button class="btn-action" style="background:#3498db; width: fit-content; padding-left: 20px; padding-right: 20px;" onclick="viewPostDetail('${post.id}')">Xem chi tiết bài viết</button>
+                    <!-- AI Analysis breakdown -->
+                    <div class="review-scores-container" style="margin-bottom: 20px;">
+                        <div class="review-box-title" style="font-size: 11px; font-weight: 800; color: var(--danger-color); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;"><i class="fa-solid fa-brain"></i> Điểm phân tích vi phạm AI</div>
+                        <div class="review-scores-grid">
+                             ${scoreBarsHtml || '<div style="font-size:12px; color:var(--text-secondary); font-style: italic;">Chưa ghi nhận điểm vi phạm từ AI.</div>'}
+                        </div>
+                    </div>
+                    
+                    <!-- Actions Group -->
+                    <div class="review-actions-premium" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+                         <div class="action-btn-row" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                             ${postStatus === 'PENDING_REVIEW'
+                             ? (!post.processingModeratorId || post.processingModeratorId == window.currentModerator.id
+                                 ? `<button class="btn-action success" onclick="approvePost('${post.id}')" style="padding: 8px 16px; font-size: 13px; font-weight: 700; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; color: white; background: var(--success-color); transition: all 0.2s;"><i class="fa-solid fa-circle-check"></i> Duyệt bài</button>
+                                            <button class="btn-action danger" onclick="deletePost(${post.id})" style="padding: 8px 16px; font-size: 13px; font-weight: 700; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; color: white; background: var(--danger-color); transition: all 0.2s;"><i class="fa-solid fa-trash-can"></i> Xóa bài</button>`
+                                 : ''
+                             )
+                             : ''
+                             }
+                             <button class="btn-action detail" onclick="viewPostDetail('${post.id}')" style="padding: 8px 16px; font-size: 13px; font-weight: 700; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);"><i class="fa-solid fa-circle-info"></i> Chi tiết</button>
+                         </div>
+                    </div>
+                </div>
             </div>
         </article>
     `;

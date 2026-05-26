@@ -592,7 +592,9 @@ public class ModeratorController {
             return ResponseEntity.status(404).body("Không tìm thấy người dùng");
 
         String type = (String) payload.get("type"); // "POST" hoặc "COMMENT"
-        Integer days = (Integer) payload.get("days"); // 3, 7 hoặc 30
+        Integer days = (Integer) payload.get("days"); // duration value
+        String unit = (String) payload.get("unit"); // "HOURS" hoặc "DAYS"
+        if (unit == null) unit = "DAYS";
 
         if (type == null || days == null) {
             return ResponseEntity.badRequest().body("Thiếu thông tin hình thức hoặc thời hạn cảnh cáo");
@@ -606,22 +608,23 @@ public class ModeratorController {
             java.time.LocalDateTime currentExpiry = user.getPostWarningExpiresAt();
             // Nếu còn hạn thì cộng thêm vào hạn cũ, nếu không thì cộng từ bây giờ
             java.time.LocalDateTime baseTime = (currentExpiry != null && currentExpiry.isAfter(now)) ? currentExpiry : now;
-            user.setPostWarningExpiresAt(baseTime.plusDays(days));
+            user.setPostWarningExpiresAt("HOURS".equals(unit) ? baseTime.plusHours(days) : baseTime.plusDays(days));
         } else if ("COMMENT".equals(type)) {
             java.time.LocalDateTime currentExpiry = user.getCommentWarningExpiresAt();
             java.time.LocalDateTime baseTime = (currentExpiry != null && currentExpiry.isAfter(now)) ? currentExpiry : now;
-            user.setCommentWarningExpiresAt(baseTime.plusDays(days));
+            user.setCommentWarningExpiresAt("HOURS".equals(unit) ? baseTime.plusHours(days) : baseTime.plusDays(days));
         }
         
         userRepository.save(user);
 
         String typeText = type.equals("POST") ? "đăng bài" : "bình luận";
+        String durationText = unit.equals("HOURS") ? days + " giờ" : days + " ngày";
         
         // Gửi thông báo hệ thống cho người dùng
-        String message = "Bạn đã bị cảnh cáo " + typeText + " trong " + days + " ngày do vi phạm tiêu chuẩn cộng đồng.";
+        String message = "Bạn đã bị cảnh cáo " + typeText + " trong " + durationText + " do vi phạm tiêu chuẩn cộng đồng.";
         sendNotification(user, moderator, "WARNING", message, "/profile");
 
-        return ResponseEntity.ok(Map.of("message", "Đã thiết lập cảnh cáo " + typeText + " cho người dùng trong " + days + " ngày."));
+        return ResponseEntity.ok(Map.of("message", "Đã thiết lập cảnh cáo " + typeText + " cho người dùng trong " + durationText + "."));
     }
 
     /** Khoá người dùng (đặt status = BANNED) */
@@ -749,6 +752,8 @@ public class ModeratorController {
         User user = userOpt.get();
         String type = (String) body.get("type"); // "TEMP" or "PERM"
         Integer days = (Integer) body.get("days");
+        String unit = (String) body.get("unit"); // "HOURS" or "DAYS"
+        if (unit == null) unit = "DAYS";
         String reason = (String) body.get("reason");
         if (reason == null || reason.trim().isEmpty()) reason = "Vi phạm tiêu chuẩn cộng đồng.";
 
@@ -760,8 +765,8 @@ public class ModeratorController {
             expiry = LocalDateTime.of(1970, 1, 1, 0, 0);
         } else {
             // Khóa tạm thời
-            if (days == null || days <= 0) return ResponseEntity.badRequest().body("Số ngày không hợp lệ.");
-            expiry = LocalDateTime.now().plusDays(days);
+            if (days == null || days <= 0) return ResponseEntity.badRequest().body("Thời hạn khóa không hợp lệ.");
+            expiry = "HOURS".equals(unit) ? LocalDateTime.now().plusHours(days) : LocalDateTime.now().plusDays(days);
             java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
             expiryStr = expiry.format(formatter);
         }

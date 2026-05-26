@@ -1,58 +1,357 @@
-# ĐÁNH GIÁ ĐỘ KHẢ THI VÀ RỦI RO TIỀM ẨN - THIẾT KẾ GIAO DIỆN LC NETWORK
+# Design System Inspired by Instagram
 
-Dưới đây là tài liệu đánh giá tính khả thi, phân tích rủi ro và các nguyên tắc thiết kế giao diện (UI/UX) cho các trang **Moderator**, **Admin** và **User** của hệ thống **LC Network**.
+## 1. Visual Theme & Atmosphere
 
----
+Instagram's design system embodies a modern, social-first aesthetic centered on authentic connection and visual storytelling. The interface prioritizes clean typography, generous whitespace, and intuitive micro-interactions that feel natural and responsive. The palette blends cool blues with warm accent tones, creating a welcoming yet professional environment where user-generated content takes center stage. The design philosophy emphasizes accessibility, approachability, and a seamless mobile-to-desktop experience that encourages users to share moments with their communities.
 
-## 1. Đánh giá tính khả thi (Feasibility Analysis)
+**Key Characteristics**
+- Modern, clean, and minimal aesthetic with strong focus on content
+- Cool blue primary accent with warm green success states
+- High contrast between text and backgrounds for readability
+- Refined typography with balanced hierarchy
+- Generous whitespace and breathing room around interactive elements
+- Responsive design that adapts gracefully across all devices
+- Emphasis on user-generated imagery and authentic moments
 
-Hệ thống hiện tại đang sử dụng các công nghệ thuần để xây dựng giao diện frontend, cụ thể:
-*   **HTML5** cho cấu trúc trang.
-*   **Vanilla CSS3** (sử dụng CSS Variables) cho kiểu dáng.
-*   **Vanilla JS** cho logic tương tác và giao tiếp API (thông qua WebSockets/REST API).
+## 2. Color Palette & Roles
 
-### Thuận lợi (Feasible Aspects):
-1.  **Dễ dàng tùy chỉnh**: Việc sử dụng Vanilla CSS giúp chúng ta có toàn quyền kiểm soát thiết kế mà không bị bó buộc bởi các framework CSS (như Bootstrap hay Tailwind).
-2.  **Hệ thống CSS Variables sẵn có**: Cả `home.css`, `moderator.css` và `admin.css` đều có các bộ biến `:root` định nghĩa màu sắc chủ đạo (`--primary`, `--primary-color`). Việc chuyển đổi sang một bảng màu cao cấp, đồng bộ, hỗ trợ Dark Mode cực kỳ thuận tiện và sạch sẽ.
-3.  **Tách biệt logic và giao diện**: Các file JS (`home.js`, `moderator_core.js`, `admin.js`) được viết độc lập, giao tiếp với HTML qua các ID và Class cố định. Chúng ta có thể chỉnh sửa giao diện (HTML/CSS) mà không cần viết lại logic xử lý dữ liệu.
+### Primary
+- **Primary Blue** (`#4150F7`): Main brand color for buttons, links, and primary interactive elements; used for login CTAs and key affordances
+- **Bright Blue** (`#0095F6`): Secondary primary accent for highlights and feature emphasis; used in notifications and active states
+- **Sky Blue** (`#0064E0`): Tertiary blue for depth and hover states on primary elements
 
-### Khó khăn (Challenging Aspects):
-1.  **Đồng bộ giao diện Admin và Moderator**: Hiện tại, trang Admin (`admin.html`) đang sử dụng một phần giao diện từ `moderator.css` và ghi đè kiểu dáng bằng các rule CSS nội tuyến (inline style) để cố gắng chuyển đổi sang chế độ tối (Dark Mode). Việc này tạo ra sự lộn xộn trong code và không nhất quán về mặt thị giác.
-2.  **Hệ thống phân trang & Kích thước bảng**: Các bảng quản lý của Admin và Moderator chứa rất nhiều cột thông tin. Thiết kế cũ có thể bị tràn khung hoặc vỡ bố cục trên các màn hình có độ phân giải thấp.
+### Accent Colors
+- **Success Green** (`#1CD164`): Positive action confirmations, success states, and validated inputs
+- **Warning Yellow** (`#FACEB`): Warning and caution states requiring user attention
 
----
+### Interactive
+- **Interactive Text Blue** (`#4150F7`): Links, secondary buttons, and text-based interactions
+- **Facebook Integration Blue** (`#0064E0`): Third-party integration buttons and social login affordances
 
-## 2. Phân tích rủi ro tiềm ẩn (Potential Risks & Mitigation)
+### Neutral Scale
+- **Almost Black** (`#1C1E21`): Primary text color for headings and body copy; highest contrast and readability
+- **True Black** (`#000000`): Darkest neutral for critical text and high-emphasis elements
+- **Very Dark Gray** (`#0C1014`): Secondary text and subtle UI elements
+- **Very Dark Gray Alt** (`#0A1317`): Alternative dark gray for borders and dividers
+- **Dark Gray** (`#111112`): Semantic text and muted interactions
+- **Medium Gray** (`#2B3036`): Mid-tone for secondary UI elements
+- **Gray Text** (`#737373`): Tertiary text, helper text, and placeholders
+- **Light Gray** (`#3E4042`): Subtle borders and dividers
+- **Very Light Gray** (`#E4E6EB`): Input borders and light UI backgrounds
+- **Near White** (`#F0F2F5`): Page backgrounds and card surfaces
+- **Off White** (`#F8F9F9`): Alternative light surface color
 
-| STT | Rủi ro tiềm ẩn | Mức độ ảnh hưởng | Giải pháp giảm thiểu |
-| :--- | :--- | :--- | :--- |
-| **1** | **Phá vỡ liên kết Javascript (JS Bindings)**<br>Khi cấu trúc HTML thay đổi, các ID hoặc Class dùng làm selector trong JS có thể bị mất hoặc đổi tên, dẫn đến việc tải dữ liệu thất bại hoặc lỗi logic. | 🔴 **Nghiêm trọng (High)** | Giữ nguyên tất cả các ID (`posts-container`, `users-tbody`, v.v.) và các hàm sự kiện inline (`onclick`, `oninput`). Chỉ chỉnh sửa thẻ bao ngoài (wrapper), class CSS trang trí hoặc thêm cấu trúc hỗ trợ mà không xóa các mốc kết nối JS. |
-| **2** | **Lỗi hiển thị trên thiết bị di động (Responsive Break)**<br>Các chỉnh sửa kiểu dáng có thể làm mất tính responsive của trang chủ hoặc thanh bên (sidebars) trên Admin/Moderator. | 🟡 **Trung bình (Medium)** | Sử dụng CSS Grid/Flexbox linh hoạt, đặt các điểm dừng `@media` rõ ràng. Áp dụng cơ chế cuộn độc lập (`overflow-y: auto`) cho các vùng hiển thị chính và tự động thu nhỏ thanh bên trên màn hình hẹp. |
-| **3** | **Xung đột CSS giữa các trang**<br>Các trang đang import chéo các file CSS của nhau (Ví dụ: `admin.html` import cả `admin.css`, `home.css` và `moderator.css`). Việc chỉnh sửa một file CSS có thể làm thay đổi giao diện ở trang khác ngoài ý muốn. | 🔴 **Nghiêm trọng (High)** | Sử dụng các selector có tính bao quát cao và định danh theo trang (ví dụ: `body.mod-layout .card` thay vì chỉ `.card`) để giới hạn tầm ảnh hưởng của CSS. Tách biệt rõ ràng các biến `:root` của từng giao diện. |
-| **4** | **Lỗi Cache trình duyệt**<br>Trình duyệt người dùng lưu cache file CSS/JS cũ, khiến giao diện mới hiển thị bị lỗi hoặc lệch lạc. | 🟢 **Thấp (Low)** | Khuyến nghị người dùng thực hiện xóa cache khi tải lại trang (Ctrl + F5) hoặc sử dụng query parameter phiên bản cho file CSS trong quá trình phát triển (`/css/home.css?v=2.0`). |
+### Surface & Borders
+- **White** (`#FFFFFF`): Primary surface, input backgrounds, and card containers
+- **Light Surface** (`#F0F2F5`): Secondary surface and subtle backgrounds
+- **Soft Gray Border** (`#E4E6EB`): Input field borders and light dividers
+- **Dark Border** (`#3E4042`): Dark mode or emphasis borders
 
----
+## 3. Typography Rules
 
-## 3. Định hướng cải tiến giao diện cao cấp (Premium UI/UX Guidelines)
+### Font Family
+**Primary**: `Optimistic, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif`
+**Secondary**: `-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif`
+**Fallback Stack**: `system-ui, -apple-system, sans-serif`
 
-Để đạt được tiêu chí giao diện hiện đại, tinh tế và chuyên nghiệp, chúng ta sẽ áp dụng các nguyên lý thiết kế sau:
+### Hierarchy
 
-### A. Giao diện User (Bảng tin LC Network):
-*   **Thẩm mỹ**: Tối ưu hóa hiệu ứng bóng đổ (Box Shadows) mịn màng, thêm đường viền mờ (`border: 1px solid rgba(0,0,0,0.03)`) để tạo hiệu ứng nổi nhẹ nhàng.
-*   **Tương tác (Micro-interactions)**:
-    *   Thêm hiệu ứng phóng to nhẹ (`transform: scale(1.02)`) và tăng cường độ đổ bóng khi di chuột qua các thẻ bài viết.
-    *   Các nút thích, bình luận, và chia sẻ sẽ đổi màu mượt mà (`transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)`).
-*   **Đồng bộ Font & Typography**: Tăng cường kích thước font chữ tiêu đề bài viết, giãn dòng (`line-height: 1.5`) cho văn bản để tạo sự thông thoáng, dễ đọc.
+| Role | Font | Size | Weight | Line Height | Letter Spacing | Notes |
+|------|------|------|--------|-------------|-----------------|-------|
+| Display/Hero | Instagram Sans | 40px | 400 | 48px | 0px | Used for page titles and major headlines |
+| Heading 1 | Optimistic | 32px | 600 | 38px | 0px | Primary section headings |
+| Heading 2 | Optimistic | 24px | 600 | 28px | 0px | Secondary section headings |
+| Heading 3 | Optimistic | 20px | 600 | 24px | 0px | Tertiary headings and card titles |
+| Body Large | Optimistic | 16px | 400 | 20px | 0px | Primary body text for longer content |
+| Body Regular | Optimistic | 15px | 400 | 17px | 0px | Standard body text and form labels |
+| Body Medium | Optimistic | 15px | 500 | 19px | 0px | Medium-emphasis body text and input fields |
+| Button | Optimistic | 15px | 600 | 18px | 0px | All button text |
+| Link Primary | -apple-system | 14px | 400 | 18px | 0px | Primary links and navigation |
+| Link Secondary | -apple-system | 12px | 400 | 18px | 0px | Tertiary links and footer links |
+| Caption | -apple-system | 12px | 400 | 14px | 0px | Small supporting text and captions |
+| Code | Menlo, monospace | 12px | 400 | 16px | 0px | Inline and block code |
 
-### B. Giao diện Moderator (Mod Panel):
-*   **Bảng màu**: Sử dụng một bảng màu tối (Dark Grey) đồng bộ cao cấp. Màu chủ đạo là xanh mòng két (`#00d1b2`), kết hợp màu nền tối (`#18191a`) và các thẻ màu xám (`#242526`).
-*   **Thẻ thống kê**: Tạo các thẻ gradient mượt mà biểu thị mức độ quan trọng (đỏ cho bài viết bị báo cáo, vàng cho tài khoản cảnh cáo, xanh cho hoạt động hoàn thành).
-*   **Chi tiết vi phạm**: Thiết kế lại phần hiển thị bằng chứng vi phạm, làm nổi bật các đoạn từ ngữ thù ghét/bạo lực hoặc ảnh vi phạm bằng viền đỏ/vàng rõ ràng và trực quan.
+### Principles
+- Typography uses a dual-font system: **Optimistic** for primary UI and headings, **-apple-system** for body and links
+- Font weights are limited to 400 (regular), 500 (medium), and 600 (semibold) for consistent hierarchy
+- Line height increases with size to maintain comfortable reading rhythm
+- All text should maintain minimum 4.5:1 contrast ratio for WCAG AA compliance
+- Letter spacing remains 0px throughout for clean, modern appearance
+- Inputs use 15px medium weight for comfortable data entry on all screen sizes
 
-### C. Giao diện Admin (Admin Dashboard):
-*   **Nhất quán**: Loại bỏ hoàn toàn sự pha tạp giữa sáng và tối. Thiết kế một hệ thống Dark Mode đồng bộ tuyệt đối với giao diện Moderator để tạo cảm giác chuyên nghiệp khi quản trị.
-*   **Thống kê & Biểu đồ**: Thiết kế các khối biểu đồ rộng rãi, có khoảng giãn cách lớn. Thêm hiệu ứng di chuột chuyển màu cho các dòng trong bảng danh sách người dùng và bài viết.
-*   **Bảng dữ liệu**: Tối ưu khoảng đệm (padding) trong bảng, làm nổi bật trạng thái tài khoản bằng các badge bo tròn có màu sắc nhẹ nhàng (ví dụ: `ACTIVE` xanh lá nhạt, `BANNED` đỏ nhạt).
+## 4. Component Stylings
 
----
-*Tài liệu này được biên soạn bởi **Antigravity** nhằm định hình các bước chỉnh sửa trực quan tiếp theo.*
+### Buttons
+
+#### Primary Button
+- **Background**: `#4150F7`
+- **Text Color**: `#FFFFFF`
+- **Padding**: `12px 24px`
+- **Border Radius**: `8px`
+- **Border**: `none`
+- **Font Size**: `15px`
+- **Font Weight**: `600`
+- **Line Height**: `18px`
+- **Cursor**: `pointer`
+- **Hover State**: Background `#3A41D6`, shadow `0px 2px 8px rgba(65, 80, 247, 0.24)`
+- **Active State**: Background `#2F36B0`
+- **Disabled State**: Background `#E4E6EB`, text color `#737373`, cursor `not-allowed`
+
+#### Secondary Button
+- **Background**: `#FFFFFF`
+- **Text Color**: `#4150F7`
+- **Padding**: `12px 24px`
+- **Border Radius**: `8px`
+- **Border**: `2px solid #4150F7`
+- **Font Size**: `15px`
+- **Font Weight**: `600`
+- **Line Height**: `18px`
+- **Hover State**: Background `#F0F2F5`, border color `#3A41D6`
+- **Active State**: Background `#E4E6EB`
+
+#### Ghost Button
+- **Background**: `transparent`
+- **Text Color**: `#4150F7`
+- **Padding**: `12px 16px`
+- **Border Radius**: `8px`
+- **Border**: `1px solid #E4E6EB`
+- **Font Size**: `15px`
+- **Font Weight**: `600`
+- **Line Height**: `18px`
+- **Hover State**: Background `#F8F9F9`, border color `#D1D5DB`
+
+#### Facebook Login Button
+- **Background**: `#FFFFFF`
+- **Text Color**: `#0064E0`
+- **Padding**: `14px 20px`
+- **Border Radius**: `8px`
+- **Border**: `1px solid #E4E6EB`
+- **Font Size**: `15px`
+- **Font Weight**: `500`
+- **Line Height**: `18px`
+- **Icon**: Facebook logo in `#0064E0` at 18px
+
+### Cards & Containers
+
+#### Standard Card
+- **Background**: `#FFFFFF`
+- **Border**: `1px solid #E4E6EB`
+- **Border Radius**: `8px`
+- **Padding**: `20px`
+- **Shadow**: `0px 1px 3px rgba(0, 0, 0, 0.06)`
+- **Margin Bottom**: `16px`
+
+#### Input Card
+- **Background**: `#F8F9F9`
+- **Border**: `1px solid #E4E6EB`
+- **Border Radius**: `8px`
+- **Padding**: `0px`
+- **Hover State**: Border color `#D1D5DB`
+
+### Inputs & Forms
+
+#### Text Input (Default)
+- **Background**: `#FFFFFF`
+- **Text Color**: `#111112`
+- **Font Size**: `15px`
+- **Font Weight**: `500`
+- **Font Family**: `Optimistic`
+- **Padding**: `18px 12px 1px 12px`
+- **Height**: `38px`
+- **Border Radius**: `0px`
+- **Border**: `none`
+- **Border Bottom**: `1px solid #E4E6EB`
+- **Line Height**: `19px`
+- **Placeholder Color**: `#737373`
+- **Placeholder Font Weight**: `400`
+- **Focus State**: Border bottom color `#4150F7`, outline `none`, shadow `none`
+
+#### Text Input (Focused)
+- **Background**: `#FFFFFF`
+- **Border Bottom**: `2px solid #4150F7`
+- **Shadow**: `none`
+- **Padding**: `18px 12px 0px 12px`
+
+#### Text Input (Error)
+- **Border Bottom**: `2px solid #E74C3C`
+- **Helper Text Color**: `#E74C3C`
+
+#### Label
+- **Font Size**: `15px`
+- **Font Weight**: `400`
+- **Font Family**: `Optimistic`
+- **Color**: `#111112`
+- **Margin Bottom**: `8px`
+- **Line Height**: `17px`
+
+#### Form Container
+- **Max Width**: `546px`
+- **Margin**: `0px auto`
+- **Padding**: `0px`
+
+### Navigation
+
+#### Primary Navigation Link
+- **Background**: `transparent`
+- **Text Color**: `#4150F7`
+- **Font Size**: `14px`
+- **Font Weight**: `400`
+- **Font Family**: `-apple-system`
+- **Padding**: `8px 0px`
+- **Line Height**: `18px`
+- **Cursor**: `pointer`
+- **Hover State**: Text color `#3A41D6`, text decoration `underline`
+- **Active State**: Font weight `500`
+
+#### Footer Link
+- **Background**: `transparent`
+- **Text Color**: `#737373`
+- **Font Size**: `12px`
+- **Font Weight**: `400`
+- **Font Family**: `-apple-system`
+- **Padding**: `4px 8px`
+- **Line Height**: `18px`
+- **Hover State**: Text color `#111112`
+
+## 5. Layout Principles
+
+### Spacing System
+**Base Unit**: `4px`
+
+**Spacing Scale**:
+- `4px` — Micro spacing for tight grouping
+- `8px` — Extra small spacing for related elements
+- `12px` — Small spacing for input padding and tight sections
+- `16px` — Standard spacing for component padding and element margins
+- `20px` — Medium spacing for card content and section spacing
+- `24px` — Large spacing between major sections
+- `32px` — Extra large spacing for major layout divisions
+- `40px` — Large padding for hero sections
+- `52px` — Extra large padding for full-width sections
+- `120px` — Maximum spacing for vertical rhythm on desktop
+
+**Usage Context**:
+- **Buttons and inputs**: `12px` vertical, `16px` horizontal
+- **Card padding**: `20px`
+- **Section margins**: `24px` to `40px`
+- **Form field spacing**: `16px` between fields
+- **Text and interactive elements**: `8px` to `12px`
+
+### Grid & Container
+- **Max Width**: `1024px` for standard layouts
+- **Form Max Width**: `546px` for authentication flows
+- **Columns**: 12-column responsive grid
+- **Gutter Width**: `16px` on desktop, `12px` on tablet, `8px` on mobile
+- **Side Padding**: `40px` on desktop, `20px` on tablet, `16px` on mobile
+- **Center Container**: `margin: 0 auto` with appropriate max-width
+
+### Whitespace Philosophy
+Instagram's design prioritizes breathing room around content and interactive elements. Whitespace creates visual hierarchy, guides focus, and improves readability. Every element receives adequate spacing to prevent cognitive overload. Generous margins separate logical sections, while tighter padding unifies related components. The design avoids cramped layouts, allowing users to comfortably interact with buttons, inputs, and navigation without accidental clicks.
+
+### Border Radius Scale
+- `0px` — Sharp corners for minimal visual softness (input underlines)
+- `2px` — Subtle rounding for very minimal softness
+- `4px` — Extra small rounded corners for minor UI elements
+- `6px` — Small rounded corners for badges and small components
+- `8px` — Standard rounded corners for buttons, inputs, and cards
+- `12px` — Large rounded corners for featured containers
+- `16px` — Extra large rounded corners for hero sections
+- `24px` — Maximum rounding for full-bleed rounded shapes
+- `50%` — Perfect circles for avatars and rounded icons
+
+## 6. Depth & Elevation
+
+| Level | Treatment | Use |
+|-------|-----------|-----|
+| Flat (0) | No shadow, solid colors only | Standard UI elements, body backgrounds, inputs |
+| Raised (1) | `0px 1px 3px rgba(0, 0, 0, 0.06)` | Standard cards, mild emphasis |
+| Floating (2) | `0px 2px 8px rgba(65, 80, 247, 0.24)` | Hover states on primary buttons, dropdown menus |
+| Lifted (3) | `0px 4px 12px rgba(0, 0, 0, 0.12)` | Modal overlays, active popovers |
+| Elevated (4) | `0px 8px 24px rgba(0, 0, 0, 0.16)` | Full-page modals, notification toasts |
+
+**Shadow Philosophy**: Instagram uses minimal, subtle shadows primarily for interactive feedback and depth indication. Shadows are most prominent on primary actions (button hovers) and modals, with flat surfaces dominating the interface. Colors contain a slight blue tint (`#4150F7` base) to create cohesion with the brand palette. Shadows scale with interaction importance—the more critical the element, the more pronounced its elevation on hover or active states. Dark backgrounds receive reduced shadow intensity to maintain visibility and contrast.
+
+## 7. Do's and Don'ts
+
+### Do
+- Use `#4150F7` for all primary CTAs and critical interactive elements
+- Maintain consistent `15px` font size for all form inputs and body text
+- Apply `8px` border radius to all buttons and standard input fields
+- Keep form max-width at `546px` for comfortable reading and input on all screens
+- Use the full blue hierarchy (`#4150F7` → `#3A41D6` → `#2F36B0`) for button states
+- Implement hover states with background color shifts; never rely on shadow alone
+- Use `#F8F9F9` as the page background and `#FFFFFF` for card surfaces
+- Provide clear focus states for keyboard navigation with color and visual feedback
+- Use `#737373` placeholder text color with reduced font weight (400)
+- Apply `#1CD164` exclusively for success and positive confirmation states
+- Include proper spacing (16px minimum) between form fields for comfortable interaction
+- Use semantic HTML and ARIA labels for all interactive components
+
+### Don't
+- Don't use colors outside the defined palette for UI elements
+- Don't apply shadows to non-interactive or flat UI components
+- Don't mix font families within a single component (use Optimistic or -apple-system, not both)
+- Don't use opacity-based color changes for interactive states; use explicit hex values
+- Don't set border-radius values outside the defined scale
+- Don't apply padding less than 12px to interactive elements
+- Don't use line-height values other than those specified in the typography table
+- Don't create buttons smaller than 38px in height (minimum touch target)
+- Don't use gray text (`#737373`) for primary headings or critical information
+- Don't mix left-aligned and center-aligned form layouts on the same page
+- Don't apply font-weight heavier than 600 for body text
+- Don't nest form inputs deeper than one container level
+
+## 8. Responsive Behavior
+
+### Breakpoints
+
+| Breakpoint Name | Width | Key Changes |
+|-----------------|-------|-------------|
+| Mobile | 320px–479px | Single column, full-width forms, `16px` padding, `8px` spacing |
+| Tablet | 480px–767px | Single to two-column, max `546px` form width centered, `20px` padding, `12px` spacing |
+| Desktop | 768px–1024px | Full grid layout, `546px` form width centered, `40px` padding, `16px` spacing |
+| Large Desktop | 1024px+ | Multi-column layouts, max-width containers, `52px` padding, `20px` spacing |
+
+### Touch Targets
+- **Minimum Height**: `44px` for all interactive elements (buttons, links, inputs)
+- **Minimum Width**: `44px` for icon-only buttons
+- **Padding Around Target**: Minimum `8px` between adjacent interactive elements to prevent accidental activation
+- **Text Links**: `44px` clickable area achieved through padding, not text size alone
+- **Checkbox/Radio**: `20px` × `20px` with `8px` padding around
+
+### Collapsing Strategy
+- **Forms**: Maintain full width on mobile (with `16px` padding), center on tablet/desktop with `546px` max-width
+- **Navigation**: Stack vertically on mobile, horizontal on tablet and above
+- **Cards**: Single-column stack on mobile, two-column on tablet, three-column on desktop
+- **Spacing**: Reduce from `20px` to `12px` between sections on tablet, to `8px` on mobile
+- **Font Sizes**: Maintain typographic hierarchy; scale display text from `40px` desktop to `28px` mobile
+- **Buttons**: Full-width on mobile with centered text, auto-width on tablet/desktop
+- **Inputs**: Full-width on mobile, `546px` max-width centered on tablet/desktop
+
+## 9. Agent Prompt Guide
+
+### Quick Color Reference
+- **Primary CTA**: Primary Blue (`#4150F7`)
+- **Secondary CTA**: Sky Blue (`#0064E0`)
+- **Success State**: Success Green (`#1CD164`)
+- **Warning State**: Warning Yellow (`#FACEB`)
+- **Headings & Primary Text**: Almost Black (`#1C1E21`)
+- **Body Text**: Dark Gray (`#111112`)
+- **Secondary Text**: Gray Text (`#737373`)
+- **Input Background**: White (`#FFFFFF`)
+- **Page Background**: Near White (`#F0F2F5`)
+- **Card Background**: Off White (`#F8F9F9`)
+- **Borders**: Soft Gray Border (`#E4E6EB`)
+- **Hover/Focus**: Bright Blue (`#0095F6`)
+
+### Iteration Guide
+1. **Color Consistency**: All primary buttons must use `#4150F7` with `#3A41D6` on hover and `#2F36B10` on active. Never deviate from this three-value hierarchy.
+2. **Typography Stack**: Use `Optimistic, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` for all UI text. Fallback to `-apple-system` only for navigation links and captions.
+3. **Spacing Foundation**: Base all spacing on the `4px` unit. Form fields require `16px` horizontal padding, `18px` top, `1px` bottom. Cards require `20px` padding on all sides.
+4. **Border Radius Consistency**: Apply `8px` radius to all buttons, inputs, and cards. Do not mix radius values within a single component set—maintain visual cohesion.
+5. **Form Layout**: Restrict form width to `546px` maximum, center with `margin: 0 auto`. Stack all inputs vertically with `16px` margin-bottom between fields. Remove default input styling and apply border-bottom only.
+6. **Elevation Subtlety**: Use shadows sparingly. Apply only on hover states (`0px 2px 8px rgba(65, 80, 247, 0.24)`) and modals. Flat surfaces (no shadow) are the default state.
+7. **Interactive Feedback**: Every interactive element must have distinct hover, active, and disabled states using explicit color values, not opacity. Disabled state uses `#E4E6EB` background with `#737373` text.
+8. **Responsive Scaling**: Maintain form width at `546px` across all breakpoints; center with padding. Font sizes remain constant; only spacing and layout columns adjust per breakpoint.
+9. **Accessibility Priority**: Ensure 4.5:1 minimum contrast on all text. Implement clear focus states with color shifts. Use proper semantic HTML (labels, button types, input types). Avoid relying on color alone to convey state.
+10. **Minimalist Philosophy**: Embrace negative space and flat design. Every element should serve a purpose. Remove unnecessary shadows, gradients, and decorative styling. Let content and clear hierarchy drive visual interest.

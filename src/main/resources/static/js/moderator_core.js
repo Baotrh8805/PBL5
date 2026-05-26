@@ -222,19 +222,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderLogTable();
     }
 
+    // Thiết lập hệ thống chuyển trang SPA không reload
+    setupNavigation();
+
     // Tải dữ liệu từ Server
     try {
         console.log("Khởi tạo: Đang tải thông tin cá nhân...");
         if (typeof fetchUserProfile === 'function') await fetchUserProfile();
 
         console.log("Khởi tạo: Đang tải danh sách bài viết...");
-        // Luôn tải posts nếu ở các trang liên quan
-        if (document.getElementById('overview-view') ||
-            document.getElementById('review-posts-view') ||
-            document.getElementById('manage-posts-view') ||
-            document.getElementById('reports-view')) {
-            if (typeof fetchPostsData === 'function') await fetchPostsData();
-        }
+        // Tải dữ liệu mặc định ban đầu cho trang Tổng quan (Overview)
+        if (typeof fetchPostsData === 'function') await fetchPostsData();
         console.log("Tải dữ liệu hoàn tất.");
 
         // Render Dashboard
@@ -244,35 +242,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (typeof syncDashboardStats === 'function') syncDashboardStats();
         }
 
-        // Render Review Posts
-        if (document.getElementById('review-posts-view')) {
-            console.log("Rendering Review Table...");
-            if (typeof renderReviewPostsTable === 'function') renderReviewPostsTable(window.cache.posts || []);
-        }
-
-        // Render Manage Posts
-        if (document.getElementById('manage-posts-view')) {
-            console.log("Rendering Manage Feed...");
-            if (typeof renderManagePostsFeed === 'function') renderManagePostsFeed(window.cache.posts || []);
-        }
-
-        // Users
-        if (document.getElementById('manage-users-view')) {
-            if (typeof loadFlaggedUsers === 'function') await loadFlaggedUsers();
-        }
-
-        // Reports
-        if (document.getElementById('reports-view')) {
-            if (typeof loadReports === 'function') await loadReports();
-        }
-
         // Right Rail
         if (typeof loadNotifications === 'function' && typeof loadMessages === 'function') {
             await Promise.all([loadNotifications(), loadMessages()]);
-        }
-
-        if (document.getElementById('statistics-view')) {
-            if (typeof syncDashboardStats === 'function') syncDashboardStats();
         }
 
         // Sidebar toggle logic
@@ -284,10 +256,76 @@ document.addEventListener('DOMContentLoaded', async () => {
                 toggleBtn.classList.toggle('active');
             });
         }
+
+        const closeRightRailBtn = document.getElementById('close-right-rail-btn');
+        if (closeRightRailBtn && rightRail) {
+            closeRightRailBtn.addEventListener('click', () => {
+                rightRail.classList.add('collapsed');
+                if (toggleBtn) toggleBtn.classList.remove('active');
+            });
+        }
     } catch (e) {
         console.error("Lỗi khởi tạo:", e);
     }
 });
+
+function setupNavigation() {
+    console.log("Setting up SPA Sidebar navigation...");
+    
+    // Hide all mod sections except overview by default
+    document.querySelectorAll('.mod-section').forEach(section => {
+        if (section.id === 'overview-view') {
+            section.classList.add('active');
+        } else {
+            section.classList.remove('active');
+        }
+    });
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const id = link.id;
+            
+            // Map navigation ID to section ID
+            let targetSectionId = 'overview-view';
+            if (id === 'nav-overview-view') targetSectionId = 'overview-view';
+            else if (id === 'nav-review-posts-view') targetSectionId = 'review-posts-view';
+            else if (id === 'nav-manage-posts-view') targetSectionId = 'manage-posts-view';
+            else if (id === 'nav-manage-users-view') targetSectionId = 'manage-users-view';
+            else if (id === 'nav-reports-view') targetSectionId = 'reports-view';
+            else if (id === 'nav-statistics-view') targetSectionId = 'statistics-view';
+            
+            console.log(`Navigating to section: ${targetSectionId}`);
+            
+            // Active link styling
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            
+            // Active view switching
+            document.querySelectorAll('.mod-section').forEach(s => s.classList.remove('active'));
+            const targetSection = document.getElementById(targetSectionId);
+            if (targetSection) targetSection.classList.add('active');
+            
+            // Trigger specific page load actions to ensure data is fresh
+            if (targetSectionId === 'overview-view') {
+                if (typeof loadDashboardData === 'function') await loadDashboardData();
+            } else if (targetSectionId === 'review-posts-view') {
+                if (typeof fetchPostsData === 'function') await fetchPostsData();
+                if (typeof renderReviewPostsTable === 'function') renderReviewPostsTable(window.cache.posts || []);
+            } else if (targetSectionId === 'manage-posts-view') {
+                if (typeof fetchPostsData === 'function') await fetchPostsData();
+                if (typeof renderManagePostsFeed === 'function') renderManagePostsFeed(window.cache.posts || []);
+            } else if (targetSectionId === 'manage-users-view') {
+                if (typeof loadFlaggedUsers === 'function') await loadFlaggedUsers();
+            } else if (targetSectionId === 'reports-view') {
+                if (typeof loadReports === 'function') await loadReports();
+            } else if (targetSectionId === 'statistics-view') {
+                if (typeof renderLogTable === 'function') renderLogTable();
+                if (typeof syncDashboardStats === 'function') syncDashboardStats();
+            }
+        });
+    });
+}
 
 async function fetchPostsData() {
     console.log("Bắt đầu fetchPostsData...");
@@ -1108,6 +1146,14 @@ async function loadNotifications() {
         if (!res.ok) throw new Error('Không tải được thông báo');
 
         const notifications = await res.json();
+        
+        // Update bell badge unread indicator dot
+        const bellBadge = document.getElementById('bell-badge');
+        if (bellBadge) {
+            const hasUnread = Array.isArray(notifications) && notifications.some(item => !item.isRead);
+            bellBadge.style.display = hasUnread ? 'block' : 'none';
+        }
+
         if (!Array.isArray(notifications) || notifications.length === 0) {
             container.innerHTML = '<div class="rail-empty">Không có thông báo mới.</div>';
             return;
@@ -1180,6 +1226,14 @@ async function loadMessages() {
         if (!res.ok) throw new Error('Server trả về lỗi ' + res.status);
 
         const conversations = await res.json();
+        
+        // Update chat badge unread indicator dot
+        const chatBadge = document.getElementById('chat-badge');
+        if (chatBadge) {
+            const hasUnread = Array.isArray(conversations) && conversations.some(item => item.unreadCount > 0);
+            chatBadge.style.display = hasUnread ? 'block' : 'none';
+        }
+
         // Không phân biệt bạn bè/người dùng, gộp chung một danh sách duy nhất
         let html = '';
         
@@ -1578,8 +1632,10 @@ window.warnUser = function(id) {
         document.getElementById('warn-duration').value = '3';
         const customContainer = document.getElementById('custom-duration-container');
         if (customContainer) customContainer.style.display = 'none';
-        const customInput = document.getElementById('warn-custom-days');
+        const customInput = document.getElementById('warn-custom-value');
         if (customInput) customInput.value = '';
+        const customUnit = document.getElementById('warn-custom-unit');
+        if (customUnit) customUnit.value = 'DAYS';
     } else {
         console.error("DEBUG: Modal or ID input not found!");
     }
@@ -1610,11 +1666,13 @@ window.submitUserWarning = async function() {
     const type = document.querySelector('input[name="warn-type"]:checked').value;
     const durationSelect = document.getElementById('warn-duration');
     let days = parseInt(durationSelect.value);
+    let unit = 'DAYS';
 
     if (durationSelect.value === 'custom') {
-        days = parseInt(document.getElementById('warn-custom-days').value);
+        days = parseInt(document.getElementById('warn-custom-value').value);
+        unit = document.getElementById('warn-custom-unit').value;
         if (isNaN(days) || days <= 0) {
-            showCustomAlert('Lỗi', 'Vui lòng nhập số ngày hợp lệ.', 'error');
+            showCustomAlert('Lỗi', 'Vui lòng nhập thời hạn hợp lệ.', 'error');
             return;
         }
     }
@@ -1638,6 +1696,8 @@ window.submitUserWarning = async function() {
         expiryDateObj = new Date(existingExpiry);
     }
 
+    const durationText = unit === 'HOURS' ? days + ' giờ' : days + ' ngày';
+
     if (expiryDateObj && expiryDateObj > now) {
         const expiryStr = expiryDateObj.toLocaleString('vi-VN');
         const typeText = (type === 'POST') ? 'đăng bài' : 'bình luận';
@@ -1645,16 +1705,16 @@ window.submitUserWarning = async function() {
         console.log("DEBUG: Active warning detected. Showing confirm dialog.");
         showCustomConfirm(
             'Cảnh báo đang hoạt động',
-            `Người dùng hiện đang bị cấm ${typeText} đến <b>${expiryStr}</b>. Bạn có chắc chắn muốn <b>CỘNG THÊM</b> ${days} ngày vào thời hạn này không?`,
-            () => performSubmit(id, type, days)
+            `Người dùng hiện đang bị cấm ${typeText} đến <b>${expiryStr}</b>. Bạn có chắc chắn muốn <b>CỘNG THÊM</b> ${durationText} vào thời hạn này không?`,
+            () => performSubmit(id, type, days, unit)
         );
     } else {
         console.log("DEBUG: No active warning or expired. Performing direct submit.");
-        performSubmit(id, type, days);
+        performSubmit(id, type, days, unit);
     }
 };
 
-async function performSubmit(id, type, days) {
+async function performSubmit(id, type, days, unit) {
     try {
         const res = await fetch(`/api/moderator/users/${id}/warn`, {
             method: 'PUT',
@@ -1662,7 +1722,7 @@ async function performSubmit(id, type, days) {
                 'Authorization': `Bearer ${window.token || localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ type, days })
+            body: JSON.stringify({ type, days, unit })
         });
         if (res.ok) {
             showCustomAlert('Thành công', 'Đã thiết lập cảnh cáo thành công.', 'success');
@@ -1689,7 +1749,8 @@ window.openLockModal = function(id) {
     // Reset form
     document.querySelector('input[name="lock-type"][value="TEMP"]').checked = true;
     document.getElementById('lock-duration').value = '3';
-    document.getElementById('lock-custom-days').value = '';
+    document.getElementById('lock-custom-value').value = '';
+    document.getElementById('lock-custom-unit').value = 'DAYS';
     document.getElementById('lock-reason').value = '';
     
     toggleLockType();
@@ -1733,13 +1794,15 @@ window.submitLockUser = async function() {
     const reason = document.getElementById('lock-reason').value;
     
     let days = null;
+    let unit = 'DAYS';
     if (type === 'TEMP') {
         const durationSelect = document.getElementById('lock-duration');
         days = parseInt(durationSelect.value);
         if (durationSelect.value === 'custom') {
-            days = parseInt(document.getElementById('lock-custom-days').value);
+            days = parseInt(document.getElementById('lock-custom-value').value);
+            unit = document.getElementById('lock-custom-unit').value;
             if (isNaN(days) || days <= 0) {
-                showCustomAlert('Lỗi', 'Vui lòng nhập số ngày khóa hợp lệ.', 'error');
+                showCustomAlert('Lỗi', 'Vui lòng nhập thời hạn khóa hợp lệ.', 'error');
                 return;
             }
         }
@@ -1752,7 +1815,7 @@ window.submitLockUser = async function() {
                 'Authorization': `Bearer ${window.token || localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ type, days, reason })
+            body: JSON.stringify({ type, days, unit, reason })
         });
         
         if (res.ok) {
@@ -1984,3 +2047,40 @@ function injectCommonModals() {
         document.body.insertAdjacentHTML('beforeend', lockHtml);
     }
 }
+
+// Global control for opening right sidebar with tab name, or collapsing if already active
+window.toggleRightRailTab = function(tabName) {
+    const rightRail = document.querySelector('.mod-chat-sidebar');
+    const toggleBtn = document.getElementById('toggle-right-rail');
+    
+    if (!rightRail) return;
+    
+    const isCurrentlyCollapsed = rightRail.classList.contains('collapsed');
+    const activeTab = document.querySelector('.right-rail-tab.active');
+    const activeTabName = activeTab ? activeTab.getAttribute('data-rail-tab') : null;
+    
+    if (isCurrentlyCollapsed) {
+        // If collapsed, expand it and focus the correct tab
+        rightRail.classList.remove('collapsed');
+        if (toggleBtn) toggleBtn.classList.add('active');
+        switchTab(tabName);
+    } else {
+        // If expanded
+        if (activeTabName === tabName) {
+            // If clicking the active tab button, collapse the sidebar
+            rightRail.classList.add('collapsed');
+            if (toggleBtn) toggleBtn.classList.remove('active');
+        } else {
+            // If clicking a different tab, switch to it
+            switchTab(tabName);
+        }
+    }
+    
+    function switchTab(target) {
+        const tabs = document.querySelectorAll('.right-rail-tab');
+        tabs.forEach(t => t.classList.toggle('active', t.getAttribute('data-rail-tab') === target));
+        document.querySelectorAll('.rail-panel').forEach(panel => {
+            panel.classList.toggle('active', panel.id === `rail-${target}-panel`);
+        });
+    }
+};

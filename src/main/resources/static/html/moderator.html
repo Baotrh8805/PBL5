@@ -12,82 +12,107 @@
     <link rel="stylesheet" href="../css/moderator.css">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script src="/js/auth-interceptor.js"></script>
 </head>
 <body class="mod-layout">
 
-    <header class="mod-topbar">
-        <div class="topbar-left">
-            <div class="staff-menu-wrap">
-                <button id="staff-menu-toggle" class="logo home-link staff-menu-toggle" type="button" aria-expanded="false" aria-controls="staff-menu-dropdown">
-                    <img id="header-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=00d1b2&color=fff" alt="Avatar" class="staff-avatar">
-                    <span id="staff-display-name">Nhân viên điều phối</span>
-                    <i class="fa-solid fa-chevron-down"></i>
-                </button>
-                <div id="staff-menu-dropdown" class="dropdown-menu staff-menu-dropdown" role="menu" aria-hidden="true">
-                    <button class="dropdown-item-btn" type="button" id="profile-info-btn">
-                        <i class="fa-solid fa-id-card"></i> Chỉnh sửa thông tin cá nhân
-                    </button>
-                    <button class="dropdown-item-btn" type="button" id="change-avatar-btn">
-                        <i class="fa-solid fa-image"></i> Thay ảnh đại diện
-                    </button>
-                    <button class="dropdown-item-btn" type="button" id="change-password-btn">
-                        <i class="fa-solid fa-key"></i> Đổi mật khẩu
-                    </button>
-                    <button class="dropdown-item-btn" type="button" id="staff-logout-btn">
-                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
-                    </button>
-                </div>
-                <input type="file" id="staff-avatar-upload" accept="image/*" hidden>
-            </div>
-        </div>
-        
-        <div class="topbar-right">
-            <button type="button" class="topbar-btn" id="toggle-right-rail" title="Ẩn/Hiện thanh bên">
-                <i class="fa-solid fa-bars-staggered"></i>
-            </button>
-            <!-- Theme Toggle Button -->
-            <button type="button" class="topbar-btn tooltip" id="theme-toggle-btn" data-tooltip="Chuyển chế độ tối/sáng" onclick="toggleTheme()">
-                <i class="fa-solid fa-moon"></i>
-            </button>
-            <button type="button" class="topbar-logout-btn" id="topbar-logout-btn">
-                <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
-            </button>
-        </div>
-    </header>
+    <!-- Floating Top-Right Controls -->
+    <div class="floating-controls">
+        <button type="button" class="control-btn" id="bell-toggle-btn" onclick="toggleRightRailTab('notifications')" title="Thông báo">
+            <i class="fa-solid fa-bell"></i>
+            <span class="control-badge" id="bell-badge" style="display: none;"></span>
+        </button>
+        <button type="button" class="control-btn" id="chat-toggle-btn" onclick="toggleRightRailTab('messages')" title="Tin nhắn">
+            <i class="fa-solid fa-comments"></i>
+            <span class="control-badge" id="chat-badge" style="display: none;"></span>
+        </button>
+        <button type="button" class="floating-theme-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Chuyển chế độ tối/sáng" style="position: static; margin: 0; box-shadow: none;">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+    </div>
 
-    <div class="mod-container">
-
-        <aside class="mod-sidebar">
-            <div class="sidebar-header">
-                <h2><i class="fa-solid fa-shield-halved"></i> Mod Panel</h2>
+    <!-- PHẦN KHUNG CHÍNH (CONTAINER): Chứa thanh điều hướng bên trái và nội dung bên phải -->
+    <div class="mod-container" style="height: 100vh;">
+        <!-- THANH ĐIỀU HƯỚNG (SIDEBAR) -->
+        <aside class="mod-sidebar" style="height: 100%; display: flex; flex-direction: column;">
+            <div class="sidebar-header" style="display: flex; flex-direction: column; gap: 4px;">
+                <h2>Mod Panel</h2>
+                <span style="font-size: 11px; color: var(--text-secondary); font-weight: 500; letter-spacing: 0.5px; opacity: 0.8;">LC Social Network</span>
             </div>
             
-            <nav class="main-nav">
-                <a href="moderator.html" class="nav-link active" id="nav-overview-view">
+            <nav class="main-nav" style="padding: 20px 15px; display: flex; flex-direction: column; gap: 10px;">
+                <div class="sidebar-section-label" style="font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; padding: 0 12px 4px; opacity: 0.65;">Workspace</div>
+                <a href="#" class="nav-link active" id="nav-overview-view">
                     <i class="fa-solid fa-chart-pie"></i> Tổng quan
                 </a>
-                <a href="moderator_review.html" class="nav-link" id="nav-review-posts-view">
+                <a href="#" class="nav-link" id="nav-review-posts-view">
                     <i class="fa-solid fa-check-double"></i> Duyệt bài viết
                 </a>
-                <a href="moderator_manage_posts.html" class="nav-link" id="nav-manage-posts-view">
+                <div class="sidebar-section-label" style="font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; padding: 12px 12px 4px; opacity: 0.65;">Quản lý chung</div>
+                <a href="#" class="nav-link" id="nav-manage-posts-view">
                     <i class="fa-solid fa-layer-group"></i> Quản lý bài viết
                 </a>
-                <a href="moderator_users.html" class="nav-link" id="nav-manage-users-view">
+                <a href="#" class="nav-link" id="nav-manage-users-view">
                     <i class="fa-solid fa-users-gear"></i> Quản lý người dùng
                 </a>
-                <a href="moderator_reports.html" class="nav-link" id="nav-reports-view">
+                <a href="#" class="nav-link" id="nav-reports-view">
                     <i class="fa-solid fa-flag"></i> Báo cáo vi phạm
                 </a>
-                <a href="moderator_logs.html" class="nav-link" id="nav-statistics-view">
+                <a href="#" class="nav-link" id="nav-statistics-view">
                     <i class="fa-solid fa-chart-simple"></i> Lịch sử hoạt động
                 </a>
             </nav>
+
+            <!-- Bottom profile section & buttons -->
+            <div class="sidebar-bottom" style="padding: 20px; border-top: 1px solid var(--sidebar-border); margin-top: auto; display: flex; flex-direction: column; gap: 15px;">
+                <!-- User / Profile Menu -->
+                <div class="staff-menu-wrap" style="position: relative; width: 100%;">
+                    <button id="staff-menu-toggle" class="staff-menu-toggle" type="button" style="width: 100%; justify-content: space-between; color: var(--text-primary); background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; text-align: left; padding: 0;" aria-expanded="false" aria-controls="staff-menu-dropdown">
+                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                            <img id="header-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=0046a0&color=fff" alt="Avatar" class="staff-avatar" style="width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;">
+                            <div style="display: flex; flex-direction: column; min-width: 0;">
+                                <span id="staff-display-name" style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary);">Nhân viên điều phối</span>
+                                <span style="font-size: 11px; color: var(--sidebar-text);">Moderator</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-up" style="font-size: 12px; color: var(--sidebar-text);"></i>
+                    </button>
+                    
+                    <div id="staff-menu-dropdown" class="dropdown-menu staff-menu-dropdown" style="display: none; position: absolute; bottom: 100%; top: auto !important; left: 0; right: 0; background: var(--sidebar-bg); border: 1px solid var(--sidebar-border); border-radius: 8px; padding: 6px; z-index: 1200; box-shadow: var(--card-shadow); margin-bottom: 8px;" role="menu" aria-hidden="true">
+                        <button class="dropdown-item-btn" type="button" id="profile-info-btn" style="width: 100%; text-align: left; padding: 10px; background: none; border: none; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; border-radius: 6px;">
+                            <i class="fa-solid fa-id-card" style="color: var(--sidebar-text); width: 16px;"></i> Thông tin cá nhân
+                        </button>
+                        <button class="dropdown-item-btn" type="button" id="change-avatar-btn" style="width: 100%; text-align: left; padding: 10px; background: none; border: none; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; border-radius: 6px;">
+                            <i class="fa-solid fa-image" style="color: var(--sidebar-text); width: 16px;"></i> Thay ảnh đại diện
+                        </button>
+                        <button class="dropdown-item-btn" type="button" id="change-password-btn" style="width: 100%; text-align: left; padding: 10px; background: none; border: none; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; border-radius: 6px;">
+                            <i class="fa-solid fa-key" style="color: var(--sidebar-text); width: 16px;"></i> Đổi mật khẩu
+                        </button>
+                        <button class="dropdown-item-btn" type="button" id="staff-logout-btn" style="width: 100%; text-align: left; padding: 10px; background: none; border: none; color: var(--red); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; border-radius: 6px;">
+                            <i class="fa-solid fa-right-from-bracket" style="width: 16px;"></i> Đăng xuất
+                        </button>
+                    </div>
+                    <input type="file" id="staff-avatar-upload" accept="image/*" hidden>
+                </div>
+
+                <!-- Sidebar toggle and Logout buttons row -->
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button type="button" class="sidebar-btn" id="toggle-right-rail" style="flex: 1; height: 38px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--sidebar-border); color: var(--sidebar-text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s ease;" title="Ẩn/Hiện thanh bên">
+                        <i class="fa-solid fa-bars-staggered"></i>
+                    </button>
+                    <button type="button" class="sidebar-btn" id="topbar-logout-btn" style="flex: 2; height: 38px; border-radius: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--red); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; gap: 8px; transition: all 0.2s ease;" title="Đăng xuất">
+                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                    </button>
+                </div>
+            </div>
         </aside>
 
         <main class="mod-main-content">
 
-<section id="overview-view" class="mod-section active">
+            <!-- Section 1: Overview Dashboard -->
+            <section id="overview-view" class="mod-section active">
                 <div class="section-title">
                     <h2>Bảng điều khiển chung</h2>
                     <p>Tổng quan tình trạng kiểm duyệt của hệ thống LC Network.</p>
@@ -120,38 +145,305 @@
                 <div class="split-layout dashboard-split">
                     <div class="card flex-2">
                         <h3 class="card-heading"><i class="fa-solid fa-bolt text-caution"></i> Vi phạm đang xử lý chung</h3>
-                        <table class="mod-table">
-                            <thead>
-                                <tr>
-                                    <th>Mã vi phạm</th>
-                                    <th>Mã bài viết</th>
-                                    <th>Mức độ</th>
-                                    <th>Tỉ lệ vi phạm</th>
-                                    <th>Tên người đăng</th>
-                                    <th>Thời gian duyệt</th>
-                                    <th>Phụ trách</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashboard-posts-list">
+                        <div class="table-wrapper">
+                            <table class="mod-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã vi phạm</th>
+                                        <th>Mã bài viết</th>
+                                        <th>Mức độ</th>
+                                        <th>Tỉ lệ vi phạm</th>
+                                        <th>Tên người đăng</th>
+                                        <th>Thời gian duyệt</th>
+                                        <th>Phụ trách</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-posts-list">
                                 </tbody>
-                        </table>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="card flex-1">
                         <h3 class="card-heading"><i class="fa-solid fa-chart-pie text-primary"></i> Hiệu suất tuần</h3>
-                        <canvas id="miniChart"></canvas>
+                        <div class="chart-container" style="position: relative; width: 100%; height: 220px; margin-top: 10px;">
+                            <canvas id="miniChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </section>
-</main>
 
-        <aside class="mod-chat-sidebar">
-            <div class="right-rail-header">
-                <button class="right-rail-tab active" type="button" data-rail-tab="notifications">
-                    <i class="fa-solid fa-bell"></i> Thông báo
-                </button>
-                <button class="right-rail-tab" type="button" data-rail-tab="messages">
-                    <i class="fa-solid fa-comments"></i> Tin nhắn
+            <!-- Section 2: Review Posts -->
+            <section id="review-posts-view" class="mod-section">
+                <div class="section-title">
+                    <h2>Duyệt bài viết</h2>
+                    <p>Theo dõi bài viết đang đăng theo dạng thẻ nội dung, kèm nhãn phát hiện vi phạm và thao tác xử lý nhanh.</p>
+                </div>
+                
+                <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+                    <div style="flex: 1; position: relative;">
+                        <i class="fa-solid fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #65676b;"></i>
+                        <input type="text" id="review-search-input" placeholder="Tìm kiếm theo ID bài, ID user hoặc tên user..." style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    </div>
+                    <select id="review-filter-select" style="padding: 12px 20px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); font-size: 14px; min-width: 150px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <option value="ALL">Tất cả bài viết</option>
+                        <option value="PENDING_REVIEW" selected>Chờ duyệt</option>
+                        <option value="PROCESSING">Đang duyệt</option>
+                        <option value="REVIEWED">Đã duyệt (Active/Rejected)</option>
+                        <option value="AI_REVIEWED">Duyệt bởi AI</option>
+                    </select>
+
+                    <select id="ai-filter-select" style="display: none; padding: 12px 20px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); font-size: 14px; min-width: 150px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <option value="AI_ALL">Tất cả bài viết AI</option>
+                        <option value="AI_APPROVED">Đã duyệt (AI)</option>
+                        <option value="AI_REJECTED">Đã xóa tự động (AI)</option>
+                    </select>
+                </div>
+
+                <div class="review-feed" id="review-posts-list">
+                    <div class="review-empty">Đang tải bài viết cần duyệt...</div>
+                </div>
+            </section>
+
+            <!-- Section 3: Manage Posts -->
+            <section id="manage-posts-view" class="mod-section">
+                <div class="section-title">
+                    <h2>Quản lý bài viết</h2>
+                    <p>Quản lý toàn bộ bài viết và xử lý vi phạm.</p>
+                </div>
+                <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px; position: relative;">
+                        <i class="fa-solid fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #65676b;"></i>
+                        <input type="text" id="manage-search-input" placeholder="Tìm theo ID bài (#P-xxx), ID user hoặc tên..." style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    </div>
+                    
+                    <select id="manage-type-filter" style="padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-width: 160px;">
+                        <option value="ALL">Tất cả bài viết</option>
+                        <option value="NORMAL">Bài viết bình thường</option>
+                        <option value="REVIEW">Bài viết kiểm tra</option>
+                    </select>
+
+                    <select id="manage-visibility-filter" style="padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-width: 160px;">
+                        <option value="ALL">Mọi quyền riêng tư</option>
+                        <option value="PUBLIC">Công khai</option>
+                        <option value="FRIENDS">Bạn bè</option>
+                        <option value="PRIVATE">Chỉ mình tôi</option>
+                    </select>
+                </div>
+
+                <div class="manage-feed" id="manage-posts-feed">
+                    <div class="review-empty">Đang tải danh sách bài viết...</div>
+                </div>
+            </section>
+
+            <!-- Section 4: Manage Users -->
+            <section id="manage-users-view" class="mod-section">
+                <div class="section-title">
+                    <h2>Quản lý người dùng</h2>
+                    <p>Danh sách thành viên cần theo dõi và thao tác nhanh.</p>
+                </div>
+
+                <div class="filter-bar" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center;">
+                    <div style="flex: 1; position: relative;">
+                        <i class="fa-solid fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #65676b;"></i>
+                        <input type="text" id="users-search-input" placeholder="Tìm kiếm theo ID user hoặc tên user..." style="width: 100%; padding: 12px 15px 12px 40px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    </div>
+                    <select id="users-role-filter" style="padding: 12px 20px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); font-size: 14px; min-width: 150px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <option value="ALL">Tất cả vai trò</option>
+                        <option value="USER">Người dùng (USER)</option>
+                        <option value="MODERATOR">Điều phối viên (MODERATOR)</option>
+                    </select>
+                </div>
+                <div class="card">
+                    <table class="mod-table">
+                        <thead>
+                            <tr>
+                                <th>Thành viên</th>
+                                <th>Email</th>
+                                <th>Trạng thái</th>
+                                <th>Vai trò</th>
+                                <th class="text-center">Điểm vi phạm</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list">
+                            <tr><td colspan="6" class="table-loading">Đang tải danh sách thành viên...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Section 5: Reports Hub -->
+            <section id="reports-view" class="mod-section">
+                <div class="mod-page-header">
+                    <div>
+                        <h1 class="mod-page-title">Báo cáo vi phạm</h1>
+                        <p class="mod-page-subtitle">Xử lý các khiếu nại và nội dung vi phạm từ người dùng</p>
+                    </div>
+                    <div class="mod-header-actions">
+                        <button class="mod-btn-refresh" onclick="loadReports()" title="Làm mới">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Thống kê báo cáo -->
+                <div class="mod-stats-row">
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-icon yellow"><i class="fa-solid fa-flag"></i></div>
+                        <div class="mod-stat-info">
+                            <div class="mod-stat-value" id="report-stat-total">--</div>
+                            <div class="mod-stat-label">Tổng báo cáo</div>
+                        </div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-icon red"><i class="fa-solid fa-clock"></i></div>
+                        <div class="mod-stat-info">
+                            <div class="mod-stat-value" id="report-stat-pending">--</div>
+                            <div class="mod-stat-label">Đang chờ xử lý</div>
+                        </div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="mod-stat-info">
+                            <div class="mod-stat-value" id="report-stat-resolved">--</div>
+                            <div class="mod-stat-label">Đã giải quyết</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thanh công cụ bộ lọc được đẩy xuống dưới -->
+                <div class="mod-filter-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--surface-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
+                    <div class="mod-search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="report-search-input" placeholder="Tìm theo ID, lý do..." oninput="filterReports()">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <select class="mod-filter-select" id="report-filter-status" onchange="filterReports()">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="PENDING">Chờ xử lý</option>
+                            <option value="RESOLVED">Đã giải quyết</option>
+                            <option value="DISMISSED">Bỏ qua</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="report-tabs" style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); display: flex; gap: 20px;">
+                    <button class="report-tab-btn active" data-report-type="POST" style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid var(--mod-primary); color: var(--mod-primary);">Bài viết bị báo cáo</button>
+                    <button class="report-tab-btn" data-report-type="COMMENT" style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; color: var(--text-secondary);">Bình luận bị báo cáo</button>
+                </div>
+
+                <div class="mod-table-card" id="report-post-container">
+                    <div class="mod-table-header">
+                        <span id="report-post-count">Đang tải...</span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="mod-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Tickets</th>
+                                    <th>Người báo cáo</th>
+                                    <th>Đối tượng bị báo cáo</th>
+                                    <th>Nguyên nhân</th>
+                                    <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-post-list">
+                                <tr><td colspan="7" class="table-loading">Đang tải danh sách báo cáo...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mod-table-card" id="report-comment-container" style="display: none;">
+                    <div class="mod-table-header">
+                        <span id="report-comment-count">Đang tải...</span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="mod-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã Tickets</th>
+                                    <th>Người báo cáo</th>
+                                    <th>Đối tượng bị báo cáo</th>
+                                    <th>Nguyên nhân</th>
+                                    <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-comment-list">
+                                <tr><td colspan="7" class="table-loading">Đang tải danh sách báo cáo...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 6: Activity Logs & Stats -->
+            <section id="statistics-view" class="mod-section">
+                <div class="section-title">
+                    <h2>Lịch sử hoạt động</h2>
+                    <p>Theo dõi số liệu xử lý của điều phối viên theo thời gian thực.</p>
+                </div>
+
+                <div class="stats-grid compact-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon success"><i class="fa-solid fa-list-check"></i></div>
+                        <div class="stat-info">
+                            <h3>Tổng thao tác hôm nay</h3>
+                            <p class="stat-number" id="log-actions-today">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon caution"><i class="fa-solid fa-file-circle-exclamation"></i></div>
+                        <div class="stat-info">
+                            <h3>Bài cần duyệt</h3>
+                            <p class="stat-number" id="log-pending-posts">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon danger"><i class="fa-solid fa-user-slash"></i></div>
+                        <div class="stat-info">
+                            <h3>Thành viên đang bị khóa</h3>
+                            <p class="stat-number" id="log-banned-users">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-heading"><i class="fa-solid fa-timeline text-primary"></i> Lịch sử thao tác gần đây</h3>
+                    <table class="mod-table">
+                        <thead>
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Hành động</th>
+                                <th>Đối tượng</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-list">
+                            <tr><td colspan="3" class="table-loading">Chưa có thao tác nào trong hôm nay.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+
+        <aside class="mod-chat-sidebar collapsed">
+            <div class="right-rail-header" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px; border-bottom: 1px solid var(--border-color); background: var(--surface-bg);">
+                <div style="display: flex; gap: 6px; flex: 1;">
+                    <button class="right-rail-tab active" type="button" data-rail-tab="notifications" style="flex: 1; padding: 8px 10px; font-size: 13px;">
+                        <i class="fa-solid fa-bell"></i> Thông báo
+                    </button>
+                    <button class="right-rail-tab" type="button" data-rail-tab="messages" style="flex: 1; padding: 8px 10px; font-size: 13px;">
+                        <i class="fa-solid fa-comments"></i> Tin nhắn
+                    </button>
+                </div>
+                <button type="button" id="close-right-rail-btn" style="width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(0,0,0,0.05); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0;" title="Ẩn thanh bên">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
@@ -179,6 +471,9 @@
 
     </div>
 
+    <!-- Modals Section -->
+
+    <!-- 1. Edit Profile Modal -->
     <div id="profile-edit-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
         <div class="modal-card profile-modal">
             <div class="modal-header">
@@ -189,7 +484,7 @@
             </div>
             <div class="modal-body">
                 <div class="profile-modal-avatar-row">
-                    <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=00d1b2&color=fff" alt="Avatar">
+                    <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=0046a0&color=fff" alt="Avatar">
                     <div>
                         <button type="button" id="profile-modal-change-avatar" class="btn btn-secondary">Đổi ảnh đại diện</button>
                         <input type="file" id="profile-modal-avatar-upload" accept="image/*" hidden>
@@ -241,22 +536,26 @@
         </div>
     </div>
 
+    <!-- 2. Post Detail Modal -->
     <div id="mod-post-detail-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
-        <div class="modal-card" style="width: 800px; max-width: 95vw; padding: 0; background: #242526; color: #e4e6eb; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
-            <div class="modal-header" style="border-bottom: 1px solid #3e4042; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-                <h2 id="mod-post-modal-title" style="font-size: 18px; margin: 0; text-align: center; flex: 1;">Chi tiết nội dung</h2>
-                <button type="button" onclick="closeModPostDetailModal()" class="close-modal" aria-label="Đóng" style="background: #3a3b3c; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: #e4e6eb; border: none; cursor: pointer;">
+        <div class="modal-card" style="width: 800px; max-width: 95vw; padding: 0; background: var(--surface-bg); color: var(--text-primary); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--border-color); box-shadow: var(--card-shadow);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: var(--surface-bg);">
+                <h2 id="mod-post-modal-title" style="font-size: 18px; margin: 0; text-align: center; flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text-primary);">
+                    Chi tiết nội dung 
+                    <span id="mod-post-modal-id-badge" style="background: var(--bg-main); padding: 2px 8px; border-radius: 4px; font-size: 13px; color: var(--text-secondary); border: 1px solid var(--border-color);">#P-?</span>
+                </h2>
+                <button type="button" onclick="closeModPostDetailModal()" class="close-modal" aria-label="Đóng" style="background: var(--bg-main); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <div class="modal-body" style="padding: 15px 20px; overflow-y: auto; max-height: 85vh;">
+            <div class="modal-body" style="padding: 15px 20px; overflow-y: auto; max-height: 85vh; background: var(--bg-main);">
                 <!-- Post Author Header & Actions -->
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <img id="mod-post-modal-avatar" src="" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
                         <div>
                             <div id="mod-post-modal-author" style="font-weight: 600; font-size: 15px;"></div>
-                            <div style="font-size: 12px; color: #b0b3b8; display: flex; align-items: center; gap: 5px;">
+                            <div style="font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px;">
                                 <span id="mod-post-modal-time"></span>
                                 <i class="fa-solid fa-earth-americas" style="font-size: 10px;"></i>
                             </div>
@@ -268,11 +567,24 @@
                 <!-- Scores -->
                 <div id="mod-post-modal-scores"></div>
 
-                <!-- Post Content -->
-                <div id="mod-post-modal-content" style="font-size: 15px; margin-bottom: 15px; white-space: pre-wrap; word-break: break-word;"></div>
+                <!-- Original Content Section -->
+                <div style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-align-left"></i> Nội dung gốc
+                    </div>
+                    <div id="mod-post-modal-content-original" style="font-size: 15px; white-space: pre-wrap; word-break: break-word; color: var(--text-primary); line-height: 1.5;"></div>
+                </div>
+
+                <!-- Violation Evidence Section -->
+                <div id="mod-post-modal-evidence-wrapper" style="margin-bottom: 20px;">
+                    <div style="font-size: 12px; color: #ffba08; text-transform: uppercase; margin-bottom: 8px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> Bằng chứng vi phạm
+                    </div>
+                    <div id="mod-post-modal-content-evidence" style="font-size: 15px; white-space: pre-wrap; word-break: break-word; color: var(--text-primary); background: rgba(241, 196, 15, 0.08); padding: 15px; border-radius: 10px; border-left: 5px solid #f1c40f; line-height: 1.5;"></div>
+                </div>
                 
                 <!-- Post Media -->
-                <div id="mod-post-modal-media" style="margin-bottom: 15px; display: flex; justify-content: center; background: #18191a; border-radius: 8px; overflow: hidden;">
+                <div id="mod-post-modal-media" style="margin-bottom: 15px; display: flex; justify-content: center; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;">
                 </div>
 
                 <!-- Interactions -->
@@ -281,6 +593,278 @@
         </div>
     </div>
 
+    <!-- 3. User Profile Modal -->
+    <div id="user-profile-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
+        <div class="modal-card" style="width: 850px; max-width: 95vw; padding: 0; background: var(--surface-bg); color: var(--text-primary); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--card-shadow); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: var(--surface-bg);">
+                <h2 id="user-profile-modal-title" style="font-size: 18px; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-user-shield" style="color: var(--mod-primary);"></i> Hồ sơ người dùng
+                </h2>
+                <button type="button" onclick="closeUserProfileModal()" class="close-modal" aria-label="Đóng" style="background: var(--bg-main); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px; overflow-y: auto; max-height: 85vh; background: var(--bg-main);">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. WebSocket Chat Box Window -->
+    <div id="mod-chat-window" class="chat-box" style="display: none; position: fixed; bottom: 20px; right: 350px; width: 330px; height: 450px; background: #242526; border-radius: 8px 8px 0 0; border: 1px solid #3e4042; flex-direction: column; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+        <div class="chat-header" style="padding: 10px 15px; border-bottom: 1px solid #3e4042; display: flex; align-items: center; justify-content: space-between; background: #242526; border-radius: 8px 8px 0 0;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img id="chat-partner-avatar" src="" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
+                <span id="chat-partner-name" style="font-weight: 600; color: #e4e6eb; font-size: 14px;">Tên người dùng</span>
+            </div>
+            <button onclick="closeModChat()" style="background: none; border: none; color: #b0b3b8; cursor: pointer; font-size: 18px;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="chat-messages-body" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #18191a;">
+            <!-- Messages load here -->
+        </div>
+        <div class="chat-input-row" style="padding: 10px; border-top: 1px solid #3e4042; display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="chat-input-field" placeholder="Aa" style="flex: 1; background: #3a3b3c; border: none; border-radius: 20px; padding: 8px 15px; color: #e4e6eb; font-size: 14px; outline: none;">
+            <button id="send-chat-btn" style="background: none; border: none; color: #0046a0; cursor: pointer; font-size: 18px;"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- 5. Warn User Penalty Modal -->
+    <div id="warn-user-modal" class="modal-overlay profile-modal-hidden" style="display: none; align-items: center; justify-content: center;">
+        <div class="profile-modal-content" style="max-width: 450px; background: var(--surface-bg); border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); border: 1px solid var(--border-color);">
+            <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--surface-bg);">
+                <h3 style="margin: 0; font-size: 18px; color: var(--text-primary);">Thiết lập cảnh cáo</h3>
+                <button class="profile-modal-close" onclick="closeWarnUserModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="profile-modal-body" style="padding: 20px; background: var(--bg-main);">
+                <input type="hidden" id="warn-user-id">
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Hình thức cảnh cáo:</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary);">
+                            <input type="radio" name="warn-type" value="POST" checked> Cảnh cáo đăng bài
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary);">
+                            <input type="radio" name="warn-type" value="COMMENT"> Cảnh cáo bình luận
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Thời hạn cảnh cáo:</label>
+                    <select id="warn-duration" onchange="toggleCustomDuration()" style="width: 100%; padding: 10px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 15px;">
+                        <option value="3">3 ngày</option>
+                        <option value="7">7 ngày</option>
+                        <option value="30">1 tháng (30 ngày)</option>
+                        <option value="custom">Tùy chọn khác...</option>
+                    </select>
+                </div>
+
+                <div id="custom-duration-container" style="display: none; margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Nhập thời hạn tùy chọn:</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="warn-custom-value" min="1" placeholder="Ví dụ: 12" style="flex: 1; padding: 10px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 15px;">
+                        <select id="warn-custom-unit" style="width: 110px; padding: 10px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 15px;">
+                            <option value="HOURS">Giờ</option>
+                            <option value="DAYS" selected>Ngày</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn-action secondary" onclick="closeWarnUserModal()">Hủy</button>
+                    <button class="btn-action warning" onclick="submitUserWarning()">Gửi cảnh cáo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Lock/Ban User Modal -->
+    <div id="lock-user-modal" class="profile-modal-overlay profile-modal-hidden" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001; justify-content: center; align-items: center;">
+        <div class="profile-modal-content" style="background: var(--surface-bg); width: 450px; border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); border: 1px solid var(--border-color);">
+            <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--surface-bg);">
+                <h3 style="margin: 0; font-size: 18px; color: var(--text-primary);">Khóa tài khoản người dùng</h3>
+                <button class="profile-modal-close" onclick="closeLockUserModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="profile-modal-body" style="padding: 20px; background: var(--bg-main);">
+                <input type="hidden" id="lock-user-id">
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Hình thức khóa:</label>
+                    <div style="display: flex; gap: 20px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary);">
+                            <input type="radio" name="lock-type" value="TEMP" checked onchange="toggleLockType()"> Khóa tạm thời
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary);">
+                            <input type="radio" name="lock-type" value="PERM" onchange="toggleLockType()"> Khóa vĩnh viễn
+                        </label>
+                    </div>
+                </div>
+
+                <div id="lock-duration-section" style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Thời hạn khóa:</label>
+                    <select id="lock-duration" onchange="toggleCustomLockDuration()" style="width: 100%; padding: 10px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 15px;">
+                        <option value="3">3 ngày</option>
+                        <option value="7">7 ngày</option>
+                        <option value="30">1 tháng (30 ngày)</option>
+                        <option value="custom">Tùy chọn khác...</option>
+                    </select>
+                    
+                    <div id="lock-custom-days-container" style="display: none; margin-top: 15px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Nhập thời hạn khóa tùy chọn:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="lock-custom-value" min="1" placeholder="Ví dụ: 12" style="flex: 1; padding: 10px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 15px;">
+                            <select id="lock-custom-unit" style="width: 110px; padding: 10px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 15px;">
+                                <option value="HOURS">Giờ</option>
+                                <option value="DAYS" selected>Ngày</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Lý do khóa (Gửi tới Email):</label>
+                    <textarea id="lock-reason" placeholder="Nhập lý do vi phạm..." style="width: 100%; height: 80px; padding: 10px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px; resize: none; outline: none;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn-action secondary" onclick="closeLockUserModal()">Hủy</button>
+                    <button class="btn-action danger" onclick="submitLockUser()">Xác nhận khóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Violation Report Tickets Detail Modal -->
+    <div id="mod-report-detail-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
+        <div class="modal-card profile-modal" style="width: 1000px; max-width: 98vw; height: 90vh;">
+            <div class="modal-header">
+                <h2>Chi tiết báo cáo vi phạm</h2>
+                <button type="button" onclick="closeReportDetailModal()" class="close-modal" aria-label="Đóng">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="display: grid; grid-template-columns: 380px 1fr; gap: 25px; padding: 25px; overflow-y: auto;">
+                <!-- Cột trái: Các bên liên quan và Nội dung khiếu nại -->
+                <div class="modal-left-col" style="display: flex; flex-direction: column; gap: 20px;">
+                    
+                    <!-- Thông tin Người báo cáo -->
+                    <div class="report-detail-section" style="padding: 15px; background: #f0f7ff; border-radius: 12px; border: 1px solid #cce3ff;">
+                        <h3 style="font-size: 12px; color: #0056b3; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-bullhorn"></i> Người báo cáo
+                        </h3>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img id="rd-reporter-avatar" src="" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div>
+                                <div id="rd-reporter-name" style="font-weight: 700; font-size: 16px; color: var(--text-primary);">---</div>
+                                <div id="rd-reporter-id" style="font-size: 12px; color: #0056b3; font-weight: 600; background: #e0efff; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 2px;">ID: ---</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MŨI TÊN CHỈ XUỐNG -->
+                    <div style="text-align: center; color: var(--border-color); margin: -10px 0;"><i class="fa-solid fa-chevron-down"></i></div>
+
+                    <!-- Thông tin Tác giả bị báo cáo -->
+                    <div class="report-detail-section" style="padding: 15px; background: #fff5f5; border-radius: 12px; border: 1px solid #feb2b2;">
+                        <h3 style="font-size: 12px; color: #c53030; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-user-shield"></i> Tác giả bị báo cáo (Chủ post)
+                        </h3>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img id="rd-author-avatar" src="" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div>
+                                <div id="rd-author-name" style="font-weight: 700; font-size: 16px; color: var(--text-primary);">---</div>
+                                <div id="rd-author-id-badge" style="font-size: 12px; color: #c53030; font-weight: 600; background: #fff1f1; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 2px;">ID: ---</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="report-detail-section" style="padding: 15px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 12px;">
+                        <h3 style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px; font-weight: 700;">Lý do khiếu nại</h3>
+                        <div id="rd-category-badge" class="mod-badge" style="margin-bottom: 10px;">---</div>
+                        <div id="rd-reason" style="font-size: 14px; line-height: 1.5; color: var(--text-primary); min-height: 60px;">---</div>
+                        <div id="rd-time" style="font-size: 11px; color: var(--text-secondary); margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 8px;">---</div>
+                    </div>
+
+                    <div class="report-detail-section" style="padding: 15px; background: var(--bg-main); border-radius: 12px; border: 1px solid var(--border-color);">
+                        <h3 id="rd-target-type" style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; font-weight: 700;">Mã bài viết</h3>
+                        <div id="rd-target-id" style="font-weight: 700; color: var(--text-primary); font-family: monospace; font-size: 16px;">#---</div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Xem trước nội dung và AI Moderation -->
+                <div class="modal-right-col" style="display: flex; flex-direction: column; gap: 20px;">
+                    <h3 style="font-size: 13px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Phân tích nội dung & AI</h3>
+                    
+                    <div id="rd-ai-status-row" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div class="ai-stat-item" style="padding: 12px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; font-weight: 700;">NSFW</div>
+                            <div id="rd-ai-nsfw" style="font-weight: 800; font-size: 18px; color: #00d1b2;">0%</div>
+                        </div>
+                        <div class="ai-stat-item" style="padding: 12px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; font-weight: 700;">Bạo lực</div>
+                            <div id="rd-ai-violence" style="font-weight: 800; font-size: 18px; color: #00d1b2;">0%</div>
+                        </div>
+                        <div class="ai-stat-item" style="padding: 12px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; font-weight: 700;">Thù ghét</div>
+                            <div id="rd-ai-hate" style="font-weight: 800; font-size: 18px; color: #00d1b2;">0%</div>
+                        </div>
+                    </div>
+
+                    <div id="rd-content-preview-box" style="background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; flex-grow: 1; display: flex; flex-direction: column;">
+                        <div style="padding: 10px 15px; background: var(--bg-main); border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-eye"></i> Nội dung bị báo cáo
+                        </div>
+                        <div id="rd-content-body" style="padding: 15px; font-size: 14px; line-height: 1.6; overflow-y: auto;">
+                            Đang tải...
+                        </div>
+                        <div id="rd-content-media" style="background: #000; text-align: center; flex-shrink: 0; display: none;"></div>
+                    </div>
+
+                    <div id="rd-evidence-section" style="background: #fff5f5; border: 1px solid #feb2b2; border-radius: 12px; padding: 15px;">
+                        <h4 style="font-size: 13px; color: #c53030; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-magnifying-glass"></i> Bằng chứng OCR (Trích xuất văn bản)
+                        </h4>
+                        <div id="rd-ocr-content" style="font-size: 13px; color: #742a2a; line-height: 1.5; font-style: italic; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 8px;">
+                            Không phát hiện vi phạm chữ viết.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="rd-modal-footer" style="padding: 15px 25px; background: #f8fafc; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px;">
+                <!-- Tải động các nút thao tác qua JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Action Note Logging Popup -->
+    <div id="mod-action-note-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true" style="z-index: 2500; display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); transition: all 0.3s ease;">
+        <div class="modal-card profile-modal" style="width: 480px; max-width: 90vw; border-radius: 16px; background: var(--surface-bg); color: var(--text-primary); box-shadow: 0 15px 35px rgba(0,0,0,0.25); overflow: hidden; border: 1px solid var(--border-color); margin: auto;">
+            <div class="modal-header" style="background: var(--bg-main); border-bottom: 1px solid var(--border-color); padding: 18px 25px; display: flex; align-items: center; justify-content: space-between;">
+                <h3 id="note-modal-title" style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-pen-to-square" style="color: #0046a0;"></i> Ghi chú xử lý báo cáo
+                </h3>
+                <button type="button" onclick="closeActionNoteModal()" class="close-modal" style="border: none; background: none; font-size: 20px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px 25px; display: flex; flex-direction: column; gap: 15px;">
+                <div id="note-modal-desc" style="font-size: 14px; color: var(--text-secondary); line-height: 1.5; font-weight: 500;">
+                    Bạn đang thực hiện thao tác xử lý báo cáo. Vui lòng nhập lý do hoặc ghi chú nếu có.
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label for="note-modal-input" style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Ghi chú của kiểm duyệt viên</label>
+                    <textarea id="note-modal-input" placeholder="Nhập lý do hoặc ghi chú xử lý (tùy chọn)..." style="width: 100%; height: 90px; padding: 12px; border-radius: 10px; border: 1.5px solid var(--border-color); font-size: 14px; font-family: inherit; resize: none; outline: none; background: var(--surface-bg); color: var(--text-primary); transition: border-color 0.2s;" onfocus="this.style.borderColor='#0046a0';" onblur="this.style.borderColor='var(--border-color)';"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 15px 25px; background: var(--bg-main); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" onclick="closeActionNoteModal()" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600; padding: 8px 20px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); cursor: pointer; font-size: 14px;">Hủy bỏ</button>
+                <button type="button" id="note-modal-confirm-btn" class="btn" style="border-radius: 8px; font-weight: 800; padding: 8px 25px; border: none; color: #fff; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-size: 14px; background: #0046a0;">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts Section -->
     <script src="../js/moderator_core.js"></script>
     <script src="../js/moderator_dashboard.js"></script>
     <script src="../js/moderator_review.js"></script>

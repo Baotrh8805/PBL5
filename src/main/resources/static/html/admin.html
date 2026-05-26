@@ -15,51 +15,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .staff-menu-dropdown.show { display: block !important; }
-        .staff-menu-dropdown { display: none; position: absolute; top: 100%; right: 0; background: #242526; border: 1px solid #3e4042; border-radius: 8px; padding: 8px 0; min-width: 220px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .dropdown-item-btn { width: 100%; text-align: left; padding: 10px 16px; background: none; border: none; color: #e4e6eb; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
-        .dropdown-item-btn:hover { background: #5a5a68; }
-        /* Giải thích đoạn ghi đè màu sắc:
-           Vì file admin.css cũ được thiết kế cho nền trắng chữ đen (Light Mode).
-           Nên đoạn CSS dưới đây dùng để "nhuộm" lại màu cho giao diện Admin,
-           giúp nó đồng bộ với giao diện Dark Mode xám đen của phần Moderator.
-        */
-        body.mod-layout {
-            color: var(--text-primary);
-        }
-        .mod-main-content .page-title,
-        .mod-main-content .stat-value,
-        .mod-main-content .data-table th,
-        .mod-main-content .data-table td {
-            color: #121313;
-        }
-        .mod-main-content .page-subtitle,
-        .mod-main-content .stat-label {
-            color: #0c0c0d;
-        }
-        .mod-main-content .stat-card,
-        .mod-main-content .table-card,
-        .mod-main-content .search-box,
-        .mod-main-content .filter-select,
-        .mod-main-content .btn-refresh {
-            background: #ffffff;
-            border-color: #3e4042;
-            color: #0a0a0a;
-        }
-        .mod-main-content .search-box input {
-            background: #ffff;
-            color: #0e0e0e;
-        }
-        .mod-main-content .data-table th,
-        .mod-main-content .data-table td {
-            border-bottom: 1px solid #161617;
-            border-top: none;
-        }
-        .mod-main-content .data-table th {
-            background: #838080;
-        }
-        .mod-main-content .data-table tr:hover td {
-            background: #9ad7cd;
-        }
+        .staff-menu-dropdown { display: none; position: absolute; top: 100%; right: 0; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 0; min-width: 220px; z-index: 100; box-shadow: var(--card-shadow); }
+        .dropdown-item-btn { width: 100%; text-align: left; padding: 10px 16px; background: none; border: none; color: var(--text-primary); font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .dropdown-item-btn:hover { background: var(--mod-primary-light); color: var(--mod-primary); }
     </style>
 </head>
 <body class="mod-layout">
@@ -85,6 +43,10 @@
         </div>
         
         <div class="topbar-right">
+            <!-- Theme Toggle Button -->
+            <button type="button" class="topbar-btn tooltip" id="theme-toggle-btn" data-tooltip="Chuyển chế độ tối/sáng" onclick="toggleTheme()" style="margin-right: 10px;">
+                <i class="fa-solid fa-moon"></i>
+            </button>
             <button type="button" class="topbar-logout-btn" onclick="logout()">
                 <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
             </button>

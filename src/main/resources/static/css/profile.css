@@ -1,6 +1,6 @@
 /* Profile Page Specific Styles */
 .profile-page {
-    background-color: #f0f2f5;
+    background-color: var(--bg-color);
 }
 
 .profile-container {
@@ -69,7 +69,7 @@
     width: 168px;
     height: 168px;
     border-radius: 50%;
-    background: white;
+    background: var(--card-bg);
     padding: 4px;
     margin-right: 20px;
     z-index: 2;
@@ -110,11 +110,11 @@
 .profile-name-section h1 {
     font-size: 32px;
     margin: 0;
-    color: #050505;
+    color: var(--text-main);
 }
 
 .profile-friends-count {
-    color: #65676b;
+    color: var(--text-muted);
     font-size: 15px;
     font-weight: 500;
     margin-top: 5px;
@@ -128,7 +128,7 @@
 
 .stat-item {
     font-size: 15px;
-    color: #050505;
+    color: var(--text-main);
     cursor: pointer;
 }
 
@@ -167,12 +167,12 @@
 }
 
 .btn-secondary {
-    background: #e4e6eb;
-    color: #050505;
+    background: var(--button-bg);
+    color: var(--text-main);
 }
 
 .btn-secondary:hover {
-    background: #d8dadf;
+    background: var(--button-hover);
 }
 
 .w-100 { width: 100%; justify-content: center; margin-top: 10px; }
@@ -182,12 +182,12 @@
 .profile-navbar {
     display: flex;
     padding: 0 30px;
-    border-top: 1px solid #ced0d4;
+    border-top: 1px solid var(--border-color);
 }
 
 .profile-navbar a {
     text-decoration: none;
-    color: #65676b;
+    color: var(--text-muted);
     font-weight: 600;
     padding: 15px 15px;
     position: relative;
@@ -209,7 +209,7 @@
 }
 
 .profile-navbar a:hover {
-    background: #f2f2f2;
+    background: var(--button-hover);
     border-radius: 6px;
 }
 
@@ -240,7 +240,7 @@
 .intro-card h3 {
     margin-top: 0;
     font-size: 20px;
-    color: #050505;
+    color: var(--text-main);
 }
 
 .bio-section {
@@ -249,7 +249,7 @@
 }
 
 .bio-text {
-    color: #050505;
+    color: var(--text-main);
     font-size: 15px;
     margin-bottom: 10px;
 }
@@ -265,7 +265,7 @@
     align-items: center;
     gap: 10px;
     padding: 10px 0;
-    color: #050505;
+    color: var(--text-main);
 }
 
 .intro-list li i {
@@ -352,7 +352,7 @@
 .friend-name {
     font-size: 12px;
     font-weight: 600;
-    color: #050505;
+    color: var(--text-main);
     text-align: center;
     width: 100%;
     white-space: nowrap;

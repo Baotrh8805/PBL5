@@ -16,24 +16,50 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <style>
-        .friends-container { max-width: 1000px; margin: 20px auto; padding: 20px; }
-        .friends-header { font-size: 24px; font-weight: bold; margin-bottom: 20px; }
-        .friend-section { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .friend-list { display: grid; gap: 15px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-        .friend-card { background: white; border: 1px solid #ced0d4; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+        .friends-container { max-width: 1000px; margin: 0 auto; padding: 0; }
+        .friends-header { font-size: 20px; font-weight: 700; margin-bottom: 20px; color: var(--text-main); transition: color 0.3s ease; }
+        .friend-section { 
+            background: var(--card-bg); 
+            border-radius: 16px; 
+            padding: 24px; 
+            box-shadow: var(--card-shadow); 
+            margin-bottom: 20px; 
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .friend-list { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+        .friend-card { 
+            background: var(--bg-color); 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .friend-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow);
+            border-color: var(--primary-color);
+        }
         .friend-card img { width: 100%; height: 200px; object-fit: cover; }
-        .friend-card-content { padding: 15px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .friend-card-name { font-weight: 600; font-size: 16px; margin-bottom: 10px; color: #050505; }
-        .friend-btn { width: 100%; padding: 8px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 5px; }
-        .btn-add { background: #e0fbf7; color: #00d1b2; }
-        .btn-add:hover { background: #ccf7f0; }
-        .btn-confirm { background: #00d1b2; color: white; }
-        .btn-confirm:hover { background: #00b99d; }
-        .btn-delete { background: #e4e6eb; color: #050505; }
-        .btn-delete:hover { background: #d8dadf; }
-        .nav-links-friends { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 1px solid #ced0d4; padding-bottom: 10px; }
-        .nav-links-friends div { font-weight: 600; color: #65676B; cursor: pointer; padding: 5px 10px; }
-        .nav-links-friends div.active { color: #00d1b2; border-bottom: 3px solid #00d1b2; }
+        .friend-card-content { padding: 16px; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
+        .friend-card-name { font-weight: 700; font-size: 15px; margin-bottom: 5px; color: var(--text-main); transition: color 0.3s ease; }
+        .friend-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s ease; margin-top: 5px; font-size: 14px; }
+        
+        .btn-add { background: var(--primary-light); color: var(--primary-color); }
+        .btn-add:hover { background: rgba(0, 209, 178, 0.25); transform: scale(1.02); }
+        
+        .btn-confirm { background: var(--primary-color); color: white; }
+        .btn-confirm:hover { background: #00b99d; transform: scale(1.02); }
+        
+        .btn-delete { background: var(--button-bg); color: var(--text-main); }
+        .btn-delete:hover { background: var(--button-hover); transform: scale(1.02); }
+        
+        .nav-links-friends { display: flex; gap: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; transition: border-color 0.3s ease; }
+        .nav-links-friends div { font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 8px 12px; transition: all 0.2s ease; border-radius: 6px; }
+        .nav-links-friends div:hover { background: var(--button-hover); color: var(--text-main); }
+        .nav-links-friends div.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); border-radius: 6px 6px 0 0; background: transparent; }
     </style>
     <script src="/js/auth-interceptor.js"></script>
 </head>
@@ -121,6 +147,11 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Theme Toggle Button -->
+            <button class="icon-btn tooltip" id="theme-toggle-btn" data-tooltip="Chuyển chế độ tối/sáng" onclick="toggleTheme()">
+                <i class="fa-solid fa-moon"></i>
+            </button>
 
             <!-- User Avatar -->
             <div class="user-avatar-btn">

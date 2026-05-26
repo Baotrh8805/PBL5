@@ -696,3 +696,8 @@
 [EVAL] label=CLEAN score=0.815945
 [FINAL TEXT] len=68 text='Ct Tan huong cuốc song nèo henderbarding OCO Promonationalists Stand'
 [REQUEST] Complete best_score=0.0540 frames=0 violating_words=(Video:)ct[O] tan[O] huong[O] cuốc[O] song[O] nèo[O] oco[O] stand[O] (Content:) detailed_tags=(Video:)ct[O] tan[O] huong[O] cuốc[O] song[O] nèo[O] oco[O] stand[O] (Content:)
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup

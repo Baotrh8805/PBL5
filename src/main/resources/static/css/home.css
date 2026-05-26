@@ -11,6 +11,26 @@
     --purple-icon: #ab39ff;
     --yellow-icon: #f7b928;
     --red-badge: #e41e3f;
+    
+    --header-bg: rgba(255, 255, 255, 0.75);
+    --header-blur: 20px;
+    --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.04), 0 2px 10px rgba(0, 0, 0, 0.02);
+    --button-bg: #e4e6eb;
+    --button-hover: #d8dadf;
+}
+
+html[data-theme="dark"] {
+    --bg-color: #0f1011;
+    --card-bg: #1b1c1e;
+    --text-main: #f1f3f5;
+    --text-muted: #9fa6ad;
+    --border-color: #2c2e30;
+    --primary-light: rgba(0, 209, 178, 0.15);
+    
+    --header-bg: rgba(27, 28, 30, 0.85);
+    --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    --button-bg: #2d2e30;
+    --button-hover: #3d3e40;
 }
 
 * {
@@ -24,6 +44,7 @@ body {
     background-color: var(--bg-color);
     color: var(--text-main);
     overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 a {
@@ -42,10 +63,24 @@ button {
 .card {
     background: var(--card-bg);
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Soft Glassmorphism Shadow */
+    box-shadow: var(--card-shadow);
     padding: 20px;
     margin-bottom: 20px;
-    border: 1px solid rgba(255,255,255,0.8);
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08), 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+html[data-theme="dark"] .card {
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+html[data-theme="dark"] .card:hover {
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.45);
 }
 
 /* Header Navigation */
@@ -55,11 +90,15 @@ button {
     align-items: center;
     padding: 0 40px;
     height: 60px;
-    background-color: var(--card-bg);
+    background: var(--header-bg);
+    backdrop-filter: blur(var(--header-blur));
+    -webkit-backdrop-filter: blur(var(--header-blur));
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.03);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .header-left {
@@ -87,16 +126,19 @@ button {
 }
 
 .header-left .search-bar {
-    background: #f0f2f5;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
     border-radius: 50px; /* Pill shape */
     display: flex;
     align-items: center;
     padding: 10px 16px;
     flex: 1; /* Take remaining space */
-    transition: 0.3s;
+    transition: all 0.3s ease;
 }
 .header-left .search-bar:focus-within {
     box-shadow: 0 0 0 2px var(--primary-light), 0 0 0 3px var(--primary-color);
+    border-color: var(--primary-color);
+    background: var(--card-bg);
 }
 
 .search-bar i {
@@ -110,6 +152,7 @@ button {
     outline: none;
     width: 100%;
     font-size: 15px;
+    color: var(--text-main);
 }
 
 .header-center {
@@ -151,7 +194,7 @@ button {
 }
 
 .nav-link:hover::before {
-    background-color: #f2f2f2;
+    background-color: var(--primary-light);
     transform: scale(0.95);
 }
 .nav-link:hover {
@@ -175,29 +218,30 @@ button {
 }
 
 .create-btn {
-    background: #e4e6eb;
-    color: #050505 !important;
+    background: var(--button-bg);
+    color: var(--text-main) !important;
 }
 .create-btn:hover {
-    background: #d8dadf;
+    background: var(--button-hover);
 }
 
 .icon-btn {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: #e2e5e9;
+    background-color: var(--button-bg);
     color: var(--text-main);
     font-size: 18px;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: 0.2s;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
     position: relative;
 }
 
 .icon-btn:hover {
-    background-color: #d8dadf;
+    background-color: var(--button-hover);
+    transform: scale(1.08);
 }
 
 .notification-btn .badge {
@@ -210,7 +254,7 @@ button {
     padding: 2px 5px;
     border-radius: 10px;
     font-weight: bold;
-    border: 2px solid white;
+    border: 2px solid var(--card-bg);
 }
 
 .notification-container {
@@ -222,10 +266,10 @@ button {
     top: 48px;
     right: 0;
     width: 340px;
-    background: #fff;
+    background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    box-shadow: var(--card-shadow);
     z-index: 1200;
     overflow: hidden;
 }
@@ -442,7 +486,7 @@ button {
 }
 
 .menu-item:hover {
-    background-color: #f2f2f2;
+    background-color: var(--button-hover);
     transform: translateX(4px);
 }
 .menu-item:hover i {
@@ -565,7 +609,7 @@ button {
 
 .post-input {
     background-color: var(--bg-color);
-    border: none;
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 12px 16px;
     font-size: 15px;
@@ -573,12 +617,12 @@ button {
     flex: 1;
     width: 100%;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
     outline: none;
 }
 
 .post-input:hover {
-    background-color: #e4e6e9;
+    background-color: var(--button-hover);
 }
 
 /* Modal Overlay */
@@ -594,13 +638,14 @@ button {
 
 /* Light mode modal explicitly to match web theme */
 .modal-overlay .light-mode {
-    background: #ffffff;
-    color: #050505;
+    background: var(--card-bg);
+    color: var(--text-main);
     width: 500px;
-    border-radius: 8px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
     display: flex;
     flex-direction: column;
+    border: 1px solid var(--border-color);
 }
 
 .modal-header {
@@ -734,19 +779,20 @@ button {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: 0.2s;
+    transition: all 0.2s ease;
     font-size: 15px;
     font-weight: 500;
     border: none;
     background: transparent;
-    color: #65676b;
+    color: var(--text-muted);
     cursor: pointer;
 }
 .add-icon-btn i {
     font-size: 20px;
 }
 .add-icon-btn:hover {
-    background: #f2f2f2;
+    background: var(--button-hover);
+    color: var(--text-main);
 }
 
 .modal-submit-btn {
@@ -780,17 +826,19 @@ button {
 .post-input {
     flex: 1;
     width: 100%;
-    background: #f0f2f5;
-    border: none;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 12px 16px;
     font-size: 15px;
+    color: var(--text-main);
     outline: none;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .post-input:hover {
-    background: #e4e6e9;
+    background: var(--button-hover);
     cursor: pointer;
 }
 
@@ -811,7 +859,7 @@ button {
 }
 
 .action-btn:hover {
-    background-color: #f2f2f2;
+    background-color: var(--button-hover);
 }
 
 .text-red { color: var(--text-muted); }
@@ -891,7 +939,8 @@ button {
 }
 
 .interaction-btn:hover {
-    background: #f2f2f2;
+    background: var(--primary-light);
+    color: var(--primary-color);
 }
 
 /* Right Sidebar */
@@ -899,8 +948,14 @@ button {
 .trending-card h3 {
     font-size: 16px;
     font-weight: 600;
-    color: #65676b;
+    color: var(--text-muted);
     margin: 0;
+    transition: color 0.3s ease;
+}
+
+html[data-theme="dark"] .suggestions-card h3, 
+html[data-theme="dark"] .trending-card h3 {
+    color: var(--text-main);
 }
 
 .card-header-sidebar {
@@ -950,8 +1005,9 @@ button {
 .suggestion-name {
     font-size: 14px;
     font-weight: 600;
-    color: #050505;
+    color: var(--text-main);
     text-decoration: none;
+    transition: color 0.3s ease;
 }
 
 .suggestion-name:hover {
@@ -960,7 +1016,8 @@ button {
 
 .suggestion-mutual {
     font-size: 12px;
-    color: #65676b;
+    color: var(--text-muted);
+    transition: color 0.3s ease;
 }
 
 .add-friend-sidebar-btn {
@@ -972,11 +1029,22 @@ button {
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
 }
 
 .add-friend-sidebar-btn:hover {
     background: #dbeaff;
+    transform: scale(1.02);
+}
+
+html[data-theme="dark"] .add-friend-sidebar-btn {
+    background: rgba(0, 209, 178, 0.15);
+    color: #00d1b2;
+}
+
+html[data-theme="dark"] .add-friend-sidebar-btn:hover {
+    background: rgba(0, 209, 178, 0.25);
+    color: #00d1b2;
 }
 
 .add-friend-sidebar-btn.cancel-btn {
@@ -1067,7 +1135,7 @@ button {
 }
 
 .options-btn:hover {
-    background-color: #f2f2f2;
+    background-color: var(--button-hover);
 }
 
 .dropdown-content {
@@ -1075,9 +1143,9 @@ button {
     position: absolute;
     right: 0;
     top: 30px;
-    background-color: #fff;
+    background-color: var(--card-bg);
     min-width: 250px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+    box-shadow: var(--card-shadow);
     z-index: 100;
     border-radius: 8px;
     overflow: hidden;
@@ -1096,7 +1164,7 @@ button {
 }
 
 .dropdown-content a:hover {
-    background-color: #f2f2f2;
+    background-color: var(--button-hover);
 }
 
 .dropdown-content i {
@@ -1127,9 +1195,9 @@ button {
     position: absolute;
     right: 16px;
     top: 48px;
-    background-color: #fff;
+    background-color: var(--card-bg);
     min-width: 250px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+    box-shadow: var(--card-shadow);
     z-index: 100;
     border-radius: 8px;
     overflow: hidden;
@@ -1147,9 +1215,9 @@ button {
     left: 0;
     width: 100%;
     max-height: 400px;
-    background: #fff;
+    background: var(--card-bg);
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: var(--card-shadow);
     z-index: 2000;
     overflow-y: auto;
     margin-top: 8px;
@@ -1252,21 +1320,29 @@ button {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
+    transition: all 0.3s ease;
+}
+
+html[data-theme="dark"] .modal-overlay {
+    background: rgba(0, 0, 0, 0.75);
 }
 
 .modal-content {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+    background: var(--card-bg);
+    color: var(--text-main);
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
     width: 100%;
     max-width: 500px;
-    animation: modalSlideUp 0.3s ease;
+    border: 1px solid var(--border-color);
+    animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes modalSlideUp {

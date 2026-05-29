@@ -38,6 +38,12 @@ public class ContentModerationService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.pbl5.repository.NotificationRepository notificationRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     public ContentModerationService(PostRepository postRepository, UserRepository userRepository) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
@@ -216,12 +222,39 @@ public class ContentModerationService {
                         postId,
                         String.format("%.4f", moderationResult.getBestScore()));
 
+                post.setReviewedAt(java.time.LocalDateTime.now());
+
                 // Cộng điểm vi phạm tự động khi AI xóa bài
                 User author = post.getUser();
                 if (author != null) {
                     int currentScore = author.getScore() != null ? author.getScore() : 0;
                     author.setScore(currentScore + 1);
                     userRepository.save(author);
+
+                    // Gửi thông báo hệ thống tự động cho người dùng
+                    try {
+                        com.pbl5.model.Notification notifEntity = new com.pbl5.model.Notification();
+                        notifEntity.setUser(author);
+                        notifEntity.setSender(null);
+                        notifEntity.setType("POST_REJECTED");
+                        notifEntity.setMessage("Bài viết của bạn đã bị gỡ tự động do vi phạm tiêu chuẩn cộng đồng. Bạn bị cộng 1 điểm vi phạm. Bạn có 3 ngày để xem lại bài viết.");
+                        notifEntity.setLink("/html/post.html?id=" + post.getId());
+                        notifEntity = notificationRepository.save(notifEntity);
+
+                        java.util.Map<String, Object> notification = new java.util.HashMap<>();
+                        notification.put("id", notifEntity.getId());
+                        notification.put("type", "POST_REJECTED");
+                        notification.put("message", notifEntity.getMessage());
+                        notification.put("senderId", null);
+                        notification.put("senderName", "Hệ thống");
+                        notification.put("senderAvatar", null);
+                        notification.put("link", notifEntity.getLink());
+
+                        messagingTemplate.convertAndSend("/topic/notifications/" + author.getId(), notification);
+                        logger.info("[MODERATION] Gửi thông báo AUTO_REJECTED cho tác giả bài viết ID={}", postId);
+                    } catch (Exception notifEx) {
+                        logger.error("[MODERATION] Lỗi gửi thông báo: {}", notifEx.getMessage());
+                    }
                 }
             }
 

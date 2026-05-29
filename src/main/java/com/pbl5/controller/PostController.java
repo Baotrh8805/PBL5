@@ -101,6 +101,20 @@ public class PostController {
             return false;
         }
 
+        // Handle deleted/rejected posts with 3-day grace period
+        if (p.getStatus() == com.pbl5.enums.PostStatus.REJECTED || p.getStatus() == com.pbl5.enums.PostStatus.AUTO_REJECTED) {
+            if (currentUser.getRole() == com.pbl5.enums.Role.ADMIN || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR) {
+                return true;
+            }
+            if (p.getUser().getId().equals(currentUser.getId())) {
+                LocalDateTime deleteTime = p.getReviewedAt();
+                if (deleteTime != null && deleteTime.plusDays(3).isAfter(LocalDateTime.now())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         // Author can always see their own posts
         if (p.getUser().getId().equals(currentUser.getId()))
             return true;
@@ -109,9 +123,8 @@ public class PostController {
         if (currentUser.getRole() == com.pbl5.enums.Role.ADMIN || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR)
             return true;
 
-        // Other users cannot see rejected or pending review posts
-        if (p.getStatus() == com.pbl5.enums.PostStatus.AUTO_REJECTED
-                || p.getStatus() == com.pbl5.enums.PostStatus.PENDING_REVIEW) {
+        // Other users cannot see pending review posts
+        if (p.getStatus() == com.pbl5.enums.PostStatus.PENDING_REVIEW) {
             return false;
         }
 

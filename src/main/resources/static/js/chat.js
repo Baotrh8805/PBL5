@@ -162,8 +162,8 @@ async function loadInboxDropdown() {
             item.innerHTML = `
                 <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff'">
                 <div class="notification-content">
-                    <div style="font-weight: ${isUnread ? '700' : '600'}; font-size: 15px; color: #050505;">${f.fullName}</div>
-                    <div class="notification-msg" style="color: ${isUnread ? '#050505' : '#65676b'}; font-weight: ${isUnread ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
+                    <div style="font-weight: ${isUnread ? '700' : '600'}; font-size: 15px; color: var(--text-main);">${f.fullName}</div>
+                    <div class="notification-msg" style="color: ${isUnread ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: ${isUnread ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
                 </div>
                 ${isUnread ? '<div class="notification-dot" style="background-color: #00d1b2; width: 10px; height: 10px; border-radius: 50%; margin-left: auto;"></div>' : ''}
             `;
@@ -237,6 +237,11 @@ function renderNotifications(notifications) {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
+            }
+
+            if (n.type === 'WARNING' || n.type === 'REPORT_WARNING') {
+                e.preventDefault();
+                showWarningModal(n.message);
             }
         };
         
@@ -578,3 +583,49 @@ function toggleChatSidebar() {
         sidebar.style.display = 'none';
     }
 }
+
+function showWarningModal(message) {
+    const existing = document.getElementById('system-warning-modal');
+    if (existing) {
+        existing.remove();
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'system-warning-modal';
+    modal.className = 'system-warning-modal-overlay';
+    
+    modal.innerHTML = `
+        <div class="system-warning-modal-card">
+            <div class="system-warning-modal-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="system-warning-modal-title">Thông Báo Cảnh Cáo</div>
+            <div class="system-warning-modal-message">${message}</div>
+            <div class="system-warning-modal-notice">
+                Vui lòng tuân thủ Tiêu chuẩn cộng đồng để xây dựng mạng xã hội lành mạnh, văn minh và an toàn.
+            </div>
+            <button class="system-warning-modal-btn" onclick="closeWarningModal()">Đã hiểu</button>
+        </div>
+    `;
+
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            closeWarningModal();
+        }
+    };
+
+    document.body.appendChild(modal);
+
+    modal.offsetHeight; // force reflow
+    modal.classList.add('show');
+}
+
+window.closeWarningModal = function() {
+    const modal = document.getElementById('system-warning-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+};

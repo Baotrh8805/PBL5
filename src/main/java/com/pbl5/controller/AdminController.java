@@ -425,11 +425,13 @@ public class AdminController {
         }
 
         createNotification(post.getUser(), null, "REPORT_WARNING",
-                "Bài viết của bạn đã bị gỡ khỏi hệ thống do vi phạm tiêu chuẩn cộng đồng.", "/");
+                "Bài viết của bạn đã bị gỡ khỏi hệ thống do vi phạm tiêu chuẩn cộng đồng. Bạn có 3 ngày để xem lại bài viết trước khi bị xóa hoàn toàn.", 
+                "/html/post.html?id=" + post.getId());
 
         // Gán trạng thái AUTO_REJECTED để bài viết vẫn còn trong DB nhưng bị ẩn/đánh
         // dấu "đã bị gỡ"
         post.setStatus(com.pbl5.enums.PostStatus.AUTO_REJECTED);
+        post.setReviewedAt(LocalDateTime.now());
         postRepository.save(post);
 
         // Cộng điểm vi phạm cho người dùng (tác giả bài viết)

@@ -36,8 +36,8 @@
                 <a href="/html/friends.html" class="nav-link" title="Bạn bè">
                     <i class="fa-solid fa-user-group"></i>
                 </a>
-                <a href="#" class="nav-link" title="Khám phá">
-                    <i class="fa-regular fa-compass"></i>
+                <a href="/html/bookmarks.html" class="nav-link active" title="Đã lưu">
+                    <i class="fa-solid fa-bookmark"></i>
                 </a>
             </nav>
         </div>
@@ -110,7 +110,33 @@
             </div>
 
             <div class="posts-container" id="bookmarks-container">
-                <div class="card" style="padding:16px; text-align:center; color:#65676B;">Đang tải bài viết đã lưu...</div>
+                <div class="skeleton-post card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-meta">
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-line x-short"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line medium"></div>
+                    </div>
+                </div>
+                <div class="skeleton-post card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-meta">
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-line x-short"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line medium"></div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -138,7 +164,20 @@
     <div id="chat-sidebar" class="chat-sidebar">
         <div class="chat-sidebar-title">Người liên hệ</div>
         <div id="chat-contact-list">
-            <div style="padding: 15px; color:#65676B; font-size:14px;">Đang tải...</div>
+            <div class="skeleton-chat-contacts" style="padding: 10px; display: flex; flex-direction: column; gap: 12px;">
+                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                    <div class="skeleton-line" style="height: 10px; width: 60%; margin-bottom: 0;"></div>
+                </div>
+                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                    <div class="skeleton-line" style="height: 10px; width: 50%; margin-bottom: 0;"></div>
+                </div>
+                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                    <div class="skeleton-line" style="height: 10px; width: 55%; margin-bottom: 0;"></div>
+                </div>
+            </div>
         </div>
     </div>
 

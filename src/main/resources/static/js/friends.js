@@ -106,19 +106,19 @@ function renderList(elementId, list, type) {
 
         if (type === 'suggestions') {
             buttons = `
-                <button id="friend-btn-${u.id}" class="friend-btn btn-add" style="margin-bottom: 5px;" onclick="actionFriend(${u.id}, 'request')">Thêm bạn bè</button>
-                <button class="friend-btn btn-secondary" onclick="openChatBox(${u.id}, '${u.fullName}', '${avatarUrl}')">Nhắn tin</button>
+                <button id="friend-btn-${u.id}" class="friend-btn btn-add" style="margin-bottom: 5px;" onclick="actionFriend(${u.id}, 'request')"><i class="fa-solid fa-user-plus" style="margin-right: 5px;"></i> Thêm bạn bè</button>
+                <button class="friend-btn btn-secondary" onclick="openChatBox(${u.id}, '${u.fullName}', '${avatarUrl}')"><i class="fa-regular fa-comment-dots" style="margin-right: 5px;"></i> Nhắn tin</button>
             `;
         } else if(type === 'requests') {
             buttons = `
-                <button class="friend-btn btn-confirm" style="margin-bottom: 5px;" onclick="actionFriend(${u.id}, 'accept')">Chấp nhận</button>
-                <button class="friend-btn btn-secondary" style="margin-bottom: 5px;" onclick="openChatBox(${u.id}, '${u.fullName}', '${avatarUrl}')">Nhắn tin</button>
-                <button class="friend-btn btn-delete" onclick="actionFriend(${u.id}, 'delete')">Xóa</button>
+                <button class="friend-btn btn-confirm" style="margin-bottom: 5px;" onclick="actionFriend(${u.id}, 'accept')"><i class="fa-solid fa-user-check" style="margin-right: 5px;"></i> Chấp nhận</button>
+                <button class="friend-btn btn-secondary" style="margin-bottom: 5px;" onclick="openChatBox(${u.id}, '${u.fullName}', '${avatarUrl}')"><i class="fa-regular fa-comment-dots" style="margin-right: 5px;"></i> Nhắn tin</button>
+                <button class="friend-btn btn-delete" onclick="actionFriend(${u.id}, 'delete')"><i class="fa-solid fa-xmark" style="margin-right: 5px;"></i> Xóa</button>
             `;
         } else if(type === 'friends') {
             buttons = `
-                <button class="friend-btn btn-secondary" style="margin-bottom: 5px;" onclick="openChatBox(${u.id}, '${u.fullName}', '${avatarUrl}')">Nhắn tin</button>
-                <button class="friend-btn btn-delete" onclick="actionFriend(${u.id}, 'delete')">Hủy kết bạn</button>
+                <button class="friend-btn btn-secondary" style="margin-bottom: 5px;" onclick="openChatBox(${u.id}, '${u.fullName}', '${avatarUrl}')"><i class="fa-regular fa-comment-dots" style="margin-right: 5px;"></i> Nhắn tin</button>
+                <button class="friend-btn btn-delete" onclick="actionFriend(${u.id}, 'delete')"><i class="fa-solid fa-user-xmark" style="margin-right: 5px;"></i> Hủy kết bạn</button>
             `;
         }
 
@@ -157,12 +157,12 @@ window.actionFriend = async function(id, action) {
             const btn = document.getElementById(`friend-btn-${id}`);
             if (btn) {
                 if (action === 'request') {
-                    btn.innerText = 'Hủy lời mời';
+                    btn.innerHTML = '<i class="fa-solid fa-user-minus" style="margin-right: 5px;"></i> Hủy lời mời';
                     btn.classList.remove('btn-add');
                     btn.classList.add('btn-delete');
                     btn.onclick = () => actionFriend(id, 'cancel');
                 } else if (action === 'cancel') {
-                    btn.innerText = 'Thêm bạn bè';
+                    btn.innerHTML = '<i class="fa-solid fa-user-plus" style="margin-right: 5px;"></i> Thêm bạn bè';
                     btn.classList.remove('btn-delete');
                     btn.classList.add('btn-add');
                     btn.onclick = () => actionFriend(id, 'request');

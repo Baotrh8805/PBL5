@@ -94,6 +94,43 @@ async function fetchPostDetail(postId, token) {
 }
 
 function renderPostDetail(post) {
+    // Check if post is deleted/rejected and display warning banner for the author
+    const warningBanner = document.getElementById('post-deleted-warning-banner');
+    if (warningBanner) {
+        warningBanner.remove();
+    }
+    
+    if (post.status === 'REJECTED' || post.status === 'AUTO_REJECTED') {
+        const banner = document.createElement('div');
+        banner.id = 'post-deleted-warning-banner';
+        banner.style.background = '#ffe8e8';
+        banner.style.color = '#d93d59';
+        banner.style.padding = '12px 16px';
+        banner.style.fontSize = '13px';
+        banner.style.fontWeight = '600';
+        banner.style.borderBottom = '1px solid #fcd2d8';
+        banner.style.display = 'flex';
+        banner.style.alignItems = 'center';
+        banner.style.gap = '10px';
+        banner.style.width = '100%';
+        banner.style.boxSizing = 'border-box';
+        
+        if (document.documentElement.getAttribute('data-theme') === 'dark') {
+            banner.style.background = 'rgba(217, 61, 89, 0.15)';
+            banner.style.color = '#ff6b8b';
+            banner.style.borderBottom = '1px solid rgba(217, 61, 89, 0.3)';
+        }
+        
+        banner.innerHTML = `
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px; flex-shrink: 0;"></i>
+            <span>Bài viết này đã bị gỡ do vi phạm tiêu chuẩn cộng đồng. Chỉ bạn mới có thể xem và bài viết sẽ bị xóa vĩnh viễn sau 3 ngày kể từ ngày gỡ.</span>
+        `;
+        const sidebar = document.querySelector('.post-info-sidebar');
+        if (sidebar) {
+            sidebar.insertBefore(banner, sidebar.firstChild);
+        }
+    }
+
     // Media
     const mediaContainer = document.getElementById('media-content');
     mediaContainer.innerHTML = '';
@@ -273,7 +310,7 @@ function renderCommentItem(c, isReply = false) {
         <div class="comment-item-container" id="comment-container-${c.id}" style="margin-bottom: 15px;">
             <div class="comment-item" style="display: flex; gap: 10px;">
                 <img src="${avatar}" class="avatar-small" loading="lazy" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;">
-                <div class="comment-bubble" style="background: #f0f2f5; padding: 6px 12px; border-radius: 18px; max-width: 85%; position: relative;">
+                <div class="comment-bubble" style="background: var(--comment-bg); padding: 6px 12px; border-radius: 18px; max-width: 85%; position: relative;">
                     <a href="/html/profile.html?userId=${c.authorId}" class="comment-user" style="font-weight: bold; color: inherit; text-decoration: none; font-size: 13px;">${c.authorName}</a>
                     <div class="comment-text" id="comment-content-${c.id}" style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${c.content || ''}</div>
                     ${mediaHtml}
@@ -311,7 +348,7 @@ function showReplyInput(commentId, authorName) {
     }
 
     container.innerHTML = `
-        <div style="display: flex; gap: 8px; align-items: center; background: #f0f2f5; border-radius: 20px; padding: 4px 12px;">
+        <div style="display: flex; gap: 8px; align-items: center; background: var(--comment-bg); border-radius: 20px; padding: 4px 12px;">
             <input type="text" id="reply-field-${commentId}" placeholder="Trả lời ${authorName}..." 
                 style="flex: 1; border: none; background: transparent; outline: none; padding: 6px 0; font-size: 13px;"
                 onkeypress="if(event.key==='Enter') submitReply(${commentId})">
@@ -497,7 +534,7 @@ window.startEditComment = function (commentId, currentContent) {
 
     contentDiv.innerHTML = `
         <div style="margin-top: 5px;">
-            <textarea id="edit-input-${commentId}" style="width: 100%; border: 1px solid #ced4da; border-radius: 8px; padding: 5px; outline: none; font-size: 14px; font-family: inherit;">${currentContent}</textarea>
+            <textarea id="edit-input-${commentId}" style="width: 100%; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; padding: 5px; outline: none; font-size: 14px; font-family: inherit;">${currentContent}</textarea>
             <div style="display: flex; gap: 5px; margin-top: 5px; justify-content: flex-end;">
                 <button onclick="cancelEditComment(${commentId}, \`${originalHtml.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" style="background: #e4e6eb; border: none; padding: 3px 8px; border-radius: 5px; font-size: 12px; cursor: pointer;">Hủy</button>
                 <button onclick="saveEditComment(${commentId})" style="background: var(--primary-color); color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 12px; cursor: pointer;">Lưu</button>

@@ -954,7 +954,7 @@ function renderCommentItem(c, postId, isReply = false) {
         <div class="comment-container" id="comment-container-${c.id}" style="margin-bottom: 5px;">
             <div class="comment" style="display: flex; gap: 8px; margin-bottom: 10px;">
                 <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
-                <div class="comment-bubble" style="background: #f0f2f5; padding: 6px 12px; border-radius: 18px; max-width: 85%; position: relative;">
+                <div class="comment-bubble" style="background: var(--comment-bg); padding: 6px 12px; border-radius: 18px; max-width: 85%; position: relative;">
                     <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
                     <div id="comment-content-${c.id}" style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
                     ${mediaHtml}
@@ -990,7 +990,7 @@ function showReplyInput(postId, commentId, authorName) {
     }
     
     container.innerHTML = `
-        <div style="display: flex; gap: 8px; align-items: center; background: #f0f2f5; border-radius: 20px; padding: 4px 12px;">
+        <div style="display: flex; gap: 8px; align-items: center; background: var(--comment-bg); border-radius: 20px; padding: 4px 12px;">
             <input type="text" id="reply-field-${commentId}" placeholder="Trả lời ${authorName}..." 
                 style="flex: 1; border: none; background: transparent; outline: none; padding: 6px 0; font-size: 13px;"
                 onkeypress="if(event.key==='Enter') submitReply(${postId}, ${commentId})">
@@ -1135,7 +1135,7 @@ window.startEditComment = function(postId, commentId, currentContent) {
     
     contentDiv.innerHTML = `
         <div style="margin-top: 5px;">
-            <textarea id="edit-input-${commentId}" style="width: 100%; border: 1px solid #ced4da; border-radius: 8px; padding: 5px; outline: none; font-size: 14px; font-family: inherit;">${currentContent}</textarea>
+            <textarea id="edit-input-${commentId}" style="width: 100%; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; padding: 5px; outline: none; font-size: 14px; font-family: inherit;">${currentContent}</textarea>
             <div style="display: flex; gap: 5px; margin-top: 5px; justify-content: flex-end;">
                 <button onclick="cancelEditComment(${commentId}, \`${originalHtml.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" style="background: #e4e6eb; border: none; padding: 3px 8px; border-radius: 5px; font-size: 12px; cursor: pointer;">Hủy</button>
                 <button onclick="saveEditComment(${postId}, ${commentId})" style="background: var(--primary-color); color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 12px; cursor: pointer;">Lưu</button>

@@ -92,6 +92,9 @@ public class ModeratorController {
                     map.put("nsfwScore", p.getNsfwScore());
                     map.put("violenceScore", p.getViolenceScore());
                     map.put("hateSpeechScore", p.getHateSpeechScore());
+                    map.put("speechLabels", p.getSpeechLabels());
+                    map.put("hateSpeechContentScore", p.getHateSpeechContentScore());
+                    map.put("hateSpeechVideoScore", p.getHateSpeechVideoScore());
                     map.put("violationDetected", p.getStatus() == PostStatus.PENDING_REVIEW);
                     map.put("violationLabel", resolveViolationLabel(p));
                     map.put("violationMediaType", resolveMediaType(p));

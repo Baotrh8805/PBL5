@@ -324,6 +324,9 @@ public class AdminController {
             map.put("nsfwScore", p.getNsfwScore());
             map.put("violenceScore", p.getViolenceScore());
             map.put("hateSpeechScore", p.getHateSpeechScore());
+            map.put("speechLabels", p.getSpeechLabels());
+            map.put("hateSpeechContentScore", p.getHateSpeechContentScore());
+            map.put("hateSpeechVideoScore", p.getHateSpeechVideoScore());
             map.put("status", p.getStatus());
             if (p.getUser() != null) {
                 Map<String, Object> user = new HashMap<>();
@@ -370,6 +373,9 @@ public class AdminController {
         map.put("nsfwScore", p.getNsfwScore());
         map.put("violenceScore", p.getViolenceScore());
         map.put("hateSpeechScore", p.getHateSpeechScore());
+        map.put("speechLabels", p.getSpeechLabels());
+        map.put("hateSpeechContentScore", p.getHateSpeechContentScore());
+        map.put("hateSpeechVideoScore", p.getHateSpeechVideoScore());
         map.put("status", p.getStatus());
         if (p.getUser() != null) {
             Map<String, Object> user = new HashMap<>();

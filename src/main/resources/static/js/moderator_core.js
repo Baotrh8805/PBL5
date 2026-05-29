@@ -915,7 +915,35 @@ window.renderPostDetailContent = function (post) {
 
     const nsfwScore = post.nsfwScore || 0;
     const violenScore = post.violenceScore || 0;
-    const hateScore = post.hateSpeechScore || 0;
+
+    let contentHateScore = post.hateSpeechContentScore || 0;
+    let videoHateScore = post.hateSpeechVideoScore || 0;
+    let contentHateLabelVal = 0;
+    let videoHateLabelVal = 0;
+
+    if (post.speechLabels) {
+        try {
+            if (post.speechLabels.includes(';')) {
+                const parts = post.speechLabels.split(';');
+                const cPart = parts[0].split(':');
+                const vPart = parts[1].split(':');
+                contentHateLabelVal = parseInt(cPart[0]) || 0;
+                contentHateScore = parseFloat(cPart[1]) || contentHateScore;
+                videoHateLabelVal = parseInt(vPart[0]) || 0;
+                videoHateScore = parseFloat(vPart[1]) || videoHateScore;
+            } else if (post.speechLabels.includes(':')) {
+                const part = post.speechLabels.split(':');
+                contentHateLabelVal = parseInt(part[0]) || 0;
+                contentHateScore = parseFloat(part[1]) || contentHateScore;
+            }
+        } catch (err) {
+            console.error("Lỗi parse speechLabels:", err);
+        }
+    }
+
+    const labelNames = { 0: "CLEAN", 1: "OFFENSIVE", 2: "HATE" };
+    const contentHateLabel = labelNames[contentHateLabelVal] || "CLEAN";
+    const videoHateLabel = labelNames[videoHateLabelVal] || "CLEAN";
 
     let scoreBarsHtml = '';
     if (violenScore > 0) {
@@ -934,11 +962,29 @@ window.renderPostDetailContent = function (post) {
             </div>
         `;
     }
-    if (hateScore > 0) {
+    if (contentHateScore > 0) {
+        const labelColor = contentHateLabelVal === 2 ? '#ff4d4f' : (contentHateLabelVal === 1 ? '#faad14' : '#52c41a');
+        const fillClass = contentHateLabelVal === 2 ? 'danger' : (contentHateLabelVal === 1 ? 'warning' : 'success');
         scoreBarsHtml += `
             <div class="review-score-item" style="margin-bottom: 8px;">
-                <div class="review-score-header" style="font-size: 0.9rem; margin-bottom: 4px; display: flex; justify-content: space-between;"><span>Ngôn từ thù ghét</span><strong>${(hateScore * 100).toFixed(1)}%</strong></div>
-                <div class="review-score-bar" style="height: 8px; margin-bottom: 0; background: #3e4042; border-radius: 4px; overflow: hidden;"><div class="review-score-fill warning" style="width: ${Math.min(100, hateScore * 100)}%; height: 100%; background: #faad14;"></div></div>
+                <div class="review-score-header" style="font-size: 0.9rem; margin-bottom: 4px; display: flex; justify-content: space-between;">
+                    <span>Ngôn từ thù ghét (Bài viết) <span style="font-size: 0.75rem; padding: 1px 6px; border-radius: 4px; margin-left: 6px; font-weight: bold; background: ${labelColor}; color: #fff;">${contentHateLabel}</span></span>
+                    <strong>${(contentHateScore * 100).toFixed(1)}%</strong>
+                </div>
+                <div class="review-score-bar" style="height: 8px; margin-bottom: 0; background: #3e4042; border-radius: 4px; overflow: hidden;"><div class="review-score-fill ${fillClass}" style="width: ${Math.min(100, contentHateScore * 100)}%; height: 100%;"></div></div>
+            </div>
+        `;
+    }
+    if (videoHateScore > 0) {
+        const labelColor = videoHateLabelVal === 2 ? '#ff4d4f' : (videoHateLabelVal === 1 ? '#faad14' : '#52c41a');
+        const fillClass = videoHateLabelVal === 2 ? 'danger' : (videoHateLabelVal === 1 ? 'warning' : 'success');
+        scoreBarsHtml += `
+            <div class="review-score-item" style="margin-bottom: 8px;">
+                <div class="review-score-header" style="font-size: 0.9rem; margin-bottom: 4px; display: flex; justify-content: space-between;">
+                    <span>Ngôn từ thù ghét (Media) <span style="font-size: 0.75rem; padding: 1px 6px; border-radius: 4px; margin-left: 6px; font-weight: bold; background: ${labelColor}; color: #fff;">${videoHateLabel}</span></span>
+                    <strong>${(videoHateScore * 100).toFixed(1)}%</strong>
+                </div>
+                <div class="review-score-bar" style="height: 8px; margin-bottom: 0; background: #3e4042; border-radius: 4px; overflow: hidden;"><div class="review-score-fill ${fillClass}" style="width: ${Math.min(100, videoHateScore * 100)}%; height: 100%;"></div></div>
             </div>
         `;
     }
@@ -946,7 +992,7 @@ window.renderPostDetailContent = function (post) {
     const scoresElem = document.getElementById('mod-post-modal-scores');
     if (scoresElem) {
         if (scoreBarsHtml) {
-            scoresElem.innerHTML = `<div style="margin-bottom: 15px; background: #18191a; padding: 15px; border-radius: 8px; border: 1px solid #3e4042;">${scoreBarsHtml}</div>`;
+            scoresElem.innerHTML = `<div style="margin-bottom: 15px; background: #18191a; padding: 15px; border-radius: 8px; border: 1px solid #3e4042; color: #e4e6eb;">${scoreBarsHtml}</div>`;
         } else {
             scoresElem.innerHTML = '';
         }

@@ -1,0 +1,5 @@
+Model weight C:\Users\DELL\AppData\Local\Temp\vgg_seq2seq.pth exsits. Ignore download!
+[INIT] Script directory: D:\University\PBL5\PBL5\src\main\model
+[INIT] Debug file path: D:\University\PBL5\PBL5\src\main\model\kiem_tra_ocr.txt
+ * Serving Flask app 'moderate'
+ * Debug mode: off

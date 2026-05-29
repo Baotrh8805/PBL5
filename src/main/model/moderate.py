@@ -874,8 +874,22 @@ class ContentModerationSystem:
             label_names = {0: "CLEAN", 1: "OFFENSIVE", 2: "HATE"}
             append_debug_line(f"[OCR] video/image text={repr(video_hate_text)}")
             append_debug_line(f"[EVAL] label={label_names.get(v_label, 'CLEAN')} score={v_hate_score:.6f}")
+        
         # Text OCR hatespeech score
         final_hate_score = max(c_hate_score, v_hate_score)
+
+        # Video/Image (OCR + Audio speech)
+        video_hatespeech_score = float(v_hate_score)
+        video_hatespeech_label = int(v_label)
+
+        if speech_label is not None and speech_score is not None:
+            if int(speech_label) > video_hatespeech_label:
+                video_hatespeech_label = int(speech_label)
+                video_hatespeech_score = float(speech_score)
+            elif int(speech_label) < video_hatespeech_label:
+                pass
+            else:
+                video_hatespeech_score = max(video_hatespeech_score, float(speech_score))
 
         # Calculate best_score: ignore speech if speech_label is 0, and ignore text if text label is 0
         best_score = max(final_nsfw_score, final_viol_score)
@@ -915,7 +929,11 @@ class ContentModerationSystem:
             "hate_speech_word": f"(Video:){video_hate_str} (Content:){content_hate_str}",
             "highest_score_frame": highest_score_frame_index,
             "total_frames": total_frames,
-            "fps": float(fps)
+            "fps": float(fps),
+            "content_hatespeech_score": float(c_hate_score),
+            "content_hatespeech_label": int(c_label),
+            "video_hatespeech_score": float(video_hatespeech_score),
+            "video_hatespeech_label": int(video_hatespeech_label)
         }
 
 

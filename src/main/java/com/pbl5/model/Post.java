@@ -35,6 +35,8 @@ public class Post extends BaseContent {
     private Double nsfwScore = 0.0;
     private Double violenceScore = 0.0;
     private Double hateSpeechScore = 0.0;
+    private Double hateSpeechContentScore = 0.0;
+    private Double hateSpeechVideoScore = 0.0;
 
     @Column(name = "speech_labels", columnDefinition = "TEXT")
     private String speechLabels;
@@ -272,5 +274,21 @@ public class Post extends BaseContent {
 
     public void setFps(Double fps) {
         this.fps = fps;
+    }
+
+    public Double getHateSpeechContentScore() {
+        return hateSpeechContentScore;
+    }
+
+    public void setHateSpeechContentScore(Double hateSpeechContentScore) {
+        this.hateSpeechContentScore = hateSpeechContentScore;
+    }
+
+    public Double getHateSpeechVideoScore() {
+        return hateSpeechVideoScore;
+    }
+
+    public void setHateSpeechVideoScore(Double hateSpeechVideoScore) {
+        this.hateSpeechVideoScore = hateSpeechVideoScore;
     }
 }

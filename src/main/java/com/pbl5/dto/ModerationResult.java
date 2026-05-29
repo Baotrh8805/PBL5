@@ -8,6 +8,8 @@ public class ModerationResult {
     private Double nsfwScore;
     private Double violenceScore;
     private Double hateSpeechScore;
+    private Double hateSpeechContentScore;
+    private Double hateSpeechVideoScore;
     private Boolean violationDetected;
     private String detectedText;
     private String mediaType;
@@ -25,7 +27,8 @@ public class ModerationResult {
             Boolean violationDetected, String detectedText, String mediaType,
             String nsfwBox, String violenBox, String hateSpeechWord,
             Integer highestScoreFrameIndex, Integer highestScoreFrameSecond,
-            Integer totalFramesAnalyzed, Double fps, String speechLabels) {
+            Integer totalFramesAnalyzed, Double fps, String speechLabels,
+            Double hateSpeechContentScore, Double hateSpeechVideoScore) {
         this.status = status;
         this.bestScore = bestScore;
         this.nsfwScore = nsfwScore;
@@ -42,6 +45,8 @@ public class ModerationResult {
         this.totalFramesAnalyzed = totalFramesAnalyzed;
         this.fps = fps;
         this.speechLabels = speechLabels;
+        this.hateSpeechContentScore = hateSpeechContentScore;
+        this.hateSpeechVideoScore = hateSpeechVideoScore;
     }
 
     public String getSpeechLabels() {
@@ -170,5 +175,21 @@ public class ModerationResult {
 
     public void setFps(Double fps) {
         this.fps = fps;
+    }
+
+    public Double getHateSpeechContentScore() {
+        return hateSpeechContentScore;
+    }
+
+    public void setHateSpeechContentScore(Double hateSpeechContentScore) {
+        this.hateSpeechContentScore = hateSpeechContentScore;
+    }
+
+    public Double getHateSpeechVideoScore() {
+        return hateSpeechVideoScore;
+    }
+
+    public void setHateSpeechVideoScore(Double hateSpeechVideoScore) {
+        this.hateSpeechVideoScore = hateSpeechVideoScore;
     }
 }

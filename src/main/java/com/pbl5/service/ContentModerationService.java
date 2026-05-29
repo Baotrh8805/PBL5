@@ -57,7 +57,7 @@ public class ContentModerationService {
 
         if (!hasContent && !hasImage && !hasVideo) {
             return new ModerationResult(PostStatus.ACTIVE, 0.0, 0.0, 0.0, 0.0, false, "", mediaType,
-                    null, null, "(Video:) (Content:)", null, null, 0, 30.0, null);
+                    null, null, "(Video:) (Content:)", null, null, 0, 30.0, "0:0.000000;0:0.000000", 0.0, 0.0);
         }
 
         try {
@@ -67,16 +67,22 @@ public class ContentModerationService {
             double nsfwScore = ((Number) scores.getOrDefault("nsfw_score", 0.0)).doubleValue();
             double violenceScore = ((Number) scores.getOrDefault("violence_score", 0.0)).doubleValue();
             double hateSpeechScore = ((Number) scores.getOrDefault("hatespeech_score", 0.0)).doubleValue();
-            // speech-specific fields from ViHSD audio model
-            Object speechProbsObj = scores.get("speech_probs");
-            String speechLabel = scores.get("speech_label") != null ? String.valueOf(scores.get("speech_label")) : null;
-            Double speechScore = scores.get("speech_score") != null
-                    ? ((Number) scores.get("speech_score")).doubleValue()
-                    : null;
+            
+            double contentHateScore = scores.containsKey("content_hatespeech_score")
+                    ? ((Number) scores.get("content_hatespeech_score")).doubleValue()
+                    : 0.0;
+            int contentHateLabel = scores.containsKey("content_hatespeech_label")
+                    ? ((Number) scores.get("content_hatespeech_label")).intValue()
+                    : 0;
+
+            double videoHateScore = scores.containsKey("video_hatespeech_score")
+                    ? ((Number) scores.get("video_hatespeech_score")).doubleValue()
+                    : 0.0;
+            int videoHateLabel = scores.containsKey("video_hatespeech_label")
+                    ? ((Number) scores.get("video_hatespeech_label")).intValue()
+                    : 0;
+
             double bestScore = ((Number) scores.getOrDefault("best_score", 0.0)).doubleValue();
-            Integer hateSpeechLabel = scores.get("hatespeech_label") != null
-                    ? ((Number) scores.get("hatespeech_label")).intValue()
-                    : null;
             String detectedText = String.valueOf(scores.getOrDefault("detected_text", ""));
             String nsfwBox = normalizeJsonValue(scores.get("nsfw_box"));
             String violenBox = normalizeJsonValue(scores.get("violen_box"));
@@ -87,42 +93,13 @@ public class ContentModerationService {
                     ? normalizeJsonValue(scores.get("content_hate_speech"))
                     : "";
 
-            // Choose the hatespeech label and score (text vs speech)
-            int chosenLabelInt = 0;
-            double chosenHateScore = hateSpeechScore;
+            int chosenLabelInt = Math.max(contentHateLabel, videoHateLabel);
+            double chosenHateScore = Math.max(contentHateScore, videoHateScore);
 
-            if (speechLabel != null && speechScore != null) {
-                int speechLabelInt = 0;
-                if ("1".equals(speechLabel) || "offensive".equalsIgnoreCase(speechLabel)) {
-                    speechLabelInt = 1;
-                } else if ("2".equals(speechLabel) || "hate".equalsIgnoreCase(speechLabel)) {
-                    speechLabelInt = 2;
-                }
-
-                int textLabelInt = (hateSpeechLabel != null) ? hateSpeechLabel : 0;
-
-                if (textLabelInt > speechLabelInt) {
-                    chosenLabelInt = textLabelInt;
-                    chosenHateScore = hateSpeechScore;
-                } else if (speechLabelInt > textLabelInt) {
-                    chosenLabelInt = speechLabelInt;
-                    chosenHateScore = speechScore;
-                } else {
-                    if (hateSpeechScore >= speechScore) {
-                        chosenLabelInt = textLabelInt;
-                        chosenHateScore = hateSpeechScore;
-                    } else {
-                        chosenLabelInt = speechLabelInt;
-                        chosenHateScore = speechScore;
-                    }
-                }
-            } else {
-                chosenLabelInt = (hateSpeechLabel != null) ? hateSpeechLabel : 0;
-                chosenHateScore = hateSpeechScore;
-            }
-
-            // Always format speechLabelsStr with the chosen hatespeech label and score
-            String speechLabelsStr = chosenLabelInt + ":" + String.format(java.util.Locale.US, "%.6f", chosenHateScore);
+            // Always format speechLabelsStr with content and video hatespeech label and score
+            String speechLabelsStr = String.format(java.util.Locale.US, "%d:%.6f;%d:%.6f", 
+                    contentHateLabel, contentHateScore, 
+                    videoHateLabel, videoHateScore);
 
             // Luôn lưu cả 2 prefix để frontend bóc tách dễ dàng, tránh lỗi khi trường bị
             // null
@@ -204,14 +181,14 @@ public class ContentModerationService {
 
             return new ModerationResult(status, bestScore, nsfwScore, violenceScore, hateSpeechScore,
                     violationDetected, detectedText, mediaType, nsfwBox, violenBox, hateSpeechWord,
-                    null, highestScoreFrame, totalFrames, fps, speechLabelsStr);
+                    null, highestScoreFrame, totalFrames, fps, speechLabelsStr, contentHateScore, videoHateScore);
 
         } catch (Exception e) {
             // Nếu có lỗi, cho phép đăng bài (fail-open approach)
             logger.error("[MODERATION] Lỗi kiểm tra nội dung: {}", e.getMessage(), e);
             // Vẫn trả về cấu trúc prefix rỗng để không lỗi UI
             return new ModerationResult(PostStatus.ACTIVE, 0.0, 0.0, 0.0, 0.0, false, "", mediaType,
-                    null, null, "(Video:) (Content:)", null, null, 0, 30.0, null);
+                    null, null, "(Video:) (Content:)", null, null, 0, 30.0, "0:0.000000;0:0.000000", 0.0, 0.0);
         }
     }
 
@@ -255,6 +232,8 @@ public class ContentModerationService {
             post.setViolenceScore(moderationResult.getViolenceScore());
             post.setHateSpeechScore(moderationResult.getHateSpeechScore());
             post.setSpeechLabels(moderationResult.getSpeechLabels());
+            post.setHateSpeechContentScore(moderationResult.getHateSpeechContentScore());
+            post.setHateSpeechVideoScore(moderationResult.getHateSpeechVideoScore());
 
             post.setViolationRate(Math.max(0.0, Math.min(100.0, moderationResult.getBestScore() * 100.0)));
             post.setNsfwBox(moderationResult.getNsfwBox());

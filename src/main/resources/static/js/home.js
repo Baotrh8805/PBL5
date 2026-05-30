@@ -307,7 +307,7 @@ function prependCreatedPostToFeed(post) {
 
                 <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
                     <img src="${document.getElementById('header-avatar') && document.getElementById('header-avatar').src ? document.getElementById('header-avatar').src : '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
-                    <div style="flex: 1; position: relative; display: flex; align-items: center; background: #f0f2f5; border-radius: 20px; padding: 0 12px;">
+                    <div style="flex: 1; position: relative; display: flex; align-items: center; background: var(--comment-bg); border-radius: 20px; padding: 0 12px; border: 1px solid var(--border-color);">
                         <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." 
                             onkeypress="handleCommentKeyPress(event, ${post.id})" 
                             style="flex: 1; background: transparent; border: none; padding: 8px 0; outline: none; font-size: 14px;">
@@ -362,9 +362,34 @@ function renderPosts(posts, token) {
         else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
         else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
         const isMine = post.mine ?? post.isMine ?? false;
+        const status = String(post.status || '').toUpperCase();
+        const isRejected = status === 'REJECTED' || status === 'AUTO_REJECTED';
+        const isPending = status === 'PENDING_REVIEW';
+        
+        let warningBanner = '';
+        let cardStyle = '';
+        
+        if (isRejected) {
+            cardStyle = ' style="opacity: 0.85; border: 1.5px solid #ff8182;"';
+            warningBanner = `
+                <div style="background-color: #ffebe9; border: 1px solid #ff8182; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #d1293f; font-size: 13.5px; font-weight: 600;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
+                    <span>Bài viết đã bị gỡ do vi phạm tiêu chuẩn cộng đồng (Chỉ bạn mới nhìn thấy).</span>
+                </div>
+            `;
+        } else if (isPending) {
+            cardStyle = ' style="border: 1.5px solid #fab005;"';
+            warningBanner = `
+                <div style="background-color: #fff9db; border: 1px solid #fab005; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #f08c00; font-size: 13.5px; font-weight: 600;">
+                    <i class="fa-solid fa-clock" style="font-size: 16px;"></i>
+                    <span>Bài viết đang chờ duyệt bởi đội ngũ quản trị (Chỉ bạn mới nhìn thấy).</span>
+                </div>
+            `;
+        }
 
         let postHtml = `
-        <article class="card post" id="post-${post.id}">
+        <article class="card post" id="post-${post.id}"${cardStyle}>
+            ${warningBanner}
             <div class="post-header">
                 <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" loading="lazy" onerror="this.src='/uploads/default-avatar.png'">
                 <div class="post-meta">
@@ -445,7 +470,7 @@ function renderPosts(posts, token) {
 
                 <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
                     <img src="${document.getElementById('header-avatar') && document.getElementById('header-avatar').src ? document.getElementById('header-avatar').src : '/uploads/default-avatar.png'}" class="avatar-small" loading="lazy" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
-                    <div style="flex: 1; position: relative; display: flex; align-items: center; background: #f0f2f5; border-radius: 20px; padding: 0 12px;">
+                    <div style="flex: 1; position: relative; display: flex; align-items: center; background: var(--comment-bg); border-radius: 20px; padding: 0 12px; border: 1px solid var(--border-color);">
                         <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." 
                             onkeypress="handleCommentKeyPress(event, ${post.id})" 
                             style="flex: 1; background: transparent; border: none; padding: 8px 0; outline: none; font-size: 14px;">

@@ -75,7 +75,6 @@ function renderManagePostsFeed(posts) {
         } else {
             actionButtons = `
                 ${isPending ? `<button class="btn-action success" onclick="approvePost('${post.id}')" style="padding: 8px 16px; font-size: 14px; font-weight: 600;">Duyệt</button>` : ''}
-                <button class="btn-action warning" onclick="hidePostAdmin('${post.id}')" style="padding: 8px 16px; font-size: 14px; font-weight: 600;">Ẩn</button>
                 <button class="btn-action danger" onclick="deletePost('${post.id}')" style="padding: 8px 16px; font-size: 14px; font-weight: 600;">Xóa bài</button>
             `;
         }

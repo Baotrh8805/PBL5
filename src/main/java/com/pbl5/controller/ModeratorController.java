@@ -270,8 +270,8 @@ public class ModeratorController {
         }
 
         Post post = postOpt.get();
-        if (post.getStatus() != PostStatus.PENDING_REVIEW) {
-            return ResponseEntity.status(400).body("Bài viết này đã được xử lý bởi người khác.");
+        if (post.getStatus() == PostStatus.REJECTED || post.getStatus() == PostStatus.AUTO_REJECTED || post.getStatus() == PostStatus.DELETED) {
+            return ResponseEntity.status(400).body("Bài viết này đã được xử lý hoặc gỡ trước đó.");
         }
 
         post.setStatus(PostStatus.REJECTED);

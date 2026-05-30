@@ -30,7 +30,12 @@ public class ModerationApiLauncher {
         }
 
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("python", "moderate.py");
+            String pythonCmd = "python";
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("mac") || os.contains("nix") || os.contains("nux")) {
+                pythonCmd = "python3";
+            }
+            ProcessBuilder processBuilder = new ProcessBuilder(pythonCmd, "moderate.py");
             processBuilder.directory(MODEL_DIR.toFile());
             processBuilder.redirectErrorStream(true);
             processBuilder.inheritIO();

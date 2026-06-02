@@ -733,6 +733,9 @@ public class ModeratorController {
     }
 
     private String buildViolationEvidence(Post post) {
+        if (post.getStatus() == PostStatus.ACTIVE || post.getStatus() == PostStatus.PUBLISHED || "Không vi phạm".equals(resolveViolationLabel(post))) {
+            return "Không có vi phạm";
+        }
         String content = post.getContent();
         if (content != null && !content.trim().isEmpty()) {
             String trimmed = content.trim();

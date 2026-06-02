@@ -124,7 +124,9 @@ function renderList(elementId, list, type) {
 
         el.innerHTML += `
             <div class="friend-card">
-                <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}&background=00d1b2&color=fff'">
+                <a href="/html/profile.html?userId=${u.id}">
+                    <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.fullName)}&background=00d1b2&color=fff'">
+                </a>
                 <div class="friend-card-content">
                     <div class="friend-card-name"><a href="/html/profile.html?userId=${u.id}" style="text-decoration:none; color:inherit;">${u.fullName}</a></div>
                     <div>${buttons}</div>
@@ -214,7 +216,9 @@ function renderSidebarSuggestions(users) {
         const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
         return `
             <div class="suggestion-item" id="suggestion-item-sidebar-${user.id}">
-                <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                <a href="/html/profile.html?userId=${user.id}">
+                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                </a>
                 <div class="suggestion-info">
                     <a href="/html/profile.html?userId=${user.id}" class="suggestion-name">${user.fullName}</a>
                     <span class="suggestion-mutual">Gợi ý cho bạn</span>

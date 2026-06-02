@@ -230,7 +230,9 @@ function prependCreatedPostToFeed(post) {
     let postHtml = `
         <article class="card post" id="post-${post.id}">
             <div class="post-header">
-                <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                <a href="/html/profile.html?userId=${post.authorId}">
+                    <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                </a>
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                     <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">Vừa xong</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
@@ -391,7 +393,9 @@ function renderPosts(posts, token) {
         <article class="card post" id="post-${post.id}"${cardStyle}>
             ${warningBanner}
             <div class="post-header">
-                <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" loading="lazy" onerror="this.src='/uploads/default-avatar.png'">
+                <a href="/html/profile.html?userId=${post.authorId}">
+                    <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" loading="lazy" onerror="this.src='/uploads/default-avatar.png'">
+                </a>
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                     <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">${timeSince(post.createdAt)}</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
@@ -978,7 +982,9 @@ function renderCommentItem(c, postId, isReply = false) {
     return `
         <div class="comment-container" id="comment-container-${c.id}" style="margin-bottom: 5px;">
             <div class="comment" style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
+                <a href="/html/profile.html?userId=${c.authorId}">
+                    <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
+                </a>
                 <div class="comment-bubble" style="background: var(--comment-bg); padding: 6px 12px; border-radius: 18px; max-width: 85%; position: relative;">
                     <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
                     <div id="comment-content-${c.id}" style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
@@ -1229,7 +1235,9 @@ function renderSidebarSuggestions(users) {
         const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
         return `
             <div class="suggestion-item" id="suggestion-item-${user.id}">
-                <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                <a href="/html/profile.html?userId=${user.id}">
+                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                </a>
                 <div class="suggestion-info">
                     <a href="/html/profile.html?userId=${user.id}" class="suggestion-name">${user.fullName}</a>
                     <span class="suggestion-mutual">Gợi ý cho bạn</span>

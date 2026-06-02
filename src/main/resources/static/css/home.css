@@ -895,6 +895,14 @@ html[data-theme="dark"] .profile-card:hover {
     position: relative; /* Thêm relative để thẻ dropdown menu có thể neo theo */
 }
 
+.post:hover {
+    z-index: 5;
+}
+
+.post:has(.dropdown-content.show) {
+    z-index: 10;
+}
+
 .post-header {
     display: flex;
     align-items: center;

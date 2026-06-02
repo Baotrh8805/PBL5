@@ -342,7 +342,9 @@ function renderProfilePosts(posts) {
         let postHtml = `
         <article class="card post" id="post-${post.id}" ${(isRejected || isPending || isDeleted) ? 'style="opacity: 0.8; border: 1px solid ' + (isRejected ? '#ff8182' : (isPending ? '#fab005' : '#ccc')) + ';"' : ''}>
             <div class="post-header">
-                <img src="${post.authorAvatar || '/uploads/default-avatar.png'}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                <a href="/html/profile.html?userId=${post.authorId}">
+                    <img src="${post.authorAvatar || '/uploads/default-avatar.png'}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                </a>
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                     <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">${timeSince(post.createdAt)}</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
@@ -732,7 +734,9 @@ async function fetchComments(postId) {
             listDiv.innerHTML += `
                 <div style="margin-bottom: 10px;">
                     <div class="comment" style="display: flex; gap: 8px;">
-                        <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
+                        <a href="/html/profile.html?userId=${c.authorId}">
+                            <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
+                        </a>
                         <div class="comment-bubble" style="background: var(--comment-bg); padding: 8px 12px; border-radius: 18px; max-width: 80%;">
                             <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
                             <div style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
@@ -1055,7 +1059,9 @@ window.prependCreatedPostToFeed = function(post) {
     let postHtml = `
     <article class="card post" id="post-${post.id}">
         <div class="post-header">
-            <img src="${authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff'">
+            <a href="/html/profile.html">
+                <img src="${authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff'">
+            </a>
             <div class="post-meta">
                 <h4 class="post-author"><a href="/html/profile.html" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                 <span class="post-time">Vừa xong <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>

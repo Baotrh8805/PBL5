@@ -155,9 +155,14 @@ function renderPostDetail(post) {
     }
 
     // Author
-    document.getElementById('post-author-name').innerText = post.authorName;
+    document.getElementById('post-author-name').innerHTML = `<a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a>`;
     const authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff`;
-    document.getElementById('post-author-avatar').src = authorAvatar;
+    const authorAvatarImg = document.getElementById('post-author-avatar');
+    authorAvatarImg.src = authorAvatar;
+    authorAvatarImg.style.cursor = 'pointer';
+    authorAvatarImg.onclick = () => {
+        window.location.href = `/html/profile.html?userId=${post.authorId}`;
+    };
 
     // Time
     document.getElementById('post-time').innerText = timeSince(post.createdAt);
@@ -309,7 +314,9 @@ function renderCommentItem(c, isReply = false) {
     return `
         <div class="comment-item-container" id="comment-container-${c.id}" style="margin-bottom: 15px;">
             <div class="comment-item" style="display: flex; gap: 10px;">
-                <img src="${avatar}" class="avatar-small" loading="lazy" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;">
+                <a href="/html/profile.html?userId=${c.authorId}">
+                    <img src="${avatar}" class="avatar-small" loading="lazy" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;">
+                </a>
                 <div class="comment-bubble" style="background: var(--comment-bg); padding: 6px 12px; border-radius: 18px; max-width: 85%; position: relative;">
                     <a href="/html/profile.html?userId=${c.authorId}" class="comment-user" style="font-weight: bold; color: inherit; text-decoration: none; font-size: 13px;">${c.authorName}</a>
                     <div class="comment-text" id="comment-content-${c.id}" style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${c.content || ''}</div>

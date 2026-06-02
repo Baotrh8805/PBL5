@@ -145,3 +145,98 @@
 [EVAL] label=HATE score=0.981344
 [FINAL TEXT] len=16 text='diết thằng chó m'
 [REQUEST] Complete best_score=0.9813 frames=0 violating_words=(Video:) (Content:)diết[O] thằng[O] chó[I-T] m[O] detailed_tags=(Video:) (Content:)diết[O] thằng[O] chó[I-T] m[O]
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=4 text='helo'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='helo'
+[EVAL] label=CLEAN score=0.813730
+[FINAL TEXT] len=4 text='helo'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)helo[O] detailed_tags=(Video:) (Content:)helo[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=18 text='cái lồn má tụi mài'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='cái lồn má tụi mài'
+[EVAL] label=OFFENSIVE score=0.980159
+[FINAL TEXT] len=18 text='cái lồn má tụi mài'
+[REQUEST] Complete best_score=0.9802 frames=0 violating_words=(Video:) (Content:)cái[O] lồn[B-T] má[O] tụi[O] mài[O] detailed_tags=(Video:) (Content:)cái[O] lồn[B-T] má[O] tụi[O] mài[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=4 text='helo'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='helo'
+[EVAL] label=CLEAN score=0.813730
+[FINAL TEXT] len=4 text='helo'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)helo[O] detailed_tags=(Video:) (Content:)helo[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=18 text='Cái lồn má tụi mày'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='Cái lồn má tụi mày'
+[EVAL] label=HATE score=0.985554
+[FINAL TEXT] len=18 text='Cái lồn má tụi mày'
+[REQUEST] Complete best_score=0.9856 frames=0 violating_words=(Video:) (Content:)cái[O] lồn[B-T] má[O] tụi[O] mày[I-T] detailed_tags=(Video:) (Content:)cái[O] lồn[B-T] má[O] tụi[O] mày[I-T]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=16 text='Con chó xinh đẹp'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='Con chó xinh đẹp'
+[EVAL] label=CLEAN score=0.811998
+[FINAL TEXT] len=16 text='Con chó xinh đẹp'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)con[O] chó[O] xinh[O] đẹp[O] detailed_tags=(Video:) (Content:)con[O] chó[O] xinh[O] đẹp[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=14 text='chó má tụi mày'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='chó má tụi mày'
+[EVAL] label=HATE score=0.984766
+[FINAL TEXT] len=14 text='chó má tụi mày'
+[REQUEST] Complete best_score=0.9848 frames=0 violating_words=(Video:) (Content:)chó[B-T] má[O] tụi[O] mày[I-T] detailed_tags=(Video:) (Content:)chó[B-T] má[O] tụi[O] mày[I-T]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIHSD_SPEECH] Audio track not found or extraction failed
+[VIDEO] Opened successfully, fps=30.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=30 sampled_index=2
+[OCR] START frame=30 second=1
+[OCR] frame=30 sec=1 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=60 sampled_index=3
+[OCR] START frame=60 second=2
+[OCR] frame=60 sec=2 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=90 sampled_index=4
+[OCR] START frame=90 second=3
+[OCR] frame=90 sec=3 raw='' clean='' len=0
+[OCR SUMMARY] frames_with_text=0
+[VIDEO] Total frames analyzed: 4
+[FINAL TEXT] len=0 text=''
+[REQUEST] Complete best_score=0.8025 frames=4 violating_words=(Video:) (Content:) detailed_tags=(Video:) (Content:)
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=26 text='helo các tình yêu của mình'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='helo các tình yêu của mình'
+[EVAL] label=CLEAN score=0.815079
+[FINAL TEXT] len=26 text='helo các tình yêu của mình'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)helo[O] các[O] tình[O] yêu[O] của[O] mình[O] detailed_tags=(Video:) (Content:)helo[O] các[O] tình[O] yêu[O] của[O] mình[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=21 text='chào các bạn của mình'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='chào các bạn của mình'
+[EVAL] label=CLEAN score=0.812485
+[FINAL TEXT] len=21 text='chào các bạn của mình'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)chào[O] các[O] bạn[O] của[O] mình[O] detailed_tags=(Video:) (Content:)chào[O] các[O] bạn[O] của[O] mình[O]

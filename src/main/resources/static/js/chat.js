@@ -528,7 +528,7 @@ function appendMessageToUI(msg) {
     }
     
     div.className = `chat-message-wrapper ${isSent ? 'sent' : 'received'}`;
-    const targetAvatarHtml = !isSent ? `<img src="${window.chatTargetAvatarUrl || '/uploads/default-avatar.png'}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'">` : '';
+    const targetAvatarHtml = !isSent ? `<a href="/html/profile.html?userId=${msg.senderId}"><img src="${window.chatTargetAvatarUrl || '/uploads/default-avatar.png'}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'"></a>` : '';
 
     div.innerHTML = `
         ${targetAvatarHtml}

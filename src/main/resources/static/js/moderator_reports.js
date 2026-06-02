@@ -235,10 +235,6 @@ window.openReportDetailModal = function(reportId) {
                         onclick="resolveReport(${report.id}, 'DISMISSED');">
                         Bỏ qua
                     </button>
-                    <button type="button" class="btn btn-warning" style="background: #faad14; color: #fff; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; cursor: pointer;" 
-                        onclick="resolveReport(${report.id}, 'RESOLVED', 'HIDE');">
-                        Ẩn bài viết
-                    </button>
                     <button type="button" class="btn btn-danger" style="background: var(--danger-color); color: #fff; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 10px rgba(241, 70, 104, 0.3); cursor: pointer;" 
                         onclick="resolveReport(${report.id}, 'RESOLVED', 'DELETE');">
                         Xóa bài

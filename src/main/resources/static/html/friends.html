@@ -56,6 +56,9 @@
         .btn-delete { background: var(--button-bg); color: var(--text-main); }
         .btn-delete:hover { background: var(--button-hover); transform: scale(1.02); }
         
+        .btn-secondary { background: var(--button-bg); color: var(--text-main); }
+        .btn-secondary:hover { background: var(--button-hover); transform: scale(1.02); }
+        
         .nav-links-friends { display: flex; gap: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; transition: border-color 0.3s ease; }
         .nav-links-friends div { font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 8px 12px; transition: all 0.2s ease; border-radius: 6px; }
         .nav-links-friends div:hover { background: var(--button-hover); color: var(--text-main); }
@@ -86,8 +89,8 @@
                 <a href="/html/friends.html" class="nav-link active" title="Bạn bè">
                     <i class="fa-solid fa-user-group"></i>
                 </a>
-                <a href="#" class="nav-link" title="Khám phá">
-                    <i class="fa-regular fa-compass"></i>
+                <a href="/html/bookmarks.html" class="nav-link" title="Đã lưu">
+                    <i class="fa-regular fa-bookmark"></i>
                 </a>
             </nav>
         </div>
@@ -121,12 +124,19 @@
                     <div class="messenger-filters">
                         <button class="filter-chip active">Tất cả</button>
                         <button class="filter-chip">Chưa đọc</button>
-                        <button class="filter-chip">Nhóm</button>
                     </div>
 
                     <div class="messenger-body" id="inbox-list">
                         <!-- Nạp động qua JS loadInboxDropdown() -->
-                        <div style="padding: 15px; text-align: center; color: #65676B;">Đang tải...</div>
+                        <div class="skeleton-post card" style="width: 100%; border: none; box-shadow: none; margin-bottom: 0; padding: 12px;">
+                            <div class="skeleton-header" style="margin-bottom: 0; gap: 8px;">
+                                <div class="skeleton-avatar" style="width: 36px; height: 36px;"></div>
+                                <div class="skeleton-meta">
+                                    <div class="skeleton-line short" style="height: 8px; margin-bottom: 4px;"></div>
+                                    <div class="skeleton-line x-short" style="height: 6px; margin-bottom: 0;"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -201,9 +211,6 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Tài Khoản</div>
-                    <a href="#" class="menu-item">
-                        <i class="fa-solid fa-gear"></i> <span>Cài đặt & Quyền riêng tư</span>
-                    </a>
                     <a href="#" class="menu-item logout-btn" onclick="logout()">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Đăng xuất</span>
                     </a>
@@ -231,17 +238,47 @@
 
                 <div id="section-suggestions" class="friend-section">
                     <h2 class="friends-header">Những người bạn có thể biết</h2>
-                    <div id="suggestions-list" class="friend-list">Đang tải...</div>
+                    <div id="suggestions-list" class="friend-list">
+                        <div class="skeleton-post card" style="width: 100%; margin-bottom: 0;">
+                            <div class="skeleton-header" style="margin-bottom: 0;">
+                                <div class="skeleton-avatar" style="width: 45px; height: 45px;"></div>
+                                <div class="skeleton-meta">
+                                    <div class="skeleton-line short"></div>
+                                    <div class="skeleton-line x-short" style="height: 8px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="section-requests" class="friend-section" style="display: none;">
                     <h2 class="friends-header">Lời mời đã nhận</h2>
-                    <div id="requests-list" class="friend-list">Đang tải...</div>
+                    <div id="requests-list" class="friend-list">
+                        <div class="skeleton-post card" style="width: 100%; margin-bottom: 0;">
+                            <div class="skeleton-header" style="margin-bottom: 0;">
+                                <div class="skeleton-avatar" style="width: 45px; height: 45px;"></div>
+                                <div class="skeleton-meta">
+                                    <div class="skeleton-line short"></div>
+                                    <div class="skeleton-line x-short" style="height: 8px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="section-friends" class="friend-section" style="display: none;">
                     <h2 class="friends-header">Danh sách bạn bè</h2>
-                    <div id="my-friends-list" class="friend-list">Đang tải...</div>
+                    <div id="my-friends-list" class="friend-list">
+                        <div class="skeleton-post card" style="width: 100%; margin-bottom: 0;">
+                            <div class="skeleton-header" style="margin-bottom: 0;">
+                                <div class="skeleton-avatar" style="width: 45px; height: 45px;"></div>
+                                <div class="skeleton-meta">
+                                    <div class="skeleton-line short"></div>
+                                    <div class="skeleton-line x-short" style="height: 8px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -255,20 +292,6 @@
                 </div>
                 <div id="sidebar-suggestions" class="suggestions-list">
                     <div class="empty-state">Chưa có gợi ý</div>
-                </div>
-            </div>
-
-            <div class="card trending-card">
-                <h3>Chủ đề thịnh hành</h3>
-                <div class="trending-list">
-                    <div class="trending-item">
-                        <span class="trending-tag">#LCNetwork</span>
-                        <span class="trending-count">1.2k bài viết</span>
-                    </div>
-                    <div class="trending-item">
-                        <span class="trending-tag">#CongNghe</span>
-                        <span class="trending-count">850 bài viết</span>
-                    </div>
                 </div>
             </div>
 
@@ -294,7 +317,20 @@
             <input type="text" id="chat-sidebar-search-input" placeholder="Tìm kiếm người dùng..." style="width:100%; padding: 8px; border-radius: 20px; border: 1px solid #ced0d4; outline:none;" onkeyup="searchChatUsers(this.value)">
         </div>
         <div id="chat-contact-list">
-            <div style="padding: 15px; color:#65676B; font-size:14px;">Đang tải...</div>
+            <div class="skeleton-chat-contacts" style="padding: 10px; display: flex; flex-direction: column; gap: 12px;">
+                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                    <div class="skeleton-line" style="height: 10px; width: 60%; margin-bottom: 0;"></div>
+                </div>
+                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                    <div class="skeleton-line" style="height: 10px; width: 50%; margin-bottom: 0;"></div>
+                </div>
+                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                    <div class="skeleton-line" style="height: 10px; width: 55%; margin-bottom: 0;"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -319,6 +355,58 @@
     <!-- Scripts -->
     <!-- Toast notification -->
     <div id="toast" class="toast hidden"></div>
+
+    <!-- Create Post Modal (Hidden by default) -->
+    <div id="create-post-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content light-mode">
+            <div class="modal-header">
+                <h2>Tạo bài viết</h2>
+                <button class="close-modal" onclick="closePostModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="modal-user-info">
+                    <img src="/uploads/default-avatar.png" id="modal-avatar" alt="Avatar" class="avatar-small">
+                    <div class="modal-user-details">
+                        <span class="modal-user-name">Đang tải...</span>
+                        <!-- Hidden actual select for function overlapping a beautiful button -->
+                        <div style="position: relative; display: inline-block;">
+                            <button type="button" class="modal-visibility-btn">
+                                <i class="fa-solid fa-earth-americas"></i>Công khai<i class="fa-solid fa-caret-down" style="font-size: 12px; margin-left: 4px;"></i>
+                            </button>
+                            <select id="modal-post-visibility" onchange="updateModalVisibility(this.value)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                                <option value="PUBLIC" selected>Công khai</option>
+                                <option value="FRIENDS">Bạn bè</option>
+                                <option value="PRIVATE">Mình tôi</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-textarea-container">
+                    <textarea id="modal-post-content" placeholder="Bạn đang nghĩ gì thế?" oninput="checkModalPostContent()"></textarea>
+                </div>
+
+                <div id="modal-image-preview-container" style="display: none; position: relative; margin: 10px 0;">
+                    <img id="modal-image-preview" src="" style="width: 100%; border-radius: 8px; max-height: 300px; object-fit: contain; background: #000;">
+                    <video id="modal-video-preview" controls style="width: 100%; border-radius: 8px; max-height: 300px; display: none; background: #000;"></video>
+                    <button onclick="removeModalMedia()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="modal-add-to-post">
+                    <span>Thêm vào bài viết của bạn</span>
+                    <div class="modal-add-icons">
+                        <input type="file" id="modal-image-input" accept="image/*,video/*" style="display: none;" onchange="previewModalMedia(event)">
+                        <button class="add-icon-btn tooltip" onclick="document.getElementById('modal-image-input').click()"><i class="fa-solid fa-images" style="color: #45bd62;"></i> Ảnh/Video</button>
+                    </div>
+                </div>
+
+                <button id="modal-submit-btn" class="modal-submit-btn" disabled onclick="submitModalPost()">Đăng</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Report Modal -->
     <div id="report-modal" class="modal-overlay" style="display: none; z-index: 3000;">
@@ -348,6 +436,7 @@
     </div>
 
     <script src="/js/friends.js"></script>
+    <script src="/js/post-creation.js" defer></script>
     <script src="/js/chat.js"></script>
 </body>
 </html>

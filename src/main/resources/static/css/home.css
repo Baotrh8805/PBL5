@@ -17,13 +17,17 @@
     --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.04), 0 2px 10px rgba(0, 0, 0, 0.02);
     --button-bg: #e4e6eb;
     --button-hover: #d8dadf;
+    --comment-bg: #f0f2f5;
+    
+    --skeleton-bg: #e4e6eb;
+    --skeleton-pulse: #f0f2f5;
 }
 
 html[data-theme="dark"] {
     --bg-color: #0f1011;
     --card-bg: #1b1c1e;
     --text-main: #f1f3f5;
-    --text-muted: #9fa6ad;
+    --text-muted: #b2bac2; /* Increased contrast for accessibility */
     --border-color: #2c2e30;
     --primary-light: rgba(0, 209, 178, 0.15);
     
@@ -31,7 +35,18 @@ html[data-theme="dark"] {
     --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
     --button-bg: #2d2e30;
     --button-hover: #3d3e40;
+    --comment-bg: #2d2e30;
+    
+    --skeleton-bg: #2c2e30;
+    --skeleton-pulse: #3d3e40;
 }
+
+.comment-bubble {
+    background-color: var(--comment-bg) !important;
+    color: var(--text-main) !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 
 * {
     margin: 0;
@@ -105,7 +120,7 @@ html[data-theme="dark"] .card:hover {
     display: flex;
     align-items: center;
     gap: 15px;
-    width: 340px; /* Match left sidebar width approx for balance */
+    width: 420px; /* Increased search bar width */
 }
 
 .logo {
@@ -214,7 +229,7 @@ html[data-theme="dark"] .card:hover {
     align-items: center;
     justify-content: flex-end;
     gap: 15px;
-    width: 340px; /* Match right sidebar width approx for balance */
+    width: 420px; /* Match left side for symmetry */
 }
 
 .create-btn {
@@ -399,6 +414,9 @@ html[data-theme="dark"] .card:hover {
 }
 .profile-card:hover {
     background-color: #f8f9fa;
+}
+html[data-theme="dark"] .profile-card:hover {
+    background-color: var(--button-hover);
 }
 
 .avatar-large {
@@ -877,6 +895,14 @@ html[data-theme="dark"] .card:hover {
     position: relative; /* Thêm relative để thẻ dropdown menu có thể neo theo */
 }
 
+.post:hover {
+    z-index: 5;
+}
+
+.post:has(.dropdown-content.show) {
+    z-index: 10;
+}
+
 .post-header {
     display: flex;
     align-items: center;
@@ -1116,6 +1142,9 @@ html[data-theme="dark"] .add-friend-sidebar-btn:hover {
     .left-sidebar, .right-sidebar {
         display: none;
     }
+    .header-left, .header-right {
+        width: auto;
+    }
 }/* Dropdown Menu CSS */
 .post-options {
     position: absolute;
@@ -1352,9 +1381,9 @@ html[data-theme="dark"] .modal-overlay {
 
 /* Skeleton Loading Animation */
 @keyframes skeleton-pulse {
-    0% { background-color: #e4e6eb; }
-    50% { background-color: #f0f2f5; }
-    100% { background-color: #e4e6eb; }
+    0% { background-color: var(--skeleton-bg); }
+    50% { background-color: var(--skeleton-pulse); }
+    100% { background-color: var(--skeleton-bg); }
 }
 
 .skeleton-post {
@@ -1382,7 +1411,7 @@ html[data-theme="dark"] .modal-overlay {
 
 .skeleton-line {
     height: 12px;
-    background-color: #e4e6eb;
+    background-color: var(--skeleton-bg);
     border-radius: 6px;
     margin-bottom: 8px;
     animation: skeleton-pulse 1.5s infinite ease-in-out;
@@ -1415,4 +1444,70 @@ html[data-theme="dark"] .modal-overlay {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* Dark Mode Overrides for Modal, Search and specific elements */
+html[data-theme="dark"] .modal-header {
+    border-bottom: 1px solid var(--border-color);
+}
+html[data-theme="dark"] .close-modal {
+    background: var(--button-bg);
+    color: var(--text-muted);
+}
+html[data-theme="dark"] .close-modal:hover {
+    background: var(--button-hover);
+}
+html[data-theme="dark"] .modal-visibility-btn {
+    background: var(--button-bg);
+    color: var(--text-main);
+}
+html[data-theme="dark"] .modal-textarea-container textarea {
+    color: var(--text-main);
+}
+html[data-theme="dark"] .modal-add-to-post {
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+}
+html[data-theme="dark"] .modal-add-to-post span {
+    color: var(--text-main);
+}
+html[data-theme="dark"] .modal-submit-btn {
+    background: var(--button-bg);
+    color: var(--text-muted);
+}
+html[data-theme="dark"] .trending-tag {
+    color: var(--text-main);
+}
+html[data-theme="dark"] .search-result-item {
+    color: var(--text-main);
+}
+html[data-theme="dark"] .search-result-item:hover {
+    background: var(--button-hover);
+}
+html[data-theme="dark"] .add-friend-sidebar-btn.cancel-btn {
+    background: var(--button-bg);
+    color: var(--text-main);
+}
+html[data-theme="dark"] .add-friend-sidebar-btn.cancel-btn:hover {
+    background: var(--button-hover);
+}
+
+html[data-theme="dark"] .empty-state {
+    background: var(--button-bg);
+}
+
+/* Custom Scrollbar for Search dropdown in dark mode */
+html[data-theme="dark"] .search-results-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+html[data-theme="dark"] .search-results-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+html[data-theme="dark"] .search-results-dropdown::-webkit-scrollbar-thumb {
+    background: var(--button-hover);
+    border-radius: 4px;
+}
+html[data-theme="dark"] .search-results-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #4d4e50;
+}
+
 

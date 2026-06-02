@@ -257,9 +257,9 @@ async function fetchAndDisplayFriends(userId) {
                 container.innerHTML = '<div style="grid-column: span 3; padding: 20px; text-align: center; color: #65676b; font-size: 13px;">Chưa có bạn bè.</div>';
             }
             
-            // Cập nhật số người theo dõi (tạm thời dùng số bạn bè)
-            const statFollowers = document.querySelector('.stat-item:nth-child(2) strong');
-            if (statFollowers) statFollowers.innerText = friends.length;
+            // Cập nhật số lượng bạn bè
+            const statFriends = document.querySelector('.stat-item:nth-child(2) strong');
+            if (statFriends) statFriends.innerText = friends.length;
         }
     } catch (err) {
         console.error("Lỗi lấy bạn bè:", err);
@@ -313,14 +313,21 @@ function renderProfilePosts(posts) {
         else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
         const isMine = post.mine ?? post.isMine ?? false;
 
-        const isRejected = post.status === 'AUTO_REJECTED';
+        const isRejected = post.status === 'AUTO_REJECTED' || post.status === 'REJECTED';
+        const isPending = post.status === 'PENDING_REVIEW';
         const isDeleted = post.status === 'DELETED';
+        
         const rejectedHtml = isRejected ? `
             <div style="background-color: #ffebe9; border: 1px solid #ff8182; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: #d1293f; font-weight: 500;">
                 <i class="fa-solid fa-triangle-exclamation" style="font-size: 18px;"></i>
                 <span>Bài viết này đã bị gỡ khỏi hệ thống do vi phạm tiêu chuẩn cộng đồng. Chỉ có bạn mới có thể nhìn thấy nội dung này.</span>
             </div>
-        ` : '';
+        ` : (isPending ? `
+            <div style="background-color: #fff9db; border: 1px solid #fab005; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: #f08c00; font-weight: 500;">
+                <i class="fa-solid fa-clock" style="font-size: 18px;"></i>
+                <span>Bài viết đang chờ duyệt bởi đội ngũ quản trị. Chỉ có bạn mới có thể nhìn thấy nội dung này.</span>
+            </div>
+        ` : '');
 
         const deletedHtml = isDeleted ? `
             <div style="background-color: #f0f2f5; border: 1px solid #ccc; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; font-weight: 500;">
@@ -333,9 +340,11 @@ function renderProfilePosts(posts) {
         ` : '';
 
         let postHtml = `
-        <article class="card post" id="post-${post.id}" ${(isRejected || isDeleted) ? 'style="opacity: 0.8; border: 1px solid ' + (isRejected ? '#ff8182' : '#ccc') + ';"' : ''}>
+        <article class="card post" id="post-${post.id}" ${(isRejected || isPending || isDeleted) ? 'style="opacity: 0.8; border: 1px solid ' + (isRejected ? '#ff8182' : (isPending ? '#fab005' : '#ccc')) + ';"' : ''}>
             <div class="post-header">
-                <img src="${post.authorAvatar || '/uploads/default-avatar.png'}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                <a href="/html/profile.html?userId=${post.authorId}">
+                    <img src="${post.authorAvatar || '/uploads/default-avatar.png'}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                </a>
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                     <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">${timeSince(post.createdAt)}</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
@@ -725,8 +734,10 @@ async function fetchComments(postId) {
             listDiv.innerHTML += `
                 <div style="margin-bottom: 10px;">
                     <div class="comment" style="display: flex; gap: 8px;">
-                        <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
-                        <div class="comment-bubble" style="background: #f0f2f5; padding: 8px 12px; border-radius: 18px; max-width: 80%;">
+                        <a href="/html/profile.html?userId=${c.authorId}">
+                            <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
+                        </a>
+                        <div class="comment-bubble" style="background: var(--comment-bg); padding: 8px 12px; border-radius: 18px; max-width: 80%;">
                             <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
                             <div style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
                         </div>
@@ -1048,7 +1059,9 @@ window.prependCreatedPostToFeed = function(post) {
     let postHtml = `
     <article class="card post" id="post-${post.id}">
         <div class="post-header">
-            <img src="${authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff'">
+            <a href="/html/profile.html">
+                <img src="${authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff'">
+            </a>
             <div class="post-meta">
                 <h4 class="post-author"><a href="/html/profile.html" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                 <span class="post-time">Vừa xong <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>

@@ -230,7 +230,9 @@ function prependCreatedPostToFeed(post) {
     let postHtml = `
         <article class="card post" id="post-${post.id}">
             <div class="post-header">
-                <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                <a href="/html/profile.html?userId=${post.authorId}">
+                    <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
+                </a>
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                     <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">Vừa xong</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
@@ -307,7 +309,7 @@ function prependCreatedPostToFeed(post) {
 
                 <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
                     <img src="${document.getElementById('header-avatar') && document.getElementById('header-avatar').src ? document.getElementById('header-avatar').src : '/uploads/default-avatar.png'}" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
-                    <div style="flex: 1; position: relative; display: flex; align-items: center; background: #f0f2f5; border-radius: 20px; padding: 0 12px;">
+                    <div style="flex: 1; position: relative; display: flex; align-items: center; background: var(--comment-bg); border-radius: 20px; padding: 0 12px; border: 1px solid var(--border-color);">
                         <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." 
                             onkeypress="handleCommentKeyPress(event, ${post.id})" 
                             style="flex: 1; background: transparent; border: none; padding: 8px 0; outline: none; font-size: 14px;">
@@ -362,11 +364,38 @@ function renderPosts(posts, token) {
         else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
         else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
         const isMine = post.mine ?? post.isMine ?? false;
+        const status = String(post.status || '').toUpperCase();
+        const isRejected = status === 'REJECTED' || status === 'AUTO_REJECTED';
+        const isPending = status === 'PENDING_REVIEW';
+        
+        let warningBanner = '';
+        let cardStyle = '';
+        
+        if (isRejected) {
+            cardStyle = ' style="opacity: 0.85; border: 1.5px solid #ff8182;"';
+            warningBanner = `
+                <div style="background-color: #ffebe9; border: 1px solid #ff8182; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #d1293f; font-size: 13.5px; font-weight: 600;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
+                    <span>Bài viết đã bị gỡ do vi phạm tiêu chuẩn cộng đồng (Chỉ bạn mới nhìn thấy).</span>
+                </div>
+            `;
+        } else if (isPending) {
+            cardStyle = ' style="border: 1.5px solid #fab005;"';
+            warningBanner = `
+                <div style="background-color: #fff9db; border: 1px solid #fab005; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #f08c00; font-size: 13.5px; font-weight: 600;">
+                    <i class="fa-solid fa-clock" style="font-size: 16px;"></i>
+                    <span>Bài viết đang chờ duyệt bởi đội ngũ quản trị (Chỉ bạn mới nhìn thấy).</span>
+                </div>
+            `;
+        }
 
         let postHtml = `
-        <article class="card post" id="post-${post.id}">
+        <article class="card post" id="post-${post.id}"${cardStyle}>
+            ${warningBanner}
             <div class="post-header">
-                <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" loading="lazy" onerror="this.src='/uploads/default-avatar.png'">
+                <a href="/html/profile.html?userId=${post.authorId}">
+                    <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" loading="lazy" onerror="this.src='/uploads/default-avatar.png'">
+                </a>
                 <div class="post-meta">
                     <h4 class="post-author"><a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
                     <span class="post-time"><a href="/html/post.html?id=${post.id}" style="text-decoration:none; color:inherit;">${timeSince(post.createdAt)}</a> <span id="visibility-icon-${post.id}">${visibilityIcon}</span></span>
@@ -445,7 +474,7 @@ function renderPosts(posts, token) {
 
                 <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
                     <img src="${document.getElementById('header-avatar') && document.getElementById('header-avatar').src ? document.getElementById('header-avatar').src : '/uploads/default-avatar.png'}" class="avatar-small" loading="lazy" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
-                    <div style="flex: 1; position: relative; display: flex; align-items: center; background: #f0f2f5; border-radius: 20px; padding: 0 12px;">
+                    <div style="flex: 1; position: relative; display: flex; align-items: center; background: var(--comment-bg); border-radius: 20px; padding: 0 12px; border: 1px solid var(--border-color);">
                         <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." 
                             onkeypress="handleCommentKeyPress(event, ${post.id})" 
                             style="flex: 1; background: transparent; border: none; padding: 8px 0; outline: none; font-size: 14px;">
@@ -953,8 +982,10 @@ function renderCommentItem(c, postId, isReply = false) {
     return `
         <div class="comment-container" id="comment-container-${c.id}" style="margin-bottom: 5px;">
             <div class="comment" style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
-                <div class="comment-bubble" style="background: #f0f2f5; padding: 6px 12px; border-radius: 18px; max-width: 85%; position: relative;">
+                <a href="/html/profile.html?userId=${c.authorId}">
+                    <img src="${c.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
+                </a>
+                <div class="comment-bubble" style="background: var(--comment-bg); padding: 6px 12px; border-radius: 18px; max-width: 85%; position: relative;">
                     <strong style="font-size: 13px;"><a href="/html/profile.html?userId=${c.authorId}" style="text-decoration:none; color:inherit;">${c.authorName}</a></strong>
                     <div id="comment-content-${c.id}" style="font-size: 14px; margin-top: 2px; white-space: pre-wrap;">${escapeHtml(c.content || '')}</div>
                     ${mediaHtml}
@@ -990,7 +1021,7 @@ function showReplyInput(postId, commentId, authorName) {
     }
     
     container.innerHTML = `
-        <div style="display: flex; gap: 8px; align-items: center; background: #f0f2f5; border-radius: 20px; padding: 4px 12px;">
+        <div style="display: flex; gap: 8px; align-items: center; background: var(--comment-bg); border-radius: 20px; padding: 4px 12px;">
             <input type="text" id="reply-field-${commentId}" placeholder="Trả lời ${authorName}..." 
                 style="flex: 1; border: none; background: transparent; outline: none; padding: 6px 0; font-size: 13px;"
                 onkeypress="if(event.key==='Enter') submitReply(${postId}, ${commentId})">
@@ -1135,7 +1166,7 @@ window.startEditComment = function(postId, commentId, currentContent) {
     
     contentDiv.innerHTML = `
         <div style="margin-top: 5px;">
-            <textarea id="edit-input-${commentId}" style="width: 100%; border: 1px solid #ced4da; border-radius: 8px; padding: 5px; outline: none; font-size: 14px; font-family: inherit;">${currentContent}</textarea>
+            <textarea id="edit-input-${commentId}" style="width: 100%; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; padding: 5px; outline: none; font-size: 14px; font-family: inherit;">${currentContent}</textarea>
             <div style="display: flex; gap: 5px; margin-top: 5px; justify-content: flex-end;">
                 <button onclick="cancelEditComment(${commentId}, \`${originalHtml.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)" style="background: #e4e6eb; border: none; padding: 3px 8px; border-radius: 5px; font-size: 12px; cursor: pointer;">Hủy</button>
                 <button onclick="saveEditComment(${postId}, ${commentId})" style="background: var(--primary-color); color: white; border: none; padding: 3px 8px; border-radius: 5px; font-size: 12px; cursor: pointer;">Lưu</button>
@@ -1204,7 +1235,9 @@ function renderSidebarSuggestions(users) {
         const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
         return `
             <div class="suggestion-item" id="suggestion-item-${user.id}">
-                <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                <a href="/html/profile.html?userId=${user.id}">
+                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                </a>
                 <div class="suggestion-info">
                     <a href="/html/profile.html?userId=${user.id}" class="suggestion-name">${user.fullName}</a>
                     <span class="suggestion-mutual">Gợi ý cho bạn</span>

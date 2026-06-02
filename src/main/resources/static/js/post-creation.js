@@ -99,6 +99,12 @@ function parseErrorMessage(errorData, fallbackMessage) {
  * Mở modal tạo bài đăng
  */
 function openPostModal() {
+    // Reset visibility to PUBLIC by default to match visual state
+    const visibilitySelect = document.getElementById('modal-post-visibility');
+    if (visibilitySelect) {
+        visibilitySelect.value = 'PUBLIC';
+        updateModalVisibility('PUBLIC');
+    }
     document.getElementById('create-post-modal').style.display = 'flex';
     document.getElementById('modal-post-content').focus();
 }

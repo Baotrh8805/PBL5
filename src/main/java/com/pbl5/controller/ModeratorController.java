@@ -270,8 +270,8 @@ public class ModeratorController {
         }
 
         Post post = postOpt.get();
-        if (post.getStatus() != PostStatus.PENDING_REVIEW) {
-            return ResponseEntity.status(400).body("Bài viết này đã được xử lý bởi người khác.");
+        if (post.getStatus() == PostStatus.REJECTED || post.getStatus() == PostStatus.AUTO_REJECTED || post.getStatus() == PostStatus.DELETED) {
+            return ResponseEntity.status(400).body("Bài viết này đã được xử lý hoặc gỡ trước đó.");
         }
 
         post.setStatus(PostStatus.REJECTED);
@@ -287,8 +287,8 @@ public class ModeratorController {
             userRepository.save(author);
 
             sendNotification(author, moderator, "POST_REJECTED",
-                    "Bài viết của bạn đã bị gỡ do vi phạm tiêu chuẩn cộng đồng. Bạn bị cộng 1 điểm vi phạm.",
-                    "/html/home.html");
+                    "Bài viết của bạn đã bị gỡ do vi phạm tiêu chuẩn cộng đồng. Bạn bị cộng 1 điểm vi phạm. Bạn có 3 ngày để xem lại bài viết.",
+                    "/html/post.html?id=" + post.getId());
         }
 
         // Broadcast update
@@ -322,8 +322,8 @@ public class ModeratorController {
         User author = post.getUser();
         if (author != null) {
             sendNotification(author, moderator, "POST_HIDDEN",
-                    "Bài viết của bạn đã bị ẩn bởi đội ngũ quản trị.",
-                    "/html/home.html");
+                    "Bài viết của bạn đã bị ẩn bởi đội ngũ quản trị. Bạn có 3 ngày để xem lại bài viết.",
+                    "/html/post.html?id=" + post.getId());
         }
 
         return ResponseEntity.ok(Map.of("message", "Đã ẩn bài viết ID " + id));
@@ -485,13 +485,13 @@ public class ModeratorController {
                         userRepository.save(author);
 
                         sendNotification(author, moderator, "POST_REJECTED",
-                                "Bài viết của bạn đã bị gỡ do vi phạm tiêu chuẩn cộng đồng. Bạn bị cộng 1 điểm vi phạm.",
-                                "/html/home.html");
+                                "Bài viết của bạn đã bị gỡ do vi phạm tiêu chuẩn cộng đồng. Bạn bị cộng 1 điểm vi phạm. Bạn có 3 ngày để xem lại bài viết.",
+                                "/html/post.html?id=" + post.getId());
                     } else {
                         // Chỉ ẩn bài viết
                         sendNotification(author, moderator, "POST_HIDDEN",
-                                "Bài viết của bạn đã bị ẩn bởi đội ngũ quản trị.",
-                                "/html/home.html");
+                                "Bài viết của bạn đã bị ẩn bởi đội ngũ quản trị. Bạn có 3 ngày để xem lại bài viết.",
+                                "/html/post.html?id=" + post.getId());
                     }
                 }
             }

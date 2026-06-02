@@ -42,8 +42,8 @@
                 <a href="/html/friends.html" class="nav-link" title="Bạn bè">
                     <i class="fa-solid fa-user-group"></i>
                 </a>
-                <a href="#" class="nav-link" title="Khám phá">
-                    <i class="fa-regular fa-compass"></i>
+                <a href="/html/bookmarks.html" class="nav-link" title="Đã lưu">
+                    <i class="fa-regular fa-bookmark"></i>
                 </a>
             </nav>
         </div>
@@ -74,12 +74,19 @@
                     <div class="messenger-filters">
                         <button class="filter-chip active" onclick="setMessengerFilter('all', this)">Tất cả</button>
                         <button class="filter-chip" onclick="setMessengerFilter('unread', this)">Chưa đọc</button>
-                        <button class="filter-chip">Nhóm</button>
                     </div>
 
                     <div class="messenger-body" id="inbox-list">
                         <!-- Nạp động qua JS loadInboxDropdown() -->
-                        <div style="padding: 15px; text-align: center; color: #65676B;">Đang tải...</div>
+                        <div class="skeleton-post card" style="width: 100%; border: none; box-shadow: none; margin-bottom: 0; padding: 12px;">
+                            <div class="skeleton-header" style="margin-bottom: 0; gap: 8px;">
+                                <div class="skeleton-avatar" style="width: 36px; height: 36px;"></div>
+                                <div class="skeleton-meta">
+                                    <div class="skeleton-line short" style="height: 8px; margin-bottom: 4px;"></div>
+                                    <div class="skeleton-line x-short" style="height: 6px; margin-bottom: 0;"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -157,9 +164,6 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Tài Khoản</div>
-                    <a href="#" class="menu-item">
-                        <i class="fa-solid fa-gear"></i> <span>Cài đặt & Quyền riêng tư</span>
-                    </a>
                     <a href="#" class="menu-item logout-btn" onclick="logout()">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Đăng xuất</span>
                     </a>
@@ -232,20 +236,6 @@
                 </div>
             </div>
 
-            <div class="card trending-card">
-                <h3>Chủ đề thịnh hành</h3>
-                <div class="trending-list">
-                    <div class="trending-item">
-                        <span class="trending-tag">#LCNetwork</span>
-                        <span class="trending-count">1.2k bài viết</span>
-                    </div>
-                    <div class="trending-item">
-                        <span class="trending-tag">#CongNghe</span>
-                        <span class="trending-count">850 bài viết</span>
-                    </div>
-                </div>
-            </div>
-
             <footer class="sidebar-footer">
                 <div class="footer-links">
                     <a href="#">Chính sách bảo mật</a>
@@ -277,11 +267,11 @@
                             <!-- Hidden actual select for function overlapping a beautiful button -->
                             <div style="position: relative; display: inline-block;">
                                 <button type="button" class="modal-visibility-btn">
-                                    <i class="fa-solid fa-user-group"></i>Công khai<i class="fa-solid fa-caret-down" style="font-size: 12px; margin-left: 4px;"></i>
+                                    <i class="fa-solid fa-earth-americas"></i>Công khai<i class="fa-solid fa-caret-down" style="font-size: 12px; margin-left: 4px;"></i>
                                 </button>
                                 <select id="modal-post-visibility" onchange="updateModalVisibility(this.value)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
-                                    <option value="PUBLIC">Công khai</option>
-                                    <option value="FRIENDS" selected>Bạn bè</option>
+                                    <option value="PUBLIC" selected>Công khai</option>
+                                    <option value="FRIENDS">Bạn bè</option>
                                     <option value="PRIVATE">Mình tôi</option>
                                 </select>
                             </div>
@@ -364,7 +354,20 @@
         </div>
         <div id="chat-contact-list">
             <!-- Fetch friends dynamically -->
-            <div style="padding: 15px; color:#65676B; font-size:14px;">Đang tải...</div>
+            <div class="skeleton-chat-contacts" style="padding: 10px; display: flex; flex-direction: column; gap: 12px;">
+                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                    <div class="skeleton-line" style="height: 10px; width: 60%; margin-bottom: 0;"></div>
+                </div>
+                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                    <div class="skeleton-line" style="height: 10px; width: 50%; margin-bottom: 0;"></div>
+                </div>
+                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                    <div class="skeleton-line" style="height: 10px; width: 55%; margin-bottom: 0;"></div>
+                </div>
+            </div>
         </div>
     </div>
 

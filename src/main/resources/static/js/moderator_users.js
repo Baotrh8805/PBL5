@@ -345,7 +345,6 @@ window.viewUserDetails = async function(userId) {
                             } else {
                                 actionButtons = `
                                     ${isPending ? `<button class="btn-action success" onclick="approvePost('${post.id}')"><i class="fa-solid fa-check"></i> Duyệt</button>` : ''}
-                                    <button class="btn-action warning" onclick="hidePostAdmin('${post.id}')"><i class="fa-solid fa-eye-slash"></i> Ẩn</button>
                                     <button class="btn-action danger" onclick="deletePost('${post.id}')"><i class="fa-solid fa-trash-can"></i> Xóa bài</button>
                                 `;
                             }

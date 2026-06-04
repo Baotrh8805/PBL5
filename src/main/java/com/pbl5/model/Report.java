@@ -49,6 +49,9 @@ public class Report {
     @Column(columnDefinition = "TEXT")
     private String adminNote;
 
+    @Column(name = "appealed_moderator")
+    private String appealedModerator;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     // ===== GETTERS & SETTERS =====
@@ -83,6 +86,10 @@ public class Report {
     public String getAdminNote() { return adminNote; }
     public void setAdminNote(String adminNote) { this.adminNote = adminNote; }
 
+    public String getAppealedModerator() { return appealedModerator; }
+    public void setAppealedModerator(String appealedModerator) { this.appealedModerator = appealedModerator; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
+

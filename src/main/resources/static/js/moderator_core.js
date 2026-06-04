@@ -92,7 +92,7 @@ window.viewPostDetail = async function (postId) {
         window.currentViewedPostId = postId;
 
         let post = (window.cache.posts || []).find(p => p.id == postId);
-        
+
         if (!post) {
             console.warn("DEBUG: Post not found in cache, attempting to reload data...");
             await fetchPostsData();
@@ -140,7 +140,7 @@ window.viewPostDetail = async function (postId) {
 };
 
 // Global Error Logging for Debugging
-window.onerror = function(message, source, lineno, colno, error) {
+window.onerror = function (message, source, lineno, colno, error) {
     console.error("GLOBAL ERROR:", message, "at", source, ":", lineno);
 };
 
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function setupNavigation() {
     console.log("Setting up SPA Sidebar navigation...");
-    
+
     // Hide all mod sections except overview by default
     document.querySelectorAll('.mod-section').forEach(section => {
         if (section.id === 'overview-view') {
@@ -285,7 +285,7 @@ function setupNavigation() {
         link.addEventListener('click', async (e) => {
             e.preventDefault();
             const id = link.id;
-            
+
             // Map navigation ID to section ID
             let targetSectionId = 'overview-view';
             if (id === 'nav-overview-view') targetSectionId = 'overview-view';
@@ -294,18 +294,18 @@ function setupNavigation() {
             else if (id === 'nav-manage-users-view') targetSectionId = 'manage-users-view';
             else if (id === 'nav-reports-view') targetSectionId = 'reports-view';
             else if (id === 'nav-statistics-view') targetSectionId = 'statistics-view';
-            
+
             console.log(`Navigating to section: ${targetSectionId}`);
-            
+
             // Active link styling
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             link.classList.add('active');
-            
+
             // Active view switching
             document.querySelectorAll('.mod-section').forEach(s => s.classList.remove('active'));
             const targetSection = document.getElementById(targetSectionId);
             if (targetSection) targetSection.classList.add('active');
-            
+
             // Trigger specific page load actions to ensure data is fresh
             if (targetSectionId === 'overview-view') {
                 if (typeof loadDashboardData === 'function') await loadDashboardData();
@@ -895,8 +895,8 @@ window.renderPostDetailContent = function (post) {
     if (mediaContainer) mediaContainer.innerHTML = extraViolationsHtml + rawMediaHtml;
 
     // Xử lý Interaction (Like, Comment, Share) và Score Bars, Buttons
-    const likeCount = Array.isArray(post.likes) ? post.likes.length : 0;
-    const commentCount = Array.isArray(post.comments) ? post.comments.length : 0;
+    const likeCount = Array.isArray(post.likes) ? post.likes.length : (post.likeCount || 0);
+    const commentCount = Array.isArray(post.comments) ? post.comments.length : (post.commentCount || 0);
 
     let interactionHtml = `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #3e4042; font-size: 13px; color: #b0b3b8; margin-top: 15px;">
@@ -1022,9 +1022,77 @@ window.renderPostDetailContent = function (post) {
 
     const modal = document.getElementById('mod-post-detail-modal');
     if (modal) {
+        // Fetch comments before opening
+        if (window.fetchModComments) {
+            window.fetchModComments(post.id);
+        }
         modal.classList.remove('profile-modal-hidden');
         modal.setAttribute('aria-hidden', 'false');
     }
+};
+
+window.fetchModComments = async function (postId) {
+    const token = window.token || localStorage.getItem('token');
+    const container = document.getElementById('mod-post-modal-comments-section');
+    const list = document.getElementById('mod-post-modal-comments-list');
+    
+    if (!container || !list) return;
+    
+    container.style.display = 'block';
+    list.innerHTML = '<div style="color: var(--text-secondary); font-size: 13px;">Đang tải bình luận...</div>';
+    
+    try {
+        const res = await fetch(`/api/posts/${postId}/comments`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Fetch failed");
+        const comments = await res.json();
+        
+        if (!comments || comments.length === 0) {
+            list.innerHTML = '<div style="color: var(--text-secondary); font-size: 13px;">Chưa có bình luận nào.</div>';
+            return;
+        }
+        
+        list.innerHTML = comments.map(c => renderModCommentItem(c)).join('');
+    } catch (err) {
+        console.error("Lỗi lấy comment:", err);
+        list.innerHTML = '<div style="color: #ff4d4f; font-size: 13px;">Lỗi tải bình luận.</div>';
+    }
+};
+
+window.renderModCommentItem = function (c, isReply = false) {
+    const timeStr = new Date(c.createdAt).toLocaleString('vi-VN');
+    let mediaHtml = '';
+    if (c.imageUrl) {
+        mediaHtml = `<img src="${c.imageUrl}" style="max-width: 100%; border-radius: 8px; margin-top: 8px; display: block;">`;
+    } else if (c.videoUrl) {
+        mediaHtml = `<video src="${c.videoUrl}" controls style="max-width: 100%; border-radius: 8px; margin-top: 8px; display: block;"></video>`;
+    }
+    
+    let repliesHtml = '';
+    if (c.replies && c.replies.length > 0) {
+        repliesHtml = `<div class="replies-container" style="margin-left: 30px; border-left: 2px solid var(--border-color, #3e4042); padding-left: 10px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+            ${c.replies.map(r => renderModCommentItem(r, true)).join('')}
+        </div>`;
+    }
+    
+    const avatar = c.authorAvatar || '/uploads/default-avatar.png';
+    const content = escapeHtml(c.content || '').replace(/\\n/g, "<br>");
+    
+    return `
+        <div class="comment-item" style="display: flex; gap: 10px;">
+            <img src="${avatar}" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">
+            <div style="flex: 1;">
+                <div style="background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border-color, #3e4042); display: inline-block;">
+                    <div style="font-weight: 600; font-size: 13px; color: var(--text-primary); margin-bottom: 2px;">${c.authorName}</div>
+                    <div style="font-size: 14px; color: var(--text-primary);">${content}</div>
+                    ${mediaHtml}
+                </div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px; margin-left: 5px;">${timeStr}</div>
+                ${repliesHtml}
+            </div>
+        </div>
+    `;
 };
 
 window.claimPost = async function (postId, options = {}) {
@@ -1192,7 +1260,7 @@ async function loadNotifications() {
         if (!res.ok) throw new Error('Không tải được thông báo');
 
         const notifications = await res.json();
-        
+
         // Update bell badge unread indicator dot
         const bellBadge = document.getElementById('bell-badge');
         if (bellBadge) {
@@ -1272,7 +1340,7 @@ async function loadMessages() {
         if (!res.ok) throw new Error('Server trả về lỗi ' + res.status);
 
         const conversations = await res.json();
-        
+
         // Update chat badge unread indicator dot
         const chatBadge = document.getElementById('chat-badge');
         if (chatBadge) {
@@ -1282,7 +1350,7 @@ async function loadMessages() {
 
         // Không phân biệt bạn bè/người dùng, gộp chung một danh sách duy nhất
         let html = '';
-        
+
         if (conversations.length > 0) {
             html += conversations.map(item => renderConvItem(item)).join('');
         } else {
@@ -1299,10 +1367,10 @@ async function loadMessages() {
 function renderConvItem(item) {
     const hasUnread = item.unreadCount > 0;
     const unreadIndicator = hasUnread ? `<div style="width: 12px; height: 12px; background: #00d1b2; border-radius: 50%; margin-left: 10px; flex-shrink: 0; box-shadow: 0 0 5px rgba(0, 209, 178, 0.5);"></div>` : '';
-    
+
     // Xử lý hiển thị tin nhắn cuối cùng (nếu có)
     const lastMsgText = item.lastMessage ? escapeHtml(item.lastMessage) : 'Mở để nhắn tin';
-    
+
     // Màu sắc tối ưu cho độ tương phản cao
     const nameColor = hasUnread ? '#050505' : '#444444';
     const msgColor = hasUnread ? '#1c1e21' : '#65676b';
@@ -1368,7 +1436,7 @@ function injectCommonModals() {
     </div>
     `;
     document.body.insertAdjacentHTML('beforeend', chatHtml);
-    
+
     // Re-bind events for the new injected elements
     const sendBtn = document.getElementById('send-chat-btn');
     const inputField = document.getElementById('chat-input-field');
@@ -1440,7 +1508,7 @@ function handleIncomingModMessage(msg) {
     if (msg.senderId == myId) return;
 
     const senderDisplayName = msg.senderName || `Người dùng ${msg.senderId}`;
-    
+
     // Hiển thị thông báo Toast trên mọi trang
     window.showToast(`Tin nhắn mới từ ${senderDisplayName}`, "info");
 
@@ -1457,7 +1525,7 @@ function handleIncomingModMessage(msg) {
     }
 
     // 3. Cập nhật danh sách tin nhắn ở sidebar ngay lập tức
-    loadMessages(); 
+    loadMessages();
 }
 
 window.selectPartner = async function (id) {
@@ -1529,11 +1597,11 @@ function formatModDateSeparator(date) {
 
 function appendModMessage(msg, isMine) {
     const body = document.getElementById('chat-messages-body');
-    
+
     // Date separator logic
     const currentMsgDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
     let needsSeparator = false;
-    
+
     if (!window.modLastMessageTimestamp) {
         needsSeparator = true;
     } else {
@@ -1541,7 +1609,7 @@ function appendModMessage(msg, isMine) {
             needsSeparator = true;
         }
     }
-    
+
     if (needsSeparator) {
         const separator = document.createElement('div');
         separator.style.textAlign = 'center';
@@ -1552,7 +1620,7 @@ function appendModMessage(msg, isMine) {
         body.appendChild(separator);
     }
     window.modLastMessageTimestamp = currentMsgDate;
-    
+
     // Message container
     const div = document.createElement('div');
     div.style.display = 'flex';
@@ -1571,7 +1639,7 @@ function appendModMessage(msg, isMine) {
     content.style.wordBreak = 'break-word';
 
     div.appendChild(content);
-    
+
     // Time string formatting
     let timeStr = "";
     if (msg.timestamp) {
@@ -1581,7 +1649,7 @@ function appendModMessage(msg, isMine) {
         const d = new Date();
         timeStr = ('0' + d.getHours()).slice(-2) + ":" + ('0' + d.getMinutes()).slice(-2);
     }
-    
+
     const timeDiv = document.createElement('div');
     timeDiv.textContent = timeStr;
     timeDiv.style.fontSize = '11px';
@@ -1589,7 +1657,7 @@ function appendModMessage(msg, isMine) {
     timeDiv.style.marginTop = '4px';
     timeDiv.style.marginRight = isMine ? '5px' : '0';
     timeDiv.style.marginLeft = isMine ? '0' : '5px';
-    
+
     div.appendChild(timeDiv);
 
     body.appendChild(div);
@@ -1661,11 +1729,11 @@ window.postActionTaken = false;
 
 
 
-window.warnUser = function(id) {
+window.warnUser = function (id) {
     console.log("DEBUG: Opening warn modal for user:", id);
     const modal = document.getElementById('warn-user-modal');
     const idInput = document.getElementById('warn-user-id');
-    
+
     if (modal && idInput) {
         idInput.value = id;
         modal.classList.remove('profile-modal-hidden');
@@ -1687,7 +1755,7 @@ window.warnUser = function(id) {
     }
 };
 
-window.toggleCustomDuration = function() {
+window.toggleCustomDuration = function () {
     const durationSelect = document.getElementById('warn-duration');
     const customContainer = document.getElementById('custom-duration-container');
     if (durationSelect && customContainer) {
@@ -1699,7 +1767,7 @@ window.toggleCustomDuration = function() {
     }
 };
 
-window.closeWarnUserModal = function() {
+window.closeWarnUserModal = function () {
     const modal = document.getElementById('warn-user-modal');
     if (modal) {
         modal.classList.add('profile-modal-hidden');
@@ -1707,7 +1775,7 @@ window.closeWarnUserModal = function() {
     }
 };
 
-window.submitUserWarning = async function() {
+window.submitUserWarning = async function () {
     const id = document.getElementById('warn-user-id').value;
     const type = document.querySelector('input[name="warn-type"]:checked').value;
     const durationSelect = document.getElementById('warn-duration');
@@ -1724,7 +1792,7 @@ window.submitUserWarning = async function() {
     }
 
     console.log("DEBUG: Checking for existing warning for user ID:", id, "Type:", type);
-    
+
     // Tìm user trong cache để kiểm tra thời hạn cũ
     const user = (window.cache.users || []).find(u => u.id == id);
     console.log("DEBUG: User found in cache:", user);
@@ -1747,7 +1815,7 @@ window.submitUserWarning = async function() {
     if (expiryDateObj && expiryDateObj > now) {
         const expiryStr = expiryDateObj.toLocaleString('vi-VN');
         const typeText = (type === 'POST') ? 'đăng bài' : 'bình luận';
-        
+
         console.log("DEBUG: Active warning detected. Showing confirm dialog.");
         showCustomConfirm(
             'Cảnh báo đang hoạt động',
@@ -1764,7 +1832,7 @@ async function performSubmit(id, type, days, unit) {
     try {
         const res = await fetch(`/api/moderator/users/${id}/warn`, {
             method: 'PUT',
-            headers: { 
+            headers: {
                 'Authorization': `Bearer ${window.token || localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
@@ -1778,7 +1846,7 @@ async function performSubmit(id, type, days, unit) {
             const msg = await res.text();
             showCustomAlert('Lỗi', msg || 'Không thể thực hiện cảnh cáo', 'error');
         }
-    } catch (e) { 
+    } catch (e) {
         console.error(e);
         showCustomAlert('Lỗi kết nối', 'Không thể kết nối đến máy chủ.', 'error');
     }
@@ -1786,26 +1854,26 @@ async function performSubmit(id, type, days, unit) {
 
 // ==================== KHÓA / MỞ KHÓA NGƯỜI DÙNG ====================
 
-window.openLockModal = function(id) {
+window.openLockModal = function (id) {
     const modal = document.getElementById('lock-user-modal');
     if (!modal) return;
-    
+
     document.getElementById('lock-user-id').value = id;
-    
+
     // Reset form
     document.querySelector('input[name="lock-type"][value="TEMP"]').checked = true;
     document.getElementById('lock-duration').value = '3';
     document.getElementById('lock-custom-value').value = '';
     document.getElementById('lock-custom-unit').value = 'DAYS';
     document.getElementById('lock-reason').value = '';
-    
+
     toggleLockType();
-    
+
     modal.style.display = 'flex';
     modal.classList.remove('profile-modal-hidden');
 };
 
-window.closeLockUserModal = function() {
+window.closeLockUserModal = function () {
     const modal = document.getElementById('lock-user-modal');
     if (modal) {
         modal.style.display = 'none';
@@ -1813,7 +1881,7 @@ window.closeLockUserModal = function() {
     }
 };
 
-window.toggleLockType = function() {
+window.toggleLockType = function () {
     const type = document.querySelector('input[name="lock-type"]:checked').value;
     const durationSection = document.getElementById('lock-duration-section');
     if (type === 'PERM') {
@@ -1824,7 +1892,7 @@ window.toggleLockType = function() {
     }
 };
 
-window.toggleCustomLockDuration = function() {
+window.toggleCustomLockDuration = function () {
     const durationSelect = document.getElementById('lock-duration');
     const customContainer = document.getElementById('lock-custom-days-container');
     if (durationSelect.value === 'custom') {
@@ -1834,11 +1902,11 @@ window.toggleCustomLockDuration = function() {
     }
 };
 
-window.submitLockUser = async function() {
+window.submitLockUser = async function () {
     const id = document.getElementById('lock-user-id').value;
     const type = document.querySelector('input[name="lock-type"]:checked').value;
     const reason = document.getElementById('lock-reason').value;
-    
+
     let days = null;
     let unit = 'DAYS';
     if (type === 'TEMP') {
@@ -1857,13 +1925,13 @@ window.submitLockUser = async function() {
     try {
         const res = await fetch(`/api/moderator/users/${id}/lock`, {
             method: 'PUT',
-            headers: { 
+            headers: {
                 'Authorization': `Bearer ${window.token || localStorage.getItem('token')}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ type, days, unit, reason })
         });
-        
+
         if (res.ok) {
             showCustomAlert('Thành công', 'Đã khóa người dùng và gửi email thông báo.', 'success');
             closeLockUserModal();
@@ -1879,7 +1947,7 @@ window.submitLockUser = async function() {
 };
 
 // ==================== HỆ THỐNG THÔNG BÁO TOAST TOÀN CẦU ====================
-window.showToast = function(message, type = 'info') {
+window.showToast = function (message, type = 'info') {
     let container = document.getElementById('toast-container');
     if (!container) {
         container = document.createElement('div');
@@ -1956,13 +2024,13 @@ async function fetchCurrentModerator() {
             const data = await res.json();
             window.currentModerator = { ...window.currentModerator, ...data };
             window.myUserId = data.id; // Alias tiện dụng
-            
+
             // Cập nhật giao diện header nếu có
             const staffName = document.getElementById('staff-display-name');
             const staffAvatar = document.getElementById('header-avatar');
             if (staffName) staffName.textContent = data.fullName || 'Điều phối viên';
             if (staffAvatar && data.avatar) staffAvatar.src = data.avatar;
-            
+
             console.log("Moderator profile loaded:", data.id);
             return true;
         }
@@ -1975,10 +2043,10 @@ async function fetchCurrentModerator() {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("Global Moderator Init Start...");
     injectCommonModals();
-    
+
     // Tải thông tin cá nhân trước khi kết nối WebSocket
     const loaded = await fetchCurrentModerator();
-    
+
     if (loaded) {
         connectWebSocket();
         loadNotifications();
@@ -2095,16 +2163,16 @@ function injectCommonModals() {
 }
 
 // Global control for opening right sidebar with tab name, or collapsing if already active
-window.toggleRightRailTab = function(tabName) {
+window.toggleRightRailTab = function (tabName) {
     const rightRail = document.querySelector('.mod-chat-sidebar');
     const toggleBtn = document.getElementById('toggle-right-rail');
-    
+
     if (!rightRail) return;
-    
+
     const isCurrentlyCollapsed = rightRail.classList.contains('collapsed');
     const activeTab = document.querySelector('.right-rail-tab.active');
     const activeTabName = activeTab ? activeTab.getAttribute('data-rail-tab') : null;
-    
+
     if (isCurrentlyCollapsed) {
         // If collapsed, expand it and focus the correct tab
         rightRail.classList.remove('collapsed');
@@ -2121,7 +2189,7 @@ window.toggleRightRailTab = function(tabName) {
             switchTab(tabName);
         }
     }
-    
+
     function switchTab(target) {
         const tabs = document.querySelectorAll('.right-rail-tab');
         tabs.forEach(t => t.classList.toggle('active', t.getAttribute('data-rail-tab') === target));

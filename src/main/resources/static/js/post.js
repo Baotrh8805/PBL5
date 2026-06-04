@@ -99,7 +99,7 @@ function renderPostDetail(post) {
     if (warningBanner) {
         warningBanner.remove();
     }
-    
+
     if (post.status === 'REJECTED' || post.status === 'AUTO_REJECTED') {
         const banner = document.createElement('div');
         banner.id = 'post-deleted-warning-banner';
@@ -114,16 +114,20 @@ function renderPostDetail(post) {
         banner.style.gap = '10px';
         banner.style.width = '100%';
         banner.style.boxSizing = 'border-box';
-        
+
         if (document.documentElement.getAttribute('data-theme') === 'dark') {
             banner.style.background = 'rgba(217, 61, 89, 0.15)';
             banner.style.color = '#ff6b8b';
             banner.style.borderBottom = '1px solid rgba(217, 61, 89, 0.3)';
         }
-        
+
+        const showAppeal = (post.mine || post.isMine) ? `
+            <button id="appeal-post-btn" onclick="openAppealModal(${post.id})" onmouseover="this.style.background='#c2304a'" onmouseout="this.style.background='#d93d59'" style="background: #d93d59; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; margin-left: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 4px rgba(217, 61, 89, 0.2); outline: none;">Kháng nghị</button>
+        ` : '';
+
         banner.innerHTML = `
             <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px; flex-shrink: 0;"></i>
-            <span>Bài viết này đã bị gỡ do vi phạm tiêu chuẩn cộng đồng. Chỉ bạn mới có thể xem và bài viết sẽ bị xóa vĩnh viễn sau 3 ngày kể từ ngày gỡ.</span>
+            <span style="flex: 1; display: flex; align-items: center; flex-wrap: wrap;">Bài viết này đã bị gỡ do vi phạm tiêu chuẩn cộng đồng. Chỉ bạn mới có thể xem và bài viết sẽ bị xóa vĩnh viễn sau 3 ngày kể từ ngày gỡ.${showAppeal}</span>
         `;
         const sidebar = document.querySelector('.post-info-sidebar');
         if (sidebar) {
@@ -186,8 +190,13 @@ function renderPostDetail(post) {
 
     // Post Options Menu
     const dropdownMenu = document.getElementById('post-dropdown-menu');
+    const isRejected = post.status === 'REJECTED' || post.status === 'AUTO_REJECTED';
     if (post.mine || post.isMine) {
-        dropdownMenu.innerHTML = `
+        dropdownMenu.innerHTML = isRejected ? `
+            <a href="javascript:void(0)" onclick="openAppealModal(${post.id})"><i class="fa-solid fa-circle-exclamation"></i> Gửi kháng nghị</a>
+            <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
+            <a href="javascript:void(0)" onclick="deletePostDetail(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+        ` : `
             <a href="javascript:void(0)" onclick="deletePostDetail(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
         `;
     } else {
@@ -590,7 +599,7 @@ window.toggleCommentMenu = function (event, commentId) {
             d.classList.remove('show');
         }
     });
-    
+
     const dropdown = document.getElementById(`comment-dropdown-${commentId}`);
     if (dropdown) {
         dropdown.classList.toggle('show');
@@ -601,10 +610,10 @@ window.toggleCommentMenu = function (event, commentId) {
 document.addEventListener('click', () => {
     const allDropdowns = document.querySelectorAll('.comment-dropdown');
     allDropdowns.forEach(d => d.classList.remove('show'));
-    
+
     // Thêm logic đóng menu bài viết nếu có
     const allPostDropdowns = document.querySelectorAll('.post-dropdown');
-    if(allPostDropdowns) {
+    if (allPostDropdowns) {
         allPostDropdowns.forEach(d => d.classList.remove('show'));
     }
 });
@@ -616,10 +625,10 @@ function reportPost(postId) {
     activeReportPostId = postId;
     activeReportCommentId = null;
     const titleEl = document.getElementById('report-modal-title');
-    if(titleEl) titleEl.innerText = "Báo cáo bài viết";
+    if (titleEl) titleEl.innerText = "Báo cáo bài viết";
     document.getElementById('report-modal').style.display = 'flex';
     document.getElementById('report-reason').value = '';
-    
+
     const confirmBtn = document.getElementById('confirm-report-btn');
     confirmBtn.onclick = () => submitReport();
 }
@@ -628,10 +637,10 @@ function reportComment(commentId) {
     activeReportCommentId = commentId;
     activeReportPostId = null;
     const titleEl = document.getElementById('report-modal-title');
-    if(titleEl) titleEl.innerText = "Báo cáo bình luận";
+    if (titleEl) titleEl.innerText = "Báo cáo bình luận";
     document.getElementById('report-modal').style.display = 'flex';
     document.getElementById('report-reason').value = '';
-    
+
     const confirmBtn = document.getElementById('confirm-report-btn');
     confirmBtn.onclick = () => submitReport();
 }
@@ -664,9 +673,9 @@ async function submitReport() {
 
         const res = await fetch(endpoint, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ reason: reason, category: category })
         });
@@ -705,9 +714,9 @@ window.togglePostMenu = function (event) {
     }
 };
 
-window.deletePostDetail = async function(postId) {
+window.deletePostDetail = async function (postId) {
     if (!confirm('Bạn có chắc chắn muốn chuyển bài viết này vào thùng rác?')) return;
-    
+
     const token = localStorage.getItem('token');
     try {
         const res = await fetch(`/api/posts/${postId}`, {
@@ -725,3 +734,101 @@ window.deletePostDetail = async function(postId) {
         console.error(err);
     }
 };
+
+window.openAppealModal = function (postId) {
+    const titleEl = document.getElementById('report-modal-title');
+    if (titleEl) titleEl.innerText = "Kháng nghị gỡ bài viết";
+    
+    const categoryEl = document.getElementById('report-category');
+    if (categoryEl) {
+        let appealOpt = categoryEl.querySelector('option[value="APPEAL"]');
+        if (!appealOpt) {
+            appealOpt = document.createElement('option');
+            appealOpt.value = 'APPEAL';
+            appealOpt.innerText = 'Kháng nghị';
+            categoryEl.appendChild(appealOpt);
+        }
+        categoryEl.value = 'APPEAL';
+        categoryEl.style.display = 'none';
+    }
+
+    const descEl = document.querySelector('#report-modal .modal-body p');
+    if (descEl) {
+        descEl.innerText = "Tại sao bạn cho rằng bài viết của mình không vi phạm tiêu chuẩn cộng đồng?";
+    }
+
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    document.getElementById('report-reason').placeholder = 'Nhập lý do kháng nghị chi tiết...';
+
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    if (confirmBtn) {
+        confirmBtn.innerText = "Gửi kháng nghị";
+        confirmBtn.onclick = () => submitAppeal(postId);
+    }
+};
+
+const originalCloseReportModal = window.closeReportModal;
+window.closeReportModal = function () {
+    if (typeof originalCloseReportModal === 'function') {
+        originalCloseReportModal();
+    } else {
+        document.getElementById('report-modal').style.display = 'none';
+    }
+    
+    const titleEl = document.getElementById('report-modal-title');
+    if (titleEl) titleEl.innerText = "Báo cáo bài viết";
+    const categoryEl = document.getElementById('report-category');
+    if (categoryEl) {
+        categoryEl.style.display = 'block';
+        categoryEl.value = 'OTHER';
+    }
+    const descEl = document.querySelector('#report-modal .modal-body p');
+    if (descEl) {
+        descEl.innerText = "Tại sao bạn muốn báo cáo nội dung này?";
+    }
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    if (confirmBtn) {
+        confirmBtn.innerText = "Gửi báo cáo";
+    }
+    const reasonEl = document.getElementById('report-reason');
+    if (reasonEl) {
+        reasonEl.placeholder = 'Nhập lý do chi tiết...';
+    }
+};
+
+async function submitAppeal(postId) {
+    const reason = document.getElementById('report-reason').value.trim();
+    if (!reason) {
+        showToast('Vui lòng nhập lý do kháng nghị.', 'error');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${postId}/appeal`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ reason: reason })
+        });
+
+        if (res.ok) {
+            closeReportModal();
+            showToast('Kháng nghị của bạn đã được gửi thành công.', 'success');
+            const appealBtn = document.getElementById('appeal-post-btn');
+            if (appealBtn) {
+                appealBtn.outerHTML = '<span style="color: #65676b; margin-left: 12px; font-weight: 600; font-size: 12px;">(Đã gửi kháng nghị)</span>';
+            }
+        } else {
+            const txt = await res.text();
+            showToast(txt, 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Lỗi khi gửi kháng nghị.', 'error');
+    }
+}
+

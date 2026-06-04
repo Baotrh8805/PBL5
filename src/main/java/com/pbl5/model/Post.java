@@ -50,6 +50,9 @@ public class Post extends BaseContent {
     @Column(columnDefinition = "TEXT")
     private String hateSpeechWord;
 
+    @Column(name = "detected_text", columnDefinition = "TEXT")
+    private String detectedText;
+
     @Column(name = "highest_score_frame_index")
     private Integer highestScoreFrameIndex;
 
@@ -186,6 +189,14 @@ public class Post extends BaseContent {
 
     public void setHateSpeechWord(String hateSpeechWord) {
         this.hateSpeechWord = hateSpeechWord;
+    }
+
+    public String getDetectedText() {
+        return detectedText;
+    }
+
+    public void setDetectedText(String detectedText) {
+        this.detectedText = detectedText;
     }
 
     public Integer getHighestScoreFrameIndex() {

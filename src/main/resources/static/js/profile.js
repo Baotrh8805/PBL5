@@ -20,80 +20,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function fetchUserProfile() {
     const token = localStorage.getItem('token');
-    
+
     fetch('/api/users/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => {
-        if (!res.ok) throw new Error('Token hết hạn');
-        return res.json();
-    })
-    .then(currentUser => {
-        currentUserId = currentUser.id;
-        
-        // --- Populate Global Sidebars and Header ---
-        document.querySelectorAll('.user-name').forEach(el => {
-            el.textContent = currentUser.fullName || 'Người dùng';
-        });
-        
-        let avatarUrl = currentUser.avatar;
-        if (!avatarUrl && currentUser.fullName) {
-            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=00d1b2&color=fff`;
-        }
+        .then(res => {
+            if (!res.ok) throw new Error('Token hết hạn');
+            return res.json();
+        })
+        .then(currentUser => {
+            currentUserId = currentUser.id;
 
-        document.querySelectorAll('#header-avatar, .avatar-large, .avatar-small, #modal-avatar').forEach(img => {
-            img.src = avatarUrl;
-        });
+            // --- Populate Global Sidebars and Header ---
+            document.querySelectorAll('.user-name').forEach(el => {
+                el.textContent = currentUser.fullName || 'Người dùng';
+            });
 
-        // Admin/Moderator Menu
-        if (currentUser.role === 'ADMIN' || currentUser.role === 'MODERATOR') {
-            const adminContainer = document.getElementById('admin-menu-container');
-            if (adminContainer) {
-                adminContainer.innerHTML = `
+            let avatarUrl = currentUser.avatar;
+            if (!avatarUrl && currentUser.fullName) {
+                avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=00d1b2&color=fff`;
+            }
+
+            document.querySelectorAll('#header-avatar, .avatar-large, .avatar-small, #modal-avatar').forEach(img => {
+                img.src = avatarUrl;
+            });
+
+            // Admin/Moderator Menu
+            if (currentUser.role === 'ADMIN' || currentUser.role === 'MODERATOR') {
+                const adminContainer = document.getElementById('admin-menu-container');
+                if (adminContainer) {
+                    adminContainer.innerHTML = `
                     <a href="/html/admin.html" id="admin-menu-item" class="menu-item admin-menu-item">
                         <i class="fa-solid ${currentUser.role === 'ADMIN' ? 'fa-shield-halved' : 'fa-user-shield'}"></i>
                         <span>${currentUser.role === 'ADMIN' ? 'Quản trị hệ thống' : 'Kiểm duyệt'}</span>
                     </a>
                 `;
+                }
             }
-        }
-        // --- End Sidebar Population ---
+            // --- End Sidebar Population ---
 
-        if (targetUserId && targetUserId !== currentUserId) {
-            // Xem trang của người khác
-            fetchTargetUser(targetUserId, token);
-        } else {
-            // Xem trang của mình
-            fillProfileData(currentUser, true);
-            fetchMyPosts('/api/posts/me');
-        }
-    })
-    .catch(() => {
-        localStorage.removeItem('token');
-        window.location.href = "/";
-    });
+            if (targetUserId && targetUserId !== currentUserId) {
+                // Xem trang của người khác
+                fetchTargetUser(targetUserId, token);
+            } else {
+                // Xem trang của mình
+                fillProfileData(currentUser, true);
+                fetchMyPosts('/api/posts/me');
+            }
+        })
+        .catch(() => {
+            localStorage.removeItem('token');
+            window.location.href = "/";
+        });
 }
 
 function fetchTargetUser(id, token) {
     fetch(`/api/users/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => {
-        if (!res.ok) throw new Error('Không lấy được user');
-        return res.json();
-    })
-    .then(targetUser => {
-        fillProfileData(targetUser, false);
-        fetchMyPosts(`/api/posts/user/${targetUser.id}`);
-    })
-    .catch(err => console.error(err));
+        .then(res => {
+            if (!res.ok) throw new Error('Không lấy được user');
+            return res.json();
+        })
+        .then(targetUser => {
+            fillProfileData(targetUser, false);
+            fetchMyPosts(`/api/posts/user/${targetUser.id}`);
+        })
+        .catch(err => console.error(err));
 }
 
 function fillProfileData(user, isCurrentUser) {
     // Cập nhật Trang cá nhân
     document.getElementById('profile-name').innerText = user.fullName || "Người dùng";
     document.getElementById('profile-bio').innerText = user.bio || "Chưa có tiểu sử.";
-    
+
     if (user.avatar) {
         const pAvatar = document.getElementById('profile-avatar');
         if (pAvatar) pAvatar.src = user.avatar;
@@ -113,7 +113,7 @@ function fillProfileData(user, isCurrentUser) {
     if (dobEl) dobEl.innerText = user.dateOfBirth ? formatDate(user.dateOfBirth) : '---';
     const genderEl = document.getElementById('profile-gender');
     if (genderEl) genderEl.innerText = user.gender || '---';
-    
+
     // Luôn hiển thị tên của CHÍNH MÌNH (currentUser) trong các modal tạo bài viết hoặc chỉnh sửa
     // Tuy nhiên, ở trang cá nhân người khác, user truyền vào fillProfileData là targetUser.
     // Chúng ta cần lấy fullName của currentUser đã lưu trước đó.
@@ -121,14 +121,14 @@ function fillProfileData(user, isCurrentUser) {
     fetch('/api/users/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => res.json())
-    .then(curr => {
-        document.querySelectorAll('.modal-user-name').forEach(el => {
-            el.textContent = curr.fullName || 'Người dùng';
+        .then(res => res.json())
+        .then(curr => {
+            document.querySelectorAll('.modal-user-name').forEach(el => {
+                el.textContent = curr.fullName || 'Người dùng';
+            });
+            const modalAvt = document.getElementById('modal-avatar');
+            if (modalAvt) modalAvt.src = curr.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(curr.fullName)}&background=00d1b2&color=fff`;
         });
-        const modalAvt = document.getElementById('modal-avatar');
-        if (modalAvt) modalAvt.src = curr.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(curr.fullName)}&background=00d1b2&color=fff`;
-    });
 
     if (isCurrentUser) {
         // Setup placeholders
@@ -136,7 +136,7 @@ function fillProfileData(user, isCurrentUser) {
         // Ẩn các nút chỉnh sửa
         const btnEdit = document.getElementById('btn-edit-profile');
         if (btnEdit) btnEdit.style.display = 'none';
-        
+
         const editAvt = document.querySelector('.edit-avatar-btn');
         if (editAvt) editAvt.style.display = 'none';
         const editCov = document.querySelector('.edit-cover-btn');
@@ -149,26 +149,26 @@ function fillProfileData(user, isCurrentUser) {
         // Hiện nút nhắn tin
         const btnMsg = document.getElementById('btn-message');
         if (btnMsg) {
-        const fAction = document.getElementById('friendship-actions');
-        if (fAction) {
-            fAction.style.display = 'inline-block';
-            const status = user.friendshipStatus;
-            const targetId = user.id;
-            if (!status || status === 'NONE') {
-                fAction.innerHTML = `<button class="btn btn-primary" onclick="sendFriendRequest(${targetId})"><i class="fa-solid fa-user-plus"></i> Thêm bạn bè</button>`;
-            } else if (status === 'PENDING') {
-                if (targetId === user.receiverId) {
-                    fAction.innerHTML = `<button class="btn btn-secondary" onclick="removeFriend(${targetId})"><i class="fa-solid fa-user-clock"></i> Đã gửi lời mời</button>`;
-                } else {
-                    fAction.innerHTML = `
+            const fAction = document.getElementById('friendship-actions');
+            if (fAction) {
+                fAction.style.display = 'inline-block';
+                const status = user.friendshipStatus;
+                const targetId = user.id;
+                if (!status || status === 'NONE') {
+                    fAction.innerHTML = `<button class="btn btn-primary" onclick="sendFriendRequest(${targetId})"><i class="fa-solid fa-user-plus"></i> Thêm bạn bè</button>`;
+                } else if (status === 'PENDING') {
+                    if (targetId === user.receiverId) {
+                        fAction.innerHTML = `<button class="btn btn-secondary" onclick="removeFriend(${targetId})"><i class="fa-solid fa-user-clock"></i> Đã gửi lời mời</button>`;
+                    } else {
+                        fAction.innerHTML = `
                         <button class="btn btn-primary" onclick="acceptFriendRequest(${targetId})"><i class="fa-solid fa-user-check"></i> Chấp nhận</button>
                         <button class="btn btn-secondary" onclick="removeFriend(${targetId})"><i class="fa-solid fa-user-xmark"></i> Xóa</button>
                     `;
+                    }
+                } else if (status === 'ACCEPTED') {
+                    fAction.innerHTML = `<button class="btn btn-secondary" onclick="removeFriend(${targetId})"><i class="fa-solid fa-user-group"></i> Bạn bè</button>`;
                 }
-            } else if (status === 'ACCEPTED') {
-                fAction.innerHTML = `<button class="btn btn-secondary" onclick="removeFriend(${targetId})"><i class="fa-solid fa-user-group"></i> Bạn bè</button>`;
             }
-        }
             btnMsg.style.display = 'inline-block';
             let avt = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
             btnMsg.onclick = () => {
@@ -189,7 +189,7 @@ function fillProfileData(user, isCurrentUser) {
 function formatDate(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
-    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
 }
 
 /**
@@ -207,7 +207,7 @@ async function fetchAndDisplayPhotos(userId) {
         if (res.ok) {
             const posts = await res.json();
             const photos = posts.filter(p => p.imageUrl).slice(0, 9);
-            
+
             if (photos.length > 0) {
                 container.innerHTML = photos.map(p => `
                     <div class="photo-item" onclick="window.location.href = '/html/post.html?id=${p.id}'">
@@ -217,7 +217,7 @@ async function fetchAndDisplayPhotos(userId) {
             } else {
                 container.innerHTML = '<div style="grid-column: span 3; padding: 20px; text-align: center; color: #65676b; font-size: 13px;">Chưa có ảnh nào.</div>';
             }
-            
+
             // Cập nhật số bài viết trong stats
             const statPosts = document.querySelector('.stat-item:nth-child(1) strong');
             if (statPosts) statPosts.innerText = posts.length;
@@ -242,7 +242,7 @@ async function fetchAndDisplayFriends(userId) {
         if (res.ok) {
             const friends = await res.json();
             const displayedFriends = friends.slice(0, 9);
-            
+
             if (displayedFriends.length > 0) {
                 container.innerHTML = displayedFriends.map(f => {
                     const avt = f.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff`;
@@ -256,7 +256,7 @@ async function fetchAndDisplayFriends(userId) {
             } else {
                 container.innerHTML = '<div style="grid-column: span 3; padding: 20px; text-align: center; color: #65676b; font-size: 13px;">Chưa có bạn bè.</div>';
             }
-            
+
             // Cập nhật số lượng bạn bè
             const statFriends = document.querySelector('.stat-item:nth-child(2) strong');
             if (statFriends) statFriends.innerText = friends.length;
@@ -272,13 +272,13 @@ function fetchMyPosts(endpointUrl) {
     fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => res.json())
-    .then(posts => {
-        renderProfilePosts(posts);
-    })
-    .catch(err => {
-        document.getElementById('profile-posts-container').innerHTML = '<p style="text-align: center; color: red;">Lỗi tải bài viết.</p>';
-    });
+        .then(res => res.json())
+        .then(posts => {
+            renderProfilePosts(posts);
+        })
+        .catch(err => {
+            document.getElementById('profile-posts-container').innerHTML = '<p style="text-align: center; color: red;">Lỗi tải bài viết.</p>';
+        });
 }
 
 function timeSince(dateString) {
@@ -303,9 +303,9 @@ function renderProfilePosts(posts) {
         container.innerHTML = '<p style="text-align: center; color: #65676B; padding: 20px;">Chưa có bài viết nào.</p>';
         return;
     }
-    
+
     container.innerHTML = '';
-    
+
     posts.forEach(post => {
         let visibilityIcon = '';
         if (post.visibility === 'PUBLIC') visibilityIcon = '<i class="fa-solid fa-earth-americas" style="margin-left: 5px; font-size: 11px;"></i>';
@@ -316,7 +316,7 @@ function renderProfilePosts(posts) {
         const isRejected = post.status === 'AUTO_REJECTED' || post.status === 'REJECTED';
         const isPending = post.status === 'PENDING_REVIEW';
         const isDeleted = post.status === 'DELETED';
-        
+
         const rejectedHtml = isRejected ? `
             <div style="background-color: #ffebe9; border: 1px solid #ff8182; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: #d1293f; font-weight: 500;">
                 <i class="fa-solid fa-triangle-exclamation" style="font-size: 18px;"></i>
@@ -351,26 +351,27 @@ function renderProfilePosts(posts) {
                 </div>
             </div>
             
-            ${!isRejected ? `
             <div class="post-options">
                 <button class="options-btn" onclick="toggleDropdown(${post.id})">
                     <i class="fa-solid fa-ellipsis"></i>
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
-                    ${isMine ? `
-                        ${!isDeleted ? `
+                    ${isMine ? (isRejected ? `
+                        <a href="javascript:void(0)" onclick="openAppealModal(${post.id})"><i class="fa-solid fa-circle-exclamation"></i> Gửi kháng nghị</a>
+                        <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
+                        <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                    ` : (isDeleted ? '' : `
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
                         <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
                         <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
-                        ` : ''}
-                    ` : `
+                    `)) : `
                         <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
                     `}
                 </div>
-            </div>` : ''}
+            </div>
 
             <div class="post-content">
                 ${rejectedHtml}
@@ -438,27 +439,27 @@ function renderProfilePosts(posts) {
 
 function escapeHtml(unsafe) {
     return unsafe
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;")
-         .replace(/\n/g, "<br>");
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;")
+        .replace(/\n/g, "<br>");
 }
 
 // ===== API GỌI XÓA VÀ CHỈNH SỬA POST (Đồng bộ với home.js) =====
 
 async function toggleLike(postId) {
     const token = localStorage.getItem('token');
-    
+
     // UI Cập nhật tức thì (Optimistic UI)
     const likeBtn = document.getElementById(`like-btn-${postId}`);
     const likeIcon = document.getElementById(`like-icon-${postId}`);
     const likeCountSpan = document.getElementById(`like-count-${postId}`);
-    
+
     if (likeBtn && likeIcon && likeCountSpan) {
         const isLiked = likeIcon.classList.contains('fa-solid');
-        
+
         let currentCount = 0;
         const countMatch = likeCountSpan.innerText.match(/\d+/);
         if (countMatch) {
@@ -485,7 +486,7 @@ async function toggleLike(postId) {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (!res.ok) {
             console.error("Lỗi khi cập nhật like trên server");
         }
@@ -501,7 +502,7 @@ function toggleDropdown(postId) {
 }
 
 // Ẩn menu khi click ra ngoài
-window.onclick = function(event) {
+window.onclick = function (event) {
     if (!event.target.closest('.options-btn')) {
         var dropdowns = document.getElementsByClassName("dropdown-content");
         for (var i = 0; i < dropdowns.length; i++) {
@@ -515,7 +516,7 @@ window.onclick = function(event) {
 
 async function deletePost(postId) {
     if (!confirm('Bạn có chắc chắn muốn chuyển bài viết này vào thùng rác?')) return;
-    
+
     const token = localStorage.getItem('token');
     try {
         const res = await fetch(`/api/posts/${postId}`, {
@@ -537,7 +538,7 @@ async function deletePost(postId) {
 
 async function restorePost(postId) {
     if (!confirm('Bạn có chắc chắn muốn khôi phục bài viết này không?')) return;
-    
+
     const token = localStorage.getItem('token');
     try {
         const res = await fetch(`/api/posts/${postId}/restore`, {
@@ -558,7 +559,7 @@ async function restorePost(postId) {
 
 async function changeVisibility(postId, level) {
     const token = localStorage.getItem('token');
-    
+
     // Optimistic UI update: thay đổi icon hiển thị ngay lập tức
     const visibilityIconSpan = document.getElementById(`visibility-icon-${postId}`);
     if (visibilityIconSpan) {
@@ -578,7 +579,7 @@ async function changeVisibility(postId, level) {
             method: 'PATCH',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (!res.ok) {
             const txt = await res.text();
             alert("Lỗi: " + txt);
@@ -611,10 +612,10 @@ function reportPost(postId) {
     activeReportPostId = postId;
     activeReportCommentId = null;
     const titleEl = document.getElementById('report-modal-title');
-    if(titleEl) titleEl.innerText = "Báo cáo bài viết";
+    if (titleEl) titleEl.innerText = "Báo cáo bài viết";
     document.getElementById('report-modal').style.display = 'flex';
     document.getElementById('report-reason').value = '';
-    
+
     // Bind confirm button
     const confirmBtn = document.getElementById('confirm-report-btn');
     confirmBtn.onclick = () => submitReport();
@@ -624,10 +625,10 @@ function reportComment(commentId) {
     activeReportCommentId = commentId;
     activeReportPostId = null;
     const titleEl = document.getElementById('report-modal-title');
-    if(titleEl) titleEl.innerText = "Báo cáo bình luận";
+    if (titleEl) titleEl.innerText = "Báo cáo bình luận";
     document.getElementById('report-modal').style.display = 'flex';
     document.getElementById('report-reason').value = '';
-    
+
     // Bind confirm button
     const confirmBtn = document.getElementById('confirm-report-btn');
     confirmBtn.onclick = () => submitReport();
@@ -661,9 +662,9 @@ async function submitReport() {
 
         const res = await fetch(endpoint, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ reason: reason, category: category })
         });
@@ -720,10 +721,10 @@ async function fetchComments(postId) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const comments = await res.json();
-        
+
         const listDiv = document.getElementById(`comment-list-${postId}`);
         listDiv.innerHTML = '';
-        
+
         if (comments.length === 0) {
             listDiv.innerHTML = '<span style="color: #65676b; font-size: 13px;">Chưa có bình luận nào. Hãy là người đầu tiên!</span>';
             return;
@@ -764,7 +765,7 @@ async function submitComment(postId) {
     if (!content) return;
 
     const token = localStorage.getItem('token');
-    
+
     // Optimistic UI update: cộng số bình luận
     const commentCountSpan = document.getElementById(`comment-count-${postId}`);
     if (commentCountSpan) {
@@ -776,13 +777,13 @@ async function submitComment(postId) {
     try {
         const res = await fetch(`/api/posts/${postId}/comments`, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ content: content })
         });
-        
+
         if (res.ok) {
             input.value = '';
             fetchComments(postId); // Chỉ tải lại đúng danh sách bình luận của bài này
@@ -801,10 +802,10 @@ function sendFriendRequest(id) {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => {
-        if(res.ok) location.reload();
-        else alert("Lỗi gửi yêu cầu");
-    });
+        .then(res => {
+            if (res.ok) location.reload();
+            else alert("Lỗi gửi yêu cầu");
+        });
 }
 function acceptFriendRequest(id) {
     const token = localStorage.getItem('token');
@@ -812,22 +813,22 @@ function acceptFriendRequest(id) {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => {
-        if(res.ok) location.reload();
-        else alert("Lỗi chấp nhận yêu cầu");
-    });
+        .then(res => {
+            if (res.ok) location.reload();
+            else alert("Lỗi chấp nhận yêu cầu");
+        });
 }
 function removeFriend(id) {
-    if(!confirm("Bạn có chắc chắn muốn thực hiện thao tác này?")) return;
+    if (!confirm("Bạn có chắc chắn muốn thực hiện thao tác này?")) return;
     const token = localStorage.getItem('token');
     fetch(`/api/friends/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => {
-        if(res.ok) location.reload();
-        else alert("Lỗi xóa/hủy");
-    });
+        .then(res => {
+            if (res.ok) location.reload();
+            else alert("Lỗi xóa/hủy");
+        });
 }
 // === FRIENDSHIP END ===
 
@@ -835,33 +836,33 @@ function removeFriend(id) {
 let currentProfileData = null;
 
 const originalFillProfileData = fillProfileData;
-fillProfileData = function(user, isCurrentUser) {
-    if(isCurrentUser) currentProfileData = user;
-    
+fillProfileData = function (user, isCurrentUser) {
+    if (isCurrentUser) currentProfileData = user;
+
     if (user.cover) {
         document.getElementById('profile-cover').src = user.cover;
     }
-    
+
     originalFillProfileData(user, isCurrentUser);
 };
 
 function openEditProfileModal() {
-    if(!currentProfileData) return;
+    if (!currentProfileData) return;
     document.getElementById('edit-fullname').value = currentProfileData.fullName || '';
     document.getElementById('edit-bio').value = currentProfileData.bio || '';
     document.getElementById('edit-relationship').value = currentProfileData.relationshipStatus || 'Độc thân';
     document.getElementById('edit-phone').value = currentProfileData.phoneNumber || '';
-    
-    if(currentProfileData.dateOfBirth) {
+
+    if (currentProfileData.dateOfBirth) {
         let dob = new Date(currentProfileData.dateOfBirth);
         let yyyy = dob.getFullYear();
         let mm = String(dob.getMonth() + 1).padStart(2, '0');
         let dd = String(dob.getDate()).padStart(2, '0');
         document.getElementById('edit-dob').value = `${yyyy}-${mm}-${dd}`;
     }
-    
+
     document.getElementById('edit-gender').value = currentProfileData.gender || 'Nam';
-    
+
     document.getElementById('edit-profile-modal').style.display = 'flex';
 }
 
@@ -871,7 +872,7 @@ function closeEditProfileModal() {
 
 async function saveProfileChanges() {
     const token = localStorage.getItem('token');
-    
+
     const req = {
         fullName: document.getElementById('edit-fullname').value.trim(),
         bio: document.getElementById('edit-bio').value.trim(),
@@ -880,7 +881,7 @@ async function saveProfileChanges() {
         dateOfBirth: document.getElementById('edit-dob').value,
         gender: document.getElementById('edit-gender').value
     };
-    
+
     try {
         const res = await fetch('/api/users/profile', {
             method: 'PUT',
@@ -890,7 +891,7 @@ async function saveProfileChanges() {
             },
             body: JSON.stringify(req)
         });
-        
+
         if (res.ok) {
             alert('Cập nhật thông tin thành công!');
             location.reload();
@@ -898,7 +899,7 @@ async function saveProfileChanges() {
             const err = await res.text();
             alert('Lỗi cập nhật: ' + err);
         }
-    } catch(e) {
+    } catch (e) {
         console.error(e);
         alert('Đã xảy ra lỗi!');
     }
@@ -910,23 +911,23 @@ let currentCropFile = null;
 
 function uploadImage(type, ev) {
     const file = ev.target.files[0];
-    if(!file) return;
-    
+    if (!file) return;
+
     currentCropType = type;
     currentCropFile = file;
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
         document.getElementById('cropper-image').src = e.target.result;
         document.getElementById('cropper-modal').style.display = 'flex';
         document.getElementById('cropper-title').textContent = type === 'cover' ? "Căn chỉnh ảnh bìa" : "Căn chỉnh ảnh đại diện";
-        
+
         if (cropper) {
             cropper.destroy();
         }
-        
+
         const aspectRatio = type === 'cover' ? 1095 / 350 : 1;
-        
+
         cropper = new Cropper(document.getElementById('cropper-image'), {
             aspectRatio: aspectRatio,
             viewMode: 1, // Restrict the crop box to not exceed the size of the canvas
@@ -945,7 +946,7 @@ function uploadImage(type, ev) {
 
 function closeCropperModal() {
     document.getElementById('cropper-modal').style.display = 'none';
-    if(cropper) {
+    if (cropper) {
         cropper.destroy();
         cropper = null;
     }
@@ -954,8 +955,8 @@ function closeCropperModal() {
 }
 
 async function saveCroppedImage() {
-    if(!cropper || !currentCropType) return;
-    
+    if (!cropper || !currentCropType) return;
+
     const btn = document.getElementById('cropper-btn-save');
     const originalText = btn.textContent;
     btn.textContent = "Đang xử lý...";
@@ -978,23 +979,23 @@ async function saveCroppedImage() {
         // Give it the original file's name and append timestamp
         const ext = currentCropFile.name.split('.').pop();
         formData.append('file', blob, `cropped-${Date.now()}.${ext}`);
-        
+
         try {
             const token = localStorage.getItem('token');
             const uploadRes = await fetch('/api/upload/image', {
                 method: 'POST',
-                headers: {'Authorization': `Bearer ${token}`},
+                headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
-            
-            if(!uploadRes.ok) {
+
+            if (!uploadRes.ok) {
                 const text = await uploadRes.text(); alert('Lỗi khi tải ảnh lên: ' + text);
                 return;
             }
-            
+
             const uploadData = await uploadRes.json();
             const imageUrl = uploadData.imageUrl;
-            
+
             // Update user profile
             const updateRes = await fetch(`/api/users/profile/${currentCropType}`, {
                 method: 'PUT',
@@ -1004,14 +1005,14 @@ async function saveCroppedImage() {
                 },
                 body: JSON.stringify({ [currentCropType]: imageUrl })
             });
-            
+
             if (updateRes.ok) {
                 closeCropperModal();
                 location.reload();
             } else {
                 alert(`Lỗi cập nhật ${currentCropType}`);
             }
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             alert('Đã xảy ra lỗi tải ảnh.');
         } finally {
@@ -1026,12 +1027,12 @@ window.closeCropperModal = closeCropperModal;
 window.saveCroppedImage = saveCroppedImage;
 
 // Alias cho post-creation.js
-window.fetchPosts = function() {
+window.fetchPosts = function () {
     fetchMyPosts();
 };
 
 // Hàm thêm bài viết mới vào đầu feed (để post-creation.js gọi)
-window.prependCreatedPostToFeed = function(post) {
+window.prependCreatedPostToFeed = function (post) {
     const container = document.getElementById('profile-posts-container');
     if (!container || !post) return false;
 
@@ -1040,7 +1041,7 @@ window.prependCreatedPostToFeed = function(post) {
     if (targetUserId && targetUserId !== currentUserId) {
         // Đang xem profile người khác, không nên tự chèn bài mình vừa đăng vào đây 
         // trừ khi logic app cho phép. Thông thường là không.
-        return false; 
+        return false;
     }
 
     // Nếu đang có thông báo "Đang tải" hoặc "Chưa có bài viết", xóa đi
@@ -1052,7 +1053,7 @@ window.prependCreatedPostToFeed = function(post) {
     if (post.visibility === 'PUBLIC') visibilityIcon = '<i class="fa-solid fa-earth-americas" style="margin-left: 5px; font-size: 11px;"></i>';
     else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
     else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
-    
+
     const isMine = true; // Bài mới tạo chắc chắn là của mình
 
     let authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff`;
@@ -1126,3 +1127,101 @@ window.prependCreatedPostToFeed = function(post) {
     container.insertAdjacentHTML('afterbegin', postHtml);
     return true;
 };
+
+window.openAppealModal = function (postId) {
+    const titleEl = document.getElementById('report-modal-title');
+    if (titleEl) titleEl.innerText = "Kháng nghị gỡ bài viết";
+    
+    const categoryEl = document.getElementById('report-category');
+    if (categoryEl) {
+        let appealOpt = categoryEl.querySelector('option[value="APPEAL"]');
+        if (!appealOpt) {
+            appealOpt = document.createElement('option');
+            appealOpt.value = 'APPEAL';
+            appealOpt.innerText = 'Kháng nghị';
+            categoryEl.appendChild(appealOpt);
+        }
+        categoryEl.value = 'APPEAL';
+        categoryEl.style.display = 'none';
+    }
+
+    const descEl = document.querySelector('#report-modal .modal-body p');
+    if (descEl) {
+        descEl.innerText = "Tại sao bạn cho rằng bài viết của mình không vi phạm tiêu chuẩn cộng đồng?";
+    }
+
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    document.getElementById('report-reason').placeholder = 'Nhập lý do kháng nghị chi tiết...';
+
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    if (confirmBtn) {
+        confirmBtn.innerText = "Gửi kháng nghị";
+        confirmBtn.onclick = () => submitAppeal(postId);
+    }
+};
+
+const originalCloseReportModal = window.closeReportModal;
+window.closeReportModal = function () {
+    if (typeof originalCloseReportModal === 'function') {
+        originalCloseReportModal();
+    } else {
+        document.getElementById('report-modal').style.display = 'none';
+    }
+    
+    const titleEl = document.getElementById('report-modal-title');
+    if (titleEl) titleEl.innerText = "Báo cáo bài viết";
+    const categoryEl = document.getElementById('report-category');
+    if (categoryEl) {
+        categoryEl.style.display = 'block';
+        categoryEl.value = 'OTHER';
+    }
+    const descEl = document.querySelector('#report-modal .modal-body p');
+    if (descEl) {
+        descEl.innerText = "Tại sao bạn muốn báo cáo nội dung này?";
+    }
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    if (confirmBtn) {
+        confirmBtn.innerText = "Gửi báo cáo";
+    }
+    const reasonEl = document.getElementById('report-reason');
+    if (reasonEl) {
+        reasonEl.placeholder = 'Nhập lý do chi tiết...';
+    }
+};
+
+async function submitAppeal(postId) {
+    const reason = document.getElementById('report-reason').value.trim();
+    if (!reason) {
+        showToast('Vui lòng nhập lý do kháng nghị.', 'error');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${postId}/appeal`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ reason: reason })
+        });
+
+        if (res.ok) {
+            closeReportModal();
+            showToast('Kháng nghị của bạn đã được gửi thành công.', 'success');
+            // Update UI if we are in post.html detail view
+            const appealBtn = document.getElementById('appeal-post-btn');
+            if (appealBtn) {
+                appealBtn.outerHTML = '<span style="color: #65676b; margin-left: 12px; font-weight: 600; font-size: 12px;">(Đã gửi kháng nghị)</span>';
+            }
+        } else {
+            const txt = await res.text();
+            showToast(txt, 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Lỗi khi gửi kháng nghị.', 'error');
+    }
+}

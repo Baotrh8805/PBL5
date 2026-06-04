@@ -217,8 +217,8 @@ function renderReviewPostsTable(posts) {
         const cardClass = `review-post-card ${hasMedia ? 'has-media' : 'no-media'} ${isReviewed ? 'reviewed' : 'pending'}`;
         const severityBorderColor = (postStatus === 'REJECTED' || postStatus === 'AUTO_REJECTED') ? '#ff4d4f' : '#00d1b2';
         const severityColor = violationRate >= 75 ? '#ff4d4f' : (violationRate >= 50 ? '#faad14' : '#1cc88a');
-        const severityStyle = isReviewed 
-            ? `border-left: 6px solid ${severityBorderColor};` 
+        const severityStyle = isReviewed
+            ? `border-left: 6px solid ${severityBorderColor};`
             : `border-left: 6px solid ${severityColor};`;
 
         return `
@@ -275,13 +275,13 @@ function renderReviewPostsTable(posts) {
                     <div class="review-actions-premium" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed var(--border-color);">
                          <div class="action-btn-row" style="display: flex; gap: 8px; flex-wrap: wrap;">
                              ${postStatus === 'PENDING_REVIEW'
-                             ? (!post.processingModeratorId || post.processingModeratorId == window.currentModerator.id
-                                 ? `<button class="btn-action success" onclick="approvePost('${post.id}')" style="padding: 8px 16px; font-size: 13px; font-weight: 700; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; color: white; background: var(--success-color); transition: all 0.2s;"><i class="fa-solid fa-circle-check"></i> Duyệt bài</button>
+                ? (!post.processingModeratorId || post.processingModeratorId == window.currentModerator.id
+                    ? `<button class="btn-action success" onclick="approvePost('${post.id}')" style="padding: 8px 16px; font-size: 13px; font-weight: 700; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; color: white; background: var(--success-color); transition: all 0.2s;"><i class="fa-solid fa-circle-check"></i> Duyệt bài</button>
                                             <button class="btn-action danger" onclick="deletePost(${post.id})" style="padding: 8px 16px; font-size: 13px; font-weight: 700; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; color: white; background: var(--danger-color); transition: all 0.2s;"><i class="fa-solid fa-trash-can"></i> Xóa bài</button>`
-                                 : ''
-                             )
-                             : ''
-                             }
+                    : ''
+                )
+                : ''
+            }
                              <button class="btn-action detail" onclick="viewPostDetail('${post.id}')" style="padding: 8px 16px; font-size: 13px; font-weight: 700; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);"><i class="fa-solid fa-circle-info"></i> Chi tiết</button>
                          </div>
                     </div>
@@ -567,9 +567,9 @@ function getScoreBreakdown(post) {
 
 function getViolationRate(post) {
     const scores = [
-        post.bestScore, 
-        post.nsfwScore, 
-        post.violenceScore, 
+        post.bestScore,
+        post.nsfwScore,
+        post.violenceScore,
         post.hateSpeechScore,
         post.hateSpeechContentScore,
         post.hateSpeechVideoScore

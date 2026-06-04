@@ -107,6 +107,8 @@ public class ModeratorController {
                     map.put("authorName", author != null ? author.getFullName() : "Ẩn danh");
                     map.put("reviewedAt", p.getReviewedAt());
                     map.put("reviewerName", currentMod != null ? currentMod.getFullName() : null);
+                    map.put("likeCount", likeRepository.countByPostId(p.getId()));
+                    map.put("commentCount", commentRepository.countByPostId(p.getId()));
 
                     if (hasActiveLock) {
                         map.put("moderationStartedAt", modTime);
@@ -117,9 +119,6 @@ public class ModeratorController {
                         map.put("processingModeratorId", null);
                         map.put("processingModeratorName", null);
                     }
-
-                    map.put("likeCount", 0);
-                    map.put("commentCount", 0);
                     return map;
                 }).collect(Collectors.toList());
         return ResponseEntity.ok(result);
@@ -270,7 +269,8 @@ public class ModeratorController {
         }
 
         Post post = postOpt.get();
-        if (post.getStatus() == PostStatus.REJECTED || post.getStatus() == PostStatus.AUTO_REJECTED || post.getStatus() == PostStatus.DELETED) {
+        if (post.getStatus() == PostStatus.REJECTED || post.getStatus() == PostStatus.AUTO_REJECTED
+                || post.getStatus() == PostStatus.DELETED) {
             return ResponseEntity.status(400).body("Bài viết này đã được xử lý hoặc gỡ trước đó.");
         }
 
@@ -390,6 +390,7 @@ public class ModeratorController {
                     map.put("category", r.getCategory() != null ? r.getCategory().name() : "OTHER");
                     map.put("createdAt", r.getCreatedAt());
                     map.put("targetType", r.getComment() != null ? "COMMENT" : "POST");
+                    map.put("appealedModerator", r.getAppealedModerator());
 
                     if (r.getUser() != null) {
                         Map<String, Object> reporterMap = new HashMap<>();
@@ -445,7 +446,7 @@ public class ModeratorController {
         }
 
         com.pbl5.model.Report report = reportOpt.get();
-        
+
         com.pbl5.enums.ReportStatus reportStatus;
         try {
             reportStatus = com.pbl5.enums.ReportStatus.valueOf(status.toUpperCase());
@@ -456,11 +457,12 @@ public class ModeratorController {
         report.setStatus(reportStatus);
         report.setResolvedAt(LocalDateTime.now());
         report.setResolvedBy(moderator);
-        
+
         if (adminNote != null && !adminNote.isBlank()) {
             report.setAdminNote(adminNote.trim());
         } else {
-            report.setAdminNote(reportStatus == com.pbl5.enums.ReportStatus.RESOLVED ? "Đã xử lý vi phạm." : "Bỏ qua báo cáo.");
+            report.setAdminNote(
+                    reportStatus == com.pbl5.enums.ReportStatus.RESOLVED ? "Đã xử lý vi phạm." : "Bỏ qua báo cáo.");
         }
 
         reportRepository.save(report);
@@ -469,29 +471,50 @@ public class ModeratorController {
             // Xử lý báo cáo bài viết
             if (report.getPost() != null) {
                 Post post = report.getPost();
-                
-                // Cập nhật trạng thái bài viết thành REJECTED (ẩn khỏi feed)
-                post.setStatus(PostStatus.REJECTED);
-                post.setProcessingModerator(moderator);
-                post.setReviewedAt(LocalDateTime.now());
-                postRepository.save(post);
 
-                User author = post.getUser();
-                if (author != null) {
-                    if ("DELETE".equalsIgnoreCase(action)) {
-                        // Cộng 1 điểm vi phạm nếu là Xóa bài
+                if (report.getCategory() == com.pbl5.enums.ReportCategory.APPEAL) {
+                    // Chấp nhận kháng nghị -> Khôi phục bài viết
+                    post.setStatus(PostStatus.ACTIVE);
+                    post.setProcessingModerator(moderator);
+                    post.setReviewedAt(LocalDateTime.now());
+                    postRepository.save(post);
+
+                    User author = post.getUser();
+                    if (author != null) {
                         int currentScore = author.getScore() != null ? author.getScore() : 0;
-                        author.setScore(currentScore + 1);
-                        userRepository.save(author);
+                        if (currentScore > 0) {
+                            author.setScore(currentScore - 1);
+                            userRepository.save(author);
+                        }
 
-                        sendNotification(author, moderator, "POST_REJECTED",
-                                "Bài viết của bạn đã bị gỡ do vi phạm tiêu chuẩn cộng đồng. Bạn bị cộng 1 điểm vi phạm. Bạn có 3 ngày để xem lại bài viết.",
-                                "/html/post.html?id=" + post.getId());
-                    } else {
-                        // Chỉ ẩn bài viết
-                        sendNotification(author, moderator, "POST_HIDDEN",
-                                "Bài viết của bạn đã bị ẩn bởi đội ngũ quản trị. Bạn có 3 ngày để xem lại bài viết.",
-                                "/html/post.html?id=" + post.getId());
+                        sendNotification(author, moderator, "POST_RESTORED",
+                                "Kháng nghị thành công. Bài viết của bạn đã được khôi phục. Bạn được trừ 1 điểm vi phạm.",
+                                "/html/home.html#post-" + post.getId());
+                    }
+                } else {
+                    // Cập nhật trạng thái bài viết thành REJECTED (ẩn khỏi feed)
+                    post.setStatus(PostStatus.REJECTED);
+                    post.setProcessingModerator(moderator);
+                    post.setReviewedAt(LocalDateTime.now());
+                    postRepository.save(post);
+
+                    User author = post.getUser();
+                    if (author != null) {
+                        if ("DELETE".equalsIgnoreCase(action)) {
+                            // Cộng 1 điểm vi phạm nếu là Xóa bài
+                            int currentScore = author.getScore() != null ? author.getScore() : 0;
+                            author.setScore(currentScore + 1);
+                            userRepository.save(author);
+
+                            sendNotification(author, moderator, "POST_REJECTED",
+                                    "Bài viết của bạn đã bị gỡ do vi phạm tiêu chuẩn cộng đồng. Bạn bị cộng 1 điểm vi phạm. Bạn có 3 ngày để xem lại bài viết.",
+                                    "/html/post.html?id=" + post.getId());
+                        } else {
+                            // Chỉ ẩn bài viết
+                            sendNotification(author, moderator, "POST_HIDDEN",
+                                    "Bài viết của bạn đã bị ẩn bởi đội ngũ quản trị. Bạn có 3 ngày để xem lại bài viết.",
+                                    "/html/post.html?id=" + post.getId());
+                        }
                     }
                 }
             }
@@ -512,25 +535,35 @@ public class ModeratorController {
                 reportRepository.save(report);
             }
 
-            // Thông báo cho người báo cáo
-            if (report.getUser() != null) {
+            // Thông báo cho người báo cáo (nếu không phải là kháng nghị)
+            if (report.getUser() != null && report.getCategory() != com.pbl5.enums.ReportCategory.APPEAL) {
                 sendNotification(report.getUser(), moderator, "REPORT_RESOLVED",
                         "Báo cáo của bạn đã được xử lý. Nội dung vi phạm đã được gỡ bỏ. Cảm ơn bạn!",
                         "/html/home.html");
             }
 
         } else if (reportStatus == com.pbl5.enums.ReportStatus.DISMISSED) {
-            // Thông báo cho người báo cáo
-            if (report.getUser() != null) {
-                sendNotification(report.getUser(), moderator, "REPORT_DISMISSED",
-                        "Báo cáo của bạn đã được xem xét. Nội dung không vi phạm tiêu chuẩn cộng đồng.",
-                        "/html/home.html");
+            if (report.getCategory() == com.pbl5.enums.ReportCategory.APPEAL) {
+                if (report.getPost() != null) {
+                    User author = report.getPost().getUser();
+                    if (author != null) {
+                        sendNotification(author, moderator, "APPEAL_REJECTED",
+                                "Kháng nghị của bạn đã bị từ chối. Bài viết vẫn bị gỡ bỏ.",
+                                "/html/post.html?id=" + report.getPost().getId());
+                    }
+                }
+            } else {
+                // Thông báo cho người báo cáo
+                if (report.getUser() != null) {
+                    sendNotification(report.getUser(), moderator, "REPORT_DISMISSED",
+                            "Báo cáo của bạn đã được xem xét. Nội dung không vi phạm tiêu chuẩn cộng đồng.",
+                            "/html/home.html");
+                }
             }
         }
 
         return ResponseEntity.ok(Map.of("message", "Đã cập nhật trạng thái báo cáo ID " + id));
     }
-
 
     // ==================== KIỂM DUYỆT NGƯỜI DÙNG ====================
 
@@ -582,7 +615,7 @@ public class ModeratorController {
 
     /** Cảnh báo người dùng với tùy chọn hình thức và thời hạn */
     @PutMapping("/users/{id}/warn")
-    public ResponseEntity<?> warnUser(@PathVariable long id, 
+    public ResponseEntity<?> warnUser(@PathVariable long id,
             @RequestBody Map<String, Object> payload,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         User moderator = getAuthenticatedUser(authHeader);
@@ -597,7 +630,8 @@ public class ModeratorController {
         String type = (String) payload.get("type"); // "POST" hoặc "COMMENT"
         Integer days = (Integer) payload.get("days"); // duration value
         String unit = (String) payload.get("unit"); // "HOURS" hoặc "DAYS"
-        if (unit == null) unit = "DAYS";
+        if (unit == null)
+            unit = "DAYS";
 
         if (type == null || days == null) {
             return ResponseEntity.badRequest().body("Thiếu thông tin hình thức hoặc thời hạn cảnh cáo");
@@ -605,29 +639,33 @@ public class ModeratorController {
 
         User user = userOpt.get();
         user.setStatus(UserStatus.WARNING);
-        
+
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
         if ("POST".equals(type)) {
             java.time.LocalDateTime currentExpiry = user.getPostWarningExpiresAt();
             // Nếu còn hạn thì cộng thêm vào hạn cũ, nếu không thì cộng từ bây giờ
-            java.time.LocalDateTime baseTime = (currentExpiry != null && currentExpiry.isAfter(now)) ? currentExpiry : now;
+            java.time.LocalDateTime baseTime = (currentExpiry != null && currentExpiry.isAfter(now)) ? currentExpiry
+                    : now;
             user.setPostWarningExpiresAt("HOURS".equals(unit) ? baseTime.plusHours(days) : baseTime.plusDays(days));
         } else if ("COMMENT".equals(type)) {
             java.time.LocalDateTime currentExpiry = user.getCommentWarningExpiresAt();
-            java.time.LocalDateTime baseTime = (currentExpiry != null && currentExpiry.isAfter(now)) ? currentExpiry : now;
+            java.time.LocalDateTime baseTime = (currentExpiry != null && currentExpiry.isAfter(now)) ? currentExpiry
+                    : now;
             user.setCommentWarningExpiresAt("HOURS".equals(unit) ? baseTime.plusHours(days) : baseTime.plusDays(days));
         }
-        
+
         userRepository.save(user);
 
         String typeText = type.equals("POST") ? "đăng bài" : "bình luận";
         String durationText = unit.equals("HOURS") ? days + " giờ" : days + " ngày";
-        
+
         // Gửi thông báo hệ thống cho người dùng
-        String message = "Bạn đã bị cảnh cáo " + typeText + " trong " + durationText + " do vi phạm tiêu chuẩn cộng đồng.";
+        String message = "Bạn đã bị cảnh cáo " + typeText + " trong " + durationText
+                + " do vi phạm tiêu chuẩn cộng đồng.";
         sendNotification(user, moderator, "WARNING", message, "/profile");
 
-        return ResponseEntity.ok(Map.of("message", "Đã thiết lập cảnh cáo " + typeText + " cho người dùng trong " + durationText + "."));
+        return ResponseEntity.ok(
+                Map.of("message", "Đã thiết lập cảnh cáo " + typeText + " cho người dùng trong " + durationText + "."));
     }
 
     /** Khoá người dùng (đặt status = BANNED) */
@@ -666,7 +704,7 @@ public class ModeratorController {
         List<Map<String, Object>> result = posts.stream().map(p -> {
             Map<String, Object> map = new HashMap<>();
             User currentMod = p.getProcessingModerator();
-            
+
             map.put("id", p.getId());
             map.put("content", p.getContent());
             map.put("imageUrl", p.getImageUrl());
@@ -733,7 +771,8 @@ public class ModeratorController {
     }
 
     private String buildViolationEvidence(Post post) {
-        if (post.getStatus() == PostStatus.ACTIVE || post.getStatus() == PostStatus.PUBLISHED || "Không vi phạm".equals(resolveViolationLabel(post))) {
+        if (post.getStatus() == PostStatus.ACTIVE || post.getStatus() == PostStatus.PUBLISHED
+                || "Không vi phạm".equals(resolveViolationLabel(post))) {
             return "Không có vi phạm";
         }
         String content = post.getContent();
@@ -753,27 +792,32 @@ public class ModeratorController {
             @RequestHeader("Authorization") String authHeader) {
         User moderator = getAuthenticatedUser(authHeader);
         Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) return ResponseEntity.notFound().build();
+        if (userOpt.isEmpty())
+            return ResponseEntity.notFound().build();
 
         User user = userOpt.get();
         String type = (String) body.get("type"); // "TEMP" or "PERM"
         Integer days = (Integer) body.get("days");
         String unit = (String) body.get("unit"); // "HOURS" or "DAYS"
-        if (unit == null) unit = "DAYS";
+        if (unit == null)
+            unit = "DAYS";
         String reason = (String) body.get("reason");
-        if (reason == null || reason.trim().isEmpty()) reason = "Vi phạm tiêu chuẩn cộng đồng.";
+        if (reason == null || reason.trim().isEmpty())
+            reason = "Vi phạm tiêu chuẩn cộng đồng.";
 
         LocalDateTime expiry = null;
         String expiryStr = null;
-        
+
         if ("PERM".equals(type)) {
             // Khóa vĩnh viễn: Lưu ngày mở là 1970-01-01 (mốc 0)
             expiry = LocalDateTime.of(1970, 1, 1, 0, 0);
         } else {
             // Khóa tạm thời
-            if (days == null || days <= 0) return ResponseEntity.badRequest().body("Thời hạn khóa không hợp lệ.");
+            if (days == null || days <= 0)
+                return ResponseEntity.badRequest().body("Thời hạn khóa không hợp lệ.");
             expiry = "HOURS".equals(unit) ? LocalDateTime.now().plusHours(days) : LocalDateTime.now().plusDays(days);
-            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter
+                    .ofPattern("HH:mm 'ngày' dd/MM/yyyy");
             expiryStr = expiry.format(formatter);
         }
 
@@ -797,7 +841,8 @@ public class ModeratorController {
             @RequestHeader("Authorization") String authHeader) {
         User moderator = getAuthenticatedUser(authHeader);
         Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) return ResponseEntity.notFound().build();
+        if (userOpt.isEmpty())
+            return ResponseEntity.notFound().build();
 
         User user = userOpt.get();
         user.setStatus(UserStatus.ACTIVE);
@@ -813,10 +858,12 @@ public class ModeratorController {
             @RequestBody Map<String, String> body,
             @RequestHeader("Authorization") String authHeader) {
         User moderator = getAuthenticatedUser(authHeader);
-        if (moderator == null) return ResponseEntity.status(401).build();
-        
+        if (moderator == null)
+            return ResponseEntity.status(401).build();
+
         Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) return ResponseEntity.notFound().build();
+        if (userOpt.isEmpty())
+            return ResponseEntity.notFound().build();
 
         User user = userOpt.get();
         String message = body.get("message");
@@ -825,7 +872,7 @@ public class ModeratorController {
         }
 
         sendNotification(user, moderator, "USER_WARNED", message, "/html/home.html");
-        
+
         return ResponseEntity.ok(Map.of("message", "Đã gửi cảnh cáo thành công cho người dùng " + user.getFullName()));
     }
 

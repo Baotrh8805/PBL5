@@ -272,6 +272,7 @@ public class ContentModerationService {
             post.setNsfwBox(moderationResult.getNsfwBox());
             post.setViolenBox(moderationResult.getViolenBox());
             post.setHateSpeechWord(moderationResult.getHateSpeechWord());
+            post.setDetectedText(moderationResult.getDetectedText());
             post.setHighestScoreFrameIndex(moderationResult.getHighestScoreFrameIndex());
             post.setHighestScoreFrameSecond(moderationResult.getHighestScoreFrameSecond());
             post.setTotalFramesAnalyzed(moderationResult.getTotalFramesAnalyzed());

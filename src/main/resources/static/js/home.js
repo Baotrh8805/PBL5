@@ -13,7 +13,7 @@ window.onload = () => {
         window.location.href = '/';
         return;
     }
-    
+
     // Fetch user profile info here
     fetchUserProfile(token);
     // Fetch feed posts
@@ -23,7 +23,7 @@ window.onload = () => {
 };
 
 // Logout Function
-window.logout = function() {
+window.logout = function () {
     localStorage.removeItem('token');
     window.location.href = '/';
 };
@@ -39,7 +39,7 @@ async function fetchUserProfile(token) {
         });
         if (res.ok) {
             const data = await res.json();
-            
+
             // Redirect MODERATOR out of home feed
             if (data.role === 'MODERATOR') {
                 window.location.href = '/html/moderator.html';
@@ -48,12 +48,12 @@ async function fetchUserProfile(token) {
                 window.location.href = '/html/admin.html';
                 return;
             }
-            
+
             // Cập nhật tên của tài khoản đăng nhập trên màn hình (sidebar)
             document.querySelectorAll('.user-name').forEach(el => {
                 el.textContent = data.fullName || 'Người dùng';
             });
-            
+
             // Cập nhật avatar (nếu có custom url, hiện tại tạm xài chữ cái đầu)
             let avatarUrl = data.avatar;
             if (!avatarUrl && data.fullName) {
@@ -67,7 +67,7 @@ async function fetchUserProfile(token) {
                 el.textContent = data.fullName || 'Người dùng';
             });
             document.getElementById('modal-post-content').placeholder = `${data.fullName || 'Người dùng'} ơi, bạn đang nghĩ gì thế?`;
-            
+
             // Hiện nút Admin/Moderator trong sidebar nếu có quyền
             if (data.role === 'ADMIN' || data.role === 'MODERATOR') {
                 const adminContainer = document.getElementById('admin-menu-container');
@@ -87,14 +87,14 @@ async function fetchUserProfile(token) {
             }
 
         } else {
-             // Handle token expired/invalid
-             // localStorage.removeItem('token');
-             // window.location.href = '/';
+            // Handle token expired/invalid
+            // localStorage.removeItem('token');
+            // window.location.href = '/';
         }
     } catch (err) {
         console.error("Error fetching profile", err);
     }
-    
+
 }
 
 // ---- Onboarding Logic ----
@@ -110,10 +110,10 @@ async function submitOnboarding() {
     const fullName = document.getElementById('onboard-fullname').value.trim();
     const phone = document.getElementById('onboard-phone').value.trim();
     const dob = document.getElementById('onboard-dob').value;
-    
+
     const genderNode = document.querySelector('input[name="onboard-gender"]:checked');
     const gender = genderNode ? genderNode.value : '';
-    
+
     const errorMsg = document.getElementById('onboard-error');
 
     if (!fullName) {
@@ -338,7 +338,7 @@ function timeSince(dateString) {
         return 'Vừa xong';
     }
     const seconds = Math.floor((new Date() - postDate) / 1000);
-    
+
     let interval = seconds / 31536000;
     if (interval > 1) return Math.floor(interval) + " năm trước";
     interval = seconds / 2592000;
@@ -358,7 +358,7 @@ function renderPosts(posts, token) {
 
     let allPostsHtml = '';
     posts.forEach(post => {
-        
+
         let visibilityIcon = '';
         if (post.visibility === 'PUBLIC') visibilityIcon = '<i class="fa-solid fa-earth-americas" style="margin-left: 5px; font-size: 11px;"></i>';
         else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
@@ -367,10 +367,10 @@ function renderPosts(posts, token) {
         const status = String(post.status || '').toUpperCase();
         const isRejected = status === 'REJECTED' || status === 'AUTO_REJECTED';
         const isPending = status === 'PENDING_REVIEW';
-        
+
         let warningBanner = '';
         let cardStyle = '';
-        
+
         if (isRejected) {
             cardStyle = ' style="opacity: 0.85; border: 1.5px solid #ff8182;"';
             warningBanner = `
@@ -407,13 +407,17 @@ function renderPosts(posts, token) {
                     <i class="fa-solid fa-ellipsis"></i>
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
-                    ${isMine ? `
+                    ${isMine ? (isRejected ? `
+                        <a href="javascript:void(0)" onclick="openAppealModal(${post.id})"><i class="fa-solid fa-circle-exclamation"></i> Gửi kháng nghị</a>
+                        <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
+                        <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                    ` : `
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
                         <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
                         <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
-                    ` : `
+                    `) : `
                         <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
                     `}
@@ -502,25 +506,25 @@ function renderPosts(posts, token) {
 
 function escapeHtml(unsafe) {
     return unsafe
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;")
-         .replace(/\n/g, "<br>"); // Xuống dòng
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;")
+        .replace(/\n/g, "<br>"); // Xuống dòng
 }
 
 async function toggleLike(postId) {
     const token = localStorage.getItem('token');
-    
+
     // UI Cập nhật tức thì (Optimistic UI)
     const likeBtn = document.getElementById(`like-btn-${postId}`);
     const likeIcon = document.getElementById(`like-icon-${postId}`);
     const likeCountSpan = document.getElementById(`like-count-${postId}`);
-    
+
     if (likeBtn && likeIcon && likeCountSpan) {
         const isLiked = likeIcon.classList.contains('fa-solid');
-        
+
         let currentCount = 0;
         const countMatch = likeCountSpan.innerText.match(/\d+/);
         if (countMatch) {
@@ -547,7 +551,7 @@ async function toggleLike(postId) {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (!res.ok) {
             console.error("Lỗi khi cập nhật like trên server");
         }
@@ -565,7 +569,7 @@ function toggleDropdown(postId) {
 // ======================= GLOBAL SEARCH =======================
 let searchTimeout = null;
 
-window.handleGlobalSearch = function(query) {
+window.handleGlobalSearch = function (query) {
     const resultsContainer = document.getElementById('global-search-results');
     if (!query || query.trim() === '') {
         resultsContainer.innerHTML = '';
@@ -602,7 +606,7 @@ window.handleGlobalSearch = function(query) {
 
 function renderSearchResults(users, posts, query) {
     const resultsContainer = document.getElementById('global-search-results');
-    
+
     if (users.length === 0 && posts.length === 0) {
         resultsContainer.innerHTML = '<div style="padding: 15px; text-align: center; color: #65676b; font-size: 14px;">Không tìm thấy kết quả phù hợp.</div>';
     } else {
@@ -641,14 +645,14 @@ function renderSearchResults(users, posts, query) {
                 `;
             }).join('');
         }
-        
+
         resultsContainer.innerHTML = html;
     }
     resultsContainer.style.display = 'block';
 }
 
 // Ẩn menu khi click ra ngoài
-window.addEventListener('click', function(event) {
+window.addEventListener('click', function (event) {
     // Dropdown posts logic
     if (!event.target.closest('.options-btn')) {
         var dropdowns = document.getElementsByClassName("dropdown-content");
@@ -671,7 +675,7 @@ window.addEventListener('click', function(event) {
 // ===== API GỌI XÓA VÀ CHỈNH SỬA POST =====
 async function deletePost(postId) {
     if (!confirm('Bạn có chắc chắn muốn chuyển bài viết này vào thùng rác?')) return;
-    
+
     const token = localStorage.getItem('token');
     try {
         const res = await fetch(`/api/posts/${postId}`, {
@@ -693,7 +697,7 @@ async function deletePost(postId) {
 
 async function changeVisibility(postId, level) {
     const token = localStorage.getItem('token');
-    
+
     // Optimistic UI update: thay đổi icon hiển thị ngay lập tức
     const visibilityIconSpan = document.getElementById(`visibility-icon-${postId}`);
     if (visibilityIconSpan) {
@@ -713,7 +717,7 @@ async function changeVisibility(postId, level) {
             method: 'PATCH',
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (!res.ok) {
             const txt = await res.text();
             alert("Lỗi: " + txt);
@@ -746,10 +750,10 @@ function reportPost(postId) {
     activeReportPostId = postId;
     activeReportCommentId = null;
     const titleEl = document.getElementById('report-modal-title');
-    if(titleEl) titleEl.innerText = "Báo cáo bài viết";
+    if (titleEl) titleEl.innerText = "Báo cáo bài viết";
     document.getElementById('report-modal').style.display = 'flex';
     document.getElementById('report-reason').value = '';
-    
+
     // Bind confirm button
     const confirmBtn = document.getElementById('confirm-report-btn');
     confirmBtn.onclick = () => submitReport();
@@ -759,10 +763,10 @@ function reportComment(commentId) {
     activeReportCommentId = commentId;
     activeReportPostId = null;
     const titleEl = document.getElementById('report-modal-title');
-    if(titleEl) titleEl.innerText = "Báo cáo bình luận";
+    if (titleEl) titleEl.innerText = "Báo cáo bình luận";
     document.getElementById('report-modal').style.display = 'flex';
     document.getElementById('report-reason').value = '';
-    
+
     // Bind confirm button
     const confirmBtn = document.getElementById('confirm-report-btn');
     confirmBtn.onclick = () => submitReport();
@@ -796,9 +800,9 @@ async function submitReport() {
 
         const res = await fetch(endpoint, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ reason: reason, category: category })
         });
@@ -882,20 +886,20 @@ function toggleComments(postId) {
     }
 }
 
-window.previewCommentMedia = function(event, postId) {
+window.previewCommentMedia = function (event, postId) {
     const file = event.target.files[0];
     if (file) {
         selectedCommentFiles[postId] = file;
         const fileName = (file.name || '').toLowerCase();
         const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|avi|mkv|webm)$/.test(fileName);
         selectedCommentMediaTypes[postId] = isVideo ? 'video' : 'image';
-        
+
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             const imgPreview = document.getElementById(`comment-image-preview-${postId}`);
             const videoPreview = document.getElementById(`comment-video-preview-${postId}`);
             const container = document.getElementById(`comment-media-preview-container-${postId}`);
-            
+
             if (isVideo) {
                 imgPreview.style.display = 'none';
                 videoPreview.style.display = 'block';
@@ -911,7 +915,7 @@ window.previewCommentMedia = function(event, postId) {
     }
 };
 
-window.removeCommentMedia = function(postId) {
+window.removeCommentMedia = function (postId) {
     delete selectedCommentFiles[postId];
     delete selectedCommentMediaTypes[postId];
     const input = document.getElementById(`comment-media-input-${postId}`);
@@ -931,11 +935,11 @@ async function fetchComments(postId) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const comments = await res.json();
-        
+
         const listDiv = document.getElementById(`comment-list-${postId}`);
         listDiv.innerHTML = '';
-        
-        if(comments.length === 0) {
+
+        if (comments.length === 0) {
             listDiv.innerHTML = '<span style="color: #65676b; font-size: 13px;">Chưa có bình luận nào. Hãy là người đầu tiên!</span>';
             return;
         }
@@ -958,7 +962,7 @@ function renderCommentItem(c, postId, isReply = false) {
     const createdAtDate = new Date(c.createdAt);
     const now = new Date();
     const diffMinutes = (now - createdAtDate) / (1000 * 60);
-    
+
     let actionsHtml = `
         <div class="comment-actions" style="margin-left: ${isReply ? '35px' : '45px'}; font-size: 11px; display: flex; gap: 12px; margin-top: -8px; margin-bottom: 10px; align-items: center;">
             <span onclick="toggleCommentLike(${postId}, ${c.id})" id="comment-like-btn-${c.id}" style="color: ${c.liked ? 'var(--primary-color)' : '#65676b'}; cursor: pointer; font-weight: 600;">
@@ -1019,7 +1023,7 @@ function showReplyInput(postId, commentId, authorName) {
         container.innerHTML = '';
         return;
     }
-    
+
     container.innerHTML = `
         <div style="display: flex; gap: 8px; align-items: center; background: var(--comment-bg); border-radius: 20px; padding: 4px 12px;">
             <input type="text" id="reply-field-${commentId}" placeholder="Trả lời ${authorName}..." 
@@ -1064,7 +1068,7 @@ async function submitComment(postId) {
     const input = document.getElementById(`comment-input-${postId}`);
     const content = input.value.trim();
     const token = localStorage.getItem('token');
-    
+
     let imageUrl = null;
     let videoUrl = null;
 
@@ -1078,14 +1082,14 @@ async function submitComment(postId) {
             const type = selectedCommentMediaTypes[postId];
             const formData = new FormData();
             formData.append('file', file);
-            
+
             const endpoint = type === 'video' ? '/api/upload/video' : '/api/upload/image';
             const uploadRes = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
-            
+
             if (uploadRes.ok) {
                 const uploadData = await uploadRes.json();
                 if (type === 'video') videoUrl = uploadData.videoUrl || uploadData.url;
@@ -1098,21 +1102,21 @@ async function submitComment(postId) {
 
         const res = await fetch(`/api/posts/${postId}/comments`, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 content: content,
                 imageUrl: imageUrl,
                 videoUrl: videoUrl
             })
         });
-        
+
         if (res.ok) {
             input.value = '';
             removeCommentMedia(postId);
-            
+
             // Optimistic UI update: cộng số bình luận (nếu chưa cộng)
             const commentCountSpan = document.getElementById(`comment-count-${postId}`);
             if (commentCountSpan) {
@@ -1121,8 +1125,8 @@ async function submitComment(postId) {
                 // Note: we don't increment here if we already did it optimistically elsewhere, 
                 // but fetchComments will refresh anyway.
             }
-            
-            fetchComments(postId); 
+
+            fetchComments(postId);
         } else {
             alert('Lỗi gửi bình luận');
         }
@@ -1160,10 +1164,10 @@ async function deleteComment(postId, commentId) {
     }
 }
 
-window.startEditComment = function(postId, commentId, currentContent) {
+window.startEditComment = function (postId, commentId, currentContent) {
     const contentDiv = document.getElementById(`comment-content-${commentId}`);
     const originalHtml = contentDiv.innerHTML;
-    
+
     contentDiv.innerHTML = `
         <div style="margin-top: 5px;">
             <textarea id="edit-input-${commentId}" style="width: 100%; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; padding: 5px; outline: none; font-size: 14px; font-family: inherit;">${currentContent}</textarea>
@@ -1175,7 +1179,7 @@ window.startEditComment = function(postId, commentId, currentContent) {
     `;
 };
 
-window.cancelEditComment = function(commentId, originalHtml) {
+window.cancelEditComment = function (commentId, originalHtml) {
     const contentDiv = document.getElementById(`comment-content-${commentId}`);
     contentDiv.innerHTML = originalHtml;
 };
@@ -1225,7 +1229,7 @@ async function fetchSidebarSuggestions(token) {
 function renderSidebarSuggestions(users) {
     const container = document.getElementById('sidebar-suggestions');
     if (!container) return;
-    
+
     if (users.length === 0) {
         container.innerHTML = '<div class="empty-state">Không có gợi ý mới</div>';
         return;
@@ -1248,7 +1252,7 @@ function renderSidebarSuggestions(users) {
     }).join('');
 }
 
-window.addFriendFromSidebar = async function(userId) {
+window.addFriendFromSidebar = async function (userId) {
     const token = localStorage.getItem('token');
     try {
         const res = await fetch(`/api/friends/request/${userId}`, {
@@ -1269,7 +1273,7 @@ window.addFriendFromSidebar = async function(userId) {
     }
 };
 
-window.cancelRequestFromSidebar = async function(userId) {
+window.cancelRequestFromSidebar = async function (userId) {
     const token = localStorage.getItem('token');
     try {
         const res = await fetch(`/api/friends/${userId}`, {
@@ -1289,3 +1293,101 @@ window.cancelRequestFromSidebar = async function(userId) {
         console.error("Lỗi hủy lời mời:", err);
     }
 };
+
+window.openAppealModal = function (postId) {
+    const titleEl = document.getElementById('report-modal-title');
+    if (titleEl) titleEl.innerText = "Kháng nghị gỡ bài viết";
+    
+    const categoryEl = document.getElementById('report-category');
+    if (categoryEl) {
+        let appealOpt = categoryEl.querySelector('option[value="APPEAL"]');
+        if (!appealOpt) {
+            appealOpt = document.createElement('option');
+            appealOpt.value = 'APPEAL';
+            appealOpt.innerText = 'Kháng nghị';
+            categoryEl.appendChild(appealOpt);
+        }
+        categoryEl.value = 'APPEAL';
+        categoryEl.style.display = 'none';
+    }
+
+    const descEl = document.querySelector('#report-modal .modal-body p');
+    if (descEl) {
+        descEl.innerText = "Tại sao bạn cho rằng bài viết của mình không vi phạm tiêu chuẩn cộng đồng?";
+    }
+
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('report-reason').value = '';
+    document.getElementById('report-reason').placeholder = 'Nhập lý do kháng nghị chi tiết...';
+
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    if (confirmBtn) {
+        confirmBtn.innerText = "Gửi kháng nghị";
+        confirmBtn.onclick = () => submitAppeal(postId);
+    }
+};
+
+const originalCloseReportModal = window.closeReportModal;
+window.closeReportModal = function () {
+    if (typeof originalCloseReportModal === 'function') {
+        originalCloseReportModal();
+    } else {
+        document.getElementById('report-modal').style.display = 'none';
+    }
+    
+    const titleEl = document.getElementById('report-modal-title');
+    if (titleEl) titleEl.innerText = "Báo cáo bài viết";
+    const categoryEl = document.getElementById('report-category');
+    if (categoryEl) {
+        categoryEl.style.display = 'block';
+        categoryEl.value = 'OTHER';
+    }
+    const descEl = document.querySelector('#report-modal .modal-body p');
+    if (descEl) {
+        descEl.innerText = "Tại sao bạn muốn báo cáo nội dung này?";
+    }
+    const confirmBtn = document.getElementById('confirm-report-btn');
+    if (confirmBtn) {
+        confirmBtn.innerText = "Gửi báo cáo";
+    }
+    const reasonEl = document.getElementById('report-reason');
+    if (reasonEl) {
+        reasonEl.placeholder = 'Nhập lý do chi tiết...';
+    }
+};
+
+async function submitAppeal(postId) {
+    const reason = document.getElementById('report-reason').value.trim();
+    if (!reason) {
+        showToast('Vui lòng nhập lý do kháng nghị.', 'error');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`/api/posts/${postId}/appeal`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ reason: reason })
+        });
+
+        if (res.ok) {
+            closeReportModal();
+            showToast('Kháng nghị của bạn đã được gửi thành công.', 'success');
+            // If there's an appeal button (like on detail view), we update it.
+            const appealBtn = document.getElementById('appeal-post-btn');
+            if (appealBtn) {
+                appealBtn.outerHTML = '<span style="color: #65676b; margin-left: 12px; font-weight: 600; font-size: 12px;">(Đã gửi kháng nghị)</span>';
+            }
+        } else {
+            const txt = await res.text();
+            showToast(txt, 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Lỗi khi gửi kháng nghị.', 'error');
+    }
+}

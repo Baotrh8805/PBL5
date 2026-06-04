@@ -102,8 +102,10 @@ public class PostController {
         }
 
         // Handle deleted/rejected posts with 3-day grace period
-        if (p.getStatus() == com.pbl5.enums.PostStatus.REJECTED || p.getStatus() == com.pbl5.enums.PostStatus.AUTO_REJECTED) {
-            if (currentUser.getRole() == com.pbl5.enums.Role.ADMIN || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR) {
+        if (p.getStatus() == com.pbl5.enums.PostStatus.REJECTED
+                || p.getStatus() == com.pbl5.enums.PostStatus.AUTO_REJECTED) {
+            if (currentUser.getRole() == com.pbl5.enums.Role.ADMIN
+                    || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR) {
                 return true;
             }
             if (p.getUser().getId().equals(currentUser.getId())) {
@@ -120,7 +122,8 @@ public class PostController {
             return true;
 
         // Admins and moderators can see all posts
-        if (currentUser.getRole() == com.pbl5.enums.Role.ADMIN || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR)
+        if (currentUser.getRole() == com.pbl5.enums.Role.ADMIN
+                || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR)
             return true;
 
         // Other users cannot see pending review posts
@@ -141,9 +144,11 @@ public class PostController {
     }
 
     private User getAuthenticatedUser(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
+        if (authHeader == null || !authHeader.startsWith("Bearer "))
+            return null;
         String token = authHeader.substring(7);
-        if (!tokenProvider.validateToken(token)) return null;
+        if (!tokenProvider.validateToken(token))
+            return null;
         String email = tokenProvider.getEmailFromJWT(token);
         return userRepository.findByEmail(email).orElse(null);
     }
@@ -156,10 +161,13 @@ public class PostController {
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
         // Kiểm tra cảnh cáo chặn đăng bài
-        if (user.getPostWarningExpiresAt() != null && user.getPostWarningExpiresAt().isAfter(java.time.LocalDateTime.now())) {
-            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
+        if (user.getPostWarningExpiresAt() != null
+                && user.getPostWarningExpiresAt().isAfter(java.time.LocalDateTime.now())) {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter
+                    .ofPattern("HH:mm 'ngày' dd/MM/yyyy");
             String expiryStr = user.getPostWarningExpiresAt().format(formatter);
-            return ResponseEntity.status(403).body("Bạn đang bị cấm đăng bài do vi phạm. Vui lòng quay lại sau " + expiryStr);
+            return ResponseEntity.status(403)
+                    .body("Bạn đang bị cấm đăng bài do vi phạm. Vui lòng quay lại sau " + expiryStr);
         }
 
         if ((request.getContent() == null || request.getContent().trim().isEmpty())
@@ -423,6 +431,67 @@ public class PostController {
         return ResponseEntity.ok("Đã gửi báo cáo thành công.");
     }
 
+    @PostMapping("/{postId}/appeal")
+    public ResponseEntity<?> appealPost(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long postId,
+            @RequestBody Map<String, String> body) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Post post = postOpt.get();
+
+        // Chỉ tác giả bài viết mới được kháng nghị
+        if (!post.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body("Bạn không có quyền kháng nghị bài viết này.");
+        }
+
+        // Bài viết phải ở trạng thái bị gỡ/từ chối
+        if (post.getStatus() != PostStatus.REJECTED && post.getStatus() != PostStatus.AUTO_REJECTED) {
+            return ResponseEntity.badRequest().body("Bài viết này không ở trạng thái bị gỡ.");
+        }
+
+        // Chống kháng nghị trùng (đang chờ duyệt)
+        boolean existsPending = reportRepository.findByPost(post).stream()
+                .anyMatch(r -> r.getCategory() == com.pbl5.enums.ReportCategory.APPEAL 
+                        && r.getStatus() == com.pbl5.enums.ReportStatus.PENDING);
+        if (existsPending) {
+            return ResponseEntity.status(409).body("Kháng nghị của bạn đang chờ xử lý.");
+        }
+
+        String reason = body.get("reason");
+        if (reason == null || reason.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Lý do kháng nghị không được để trống.");
+        }
+
+        Report report = new Report();
+        report.setUser(user);
+        report.setPost(post);
+        report.setReason(reason.trim());
+        report.setCategory(com.pbl5.enums.ReportCategory.APPEAL);
+        
+        // Xác định người bị kháng cáo
+        if (post.getStatus() == PostStatus.AUTO_REJECTED) {
+            report.setAppealedModerator("AI");
+        } else {
+            User mod = post.getProcessingModerator();
+            if (mod != null) {
+                report.setAppealedModerator(mod.getFullName());
+            } else {
+                report.setAppealedModerator("Moderator");
+            }
+        }
+        
+        reportRepository.save(report);
+
+        return ResponseEntity.ok("Gửi kháng nghị thành công.");
+    }
+
+
     @PostMapping("/comments/{commentId}/report")
     public ResponseEntity<?> reportComment(@RequestHeader("Authorization") String authHeader,
             @PathVariable Long commentId,
@@ -554,7 +623,7 @@ public class PostController {
                             : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+")
                                     + "&background=00d1b2&color=fff";
 
-                    responses.add(new PostResponse(
+                    PostResponse resp = new PostResponse(
                             post.getId(),
                             post.getContent(),
                             post.getImageUrl(),
@@ -568,7 +637,26 @@ public class PostController {
                             isLiked,
                             isMine,
                             post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
-                            post.getStatus() != null ? post.getStatus().name() : "ACTIVE"));
+                            post.getStatus() != null ? post.getStatus().name() : "ACTIVE");
+
+                    if (post.getProcessingModerator() != null) {
+                        resp.setReviewerId(post.getProcessingModerator().getId());
+                        resp.setReviewerName(post.getProcessingModerator().getFullName());
+                        resp.setReviewerAvatar(post.getProcessingModerator().getAvatar());
+                    } else if (post.getStatus() == PostStatus.AUTO_REJECTED) {
+                        resp.setReviewerId(0L);
+                        resp.setReviewerName("Moderator AI");
+                        resp.setReviewerAvatar("https://ui-avatars.com/api/?name=AI&background=3b82f6&color=fff");
+                    }
+                    resp.setNsfwScore(post.getNsfwScore());
+                    resp.setViolenceScore(post.getViolenceScore());
+                    resp.setHateSpeechScore(post.getHateSpeechScore());
+                    resp.setOcrContent(post.getDetectedText());
+                    resp.setSpeechLabels(post.getSpeechLabels());
+                    resp.setHateSpeechContentScore(post.getHateSpeechContentScore());
+                    resp.setHateSpeechVideoScore(post.getHateSpeechVideoScore());
+                    resp.setHateSpeechWord(post.getHateSpeechWord());
+                    responses.add(resp);
                 }
             } catch (Exception e) {
                 // skip broken post
@@ -625,6 +713,25 @@ public class PostController {
                 isMine,
                 post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
                 post.getStatus() != null ? post.getStatus().name() : "ACTIVE");
+
+        if (post.getProcessingModerator() != null) {
+            response.setReviewerId(post.getProcessingModerator().getId());
+            response.setReviewerName(post.getProcessingModerator().getFullName());
+            response.setReviewerAvatar(post.getProcessingModerator().getAvatar());
+        } else if (post.getStatus() == PostStatus.AUTO_REJECTED) {
+            response.setReviewerId(0L);
+            response.setReviewerName("Moderator AI");
+            response.setReviewerAvatar("https://ui-avatars.com/api/?name=AI&background=3b82f6&color=fff");
+        }
+
+        response.setNsfwScore(post.getNsfwScore());
+        response.setViolenceScore(post.getViolenceScore());
+        response.setHateSpeechScore(post.getHateSpeechScore());
+        response.setOcrContent(post.getDetectedText());
+        response.setSpeechLabels(post.getSpeechLabels());
+        response.setHateSpeechContentScore(post.getHateSpeechContentScore());
+        response.setHateSpeechVideoScore(post.getHateSpeechVideoScore());
+        response.setHateSpeechWord(post.getHateSpeechWord());
 
         // Set bookmark state
         if (currentUser != null) {

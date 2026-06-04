@@ -58,8 +58,9 @@ public class DataInitializer {
                 jdbcTemplate.execute("ALTER TABLE posts DROP COLUMN IF EXISTS violation_label");
                 jdbcTemplate.execute("ALTER TABLE posts DROP COLUMN IF EXISTS violation_media_type");
                 jdbcTemplate.execute("ALTER TABLE posts DROP COLUMN IF EXISTS violation_detected");
+                jdbcTemplate.execute("ALTER TABLE reports DROP CONSTRAINT IF EXISTS reports_category_check");
             } catch (Exception e) {
-                System.out.println("Không thể dọn các cột moderation cũ: " + e.getMessage());
+                System.out.println("Không thể dọn các cột moderation cũ hoặc constraint: " + e.getMessage());
             }
         };
     }

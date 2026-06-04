@@ -9,7 +9,22 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
+    return text.toString().replace(/[&<>"']/g, function (m) { return map[m]; });
+}
+
+function getCategoryLabel(cat) {
+    if (!cat) return 'Nội dung';
+    switch (cat.toUpperCase()) {
+        case 'SPAM': return 'Spam / Rác';
+        case 'VIOLENCE': return 'Bạo lực';
+        case 'HARASSMENT': return 'Quấy rối';
+        case 'HATE_SPEECH': return 'Ngôn từ thù ghét';
+        case 'NSFW': return 'Nhạy cảm';
+        case 'FALSE_INFO': return 'Tin giả';
+        case 'OTHER': return 'Khác';
+        case 'APPEAL': return '<span style="color: #3b82f6; font-weight: 700;">Kháng nghị</span>';
+        default: return cat;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,17 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const type = tab.getAttribute('data-report-type');
             const pc = document.getElementById('report-post-container');
             const cc = document.getElementById('report-comment-container');
-            
+
             if (type === 'POST') {
-                if(pc) pc.style.display = 'block';
-                if(cc) cc.style.display = 'none';
+                if (pc) pc.style.display = 'block';
+                if (cc) cc.style.display = 'none';
             } else {
-                if(pc) pc.style.display = 'none';
-                if(cc) cc.style.display = 'block';
+                if (pc) pc.style.display = 'none';
+                if (cc) cc.style.display = 'block';
             }
         });
     });
-    
+
     loadReports();
 });
 
@@ -61,11 +76,11 @@ async function loadReports() {
 
 function updateReportStats(reports) {
     if (!Array.isArray(reports)) return;
-    
+
     const total = reports.length;
     const pending = reports.filter(r => (r.status || 'PENDING') === 'PENDING').length;
     const resolved = reports.filter(r => (r.status || 'PENDING') === 'RESOLVED').length;
-    
+
     document.getElementById('report-stat-total').textContent = total;
     document.getElementById('report-stat-pending').textContent = pending;
     document.getElementById('report-stat-resolved').textContent = resolved;
@@ -74,7 +89,7 @@ function updateReportStats(reports) {
 function filterReports() {
     const query = document.getElementById('report-search-input').value.toLowerCase().trim();
     const status = document.getElementById('report-filter-status').value;
-    
+
     let filtered = allReportsData;
 
     // 1. Lọc theo trạng thái
@@ -116,7 +131,7 @@ function renderReportsTable(reports) {
         const postId = isPost ? (targetObj ? targetObj.id : 'null') : (report.comment && report.comment.postId ? report.comment.postId : 'null');
         const reason = report.reason ? escapeHtml(report.reason) : '(Không có lý do)';
         const time = report.createdAt ? new Date(report.createdAt).toLocaleString('vi-VN') : '---';
-        
+
         let statusBadge = '';
         const currentStatus = report.status || 'PENDING';
 
@@ -142,9 +157,14 @@ function renderReportsTable(reports) {
         const targetLabel = targetObj ? (isPost ? 'Bài viết' : 'Bình luận') : (isPost ? '<span style="color:red">Bài viết đã xóa</span>' : '<span style="color:red">Bình luận đã xóa</span>');
         const targetValue = targetObj ? `#${targetId}` : '---';
 
+        let reasonHtml = `<div style="max-width:180px; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${reason}">${reason}</div>`;
+        if (report.category === 'APPEAL' && report.appealedModerator) {
+            reasonHtml += `<div style="font-size:11px; color:#3b82f6; margin-top:2px;">Bị kháng nghị: <strong>${escapeHtml(report.appealedModerator)}</strong></div>`;
+        }
+
         return `
             <tr>
-                <td><strong>#T-${report.id}</strong><div style="font-size:11px;color:#65676b;">${escapeHtml(report.category || 'Nội dung')}</div></td>
+                <td><strong>#T-${report.id}</strong><div style="font-size:11px;color:#65676b;">${getCategoryLabel(report.category)}</div></td>
                 <td>
                     <div style="font-weight:600;">${report.reporter ? escapeHtml(report.reporter.fullName) : 'Ẩn danh'}</div>
                     <div style="font-size:11px;color:#65676b;">ID: ${report.reporter ? report.reporter.id : '?'}</div>
@@ -153,7 +173,7 @@ function renderReportsTable(reports) {
                     <div style="font-weight:600;">${targetLabel}</div>
                     <div style="font-size:11px;color:#00d1b2;">${targetValue}</div>
                 </td>
-                <td><div style="max-width:180px; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${reason}">${reason}</div></td>
+                <td>${reasonHtml}</td>
                 <td><div style="font-size:12px;">${time}</div></td>
                 <td>${statusBadge}</td>
                 <td>${actions}</td>
@@ -162,18 +182,18 @@ function renderReportsTable(reports) {
     };
 
     // Render tables
-    postTbody.innerHTML = postReports.length === 0 
-        ? '<tr><td colspan="7" class="table-loading">Không có báo cáo nào.</td></tr>' 
+    postTbody.innerHTML = postReports.length === 0
+        ? '<tr><td colspan="7" class="table-loading">Không có báo cáo nào.</td></tr>'
         : postReports.map(renderRow).join('');
 
-    commentTbody.innerHTML = commentReports.length === 0 
-        ? '<tr><td colspan="7" class="table-loading">Không có báo cáo nào.</td></tr>' 
+    commentTbody.innerHTML = commentReports.length === 0
+        ? '<tr><td colspan="7" class="table-loading">Không có báo cáo nào.</td></tr>'
         : commentReports.map(renderRow).join('');
 }
 
-window.openReportDetailModal = function(reportId) {
+window.openReportDetailModal = function (reportId) {
     console.log("--- openReportDetailModal called with ID:", reportId);
-    
+
     if (!allReportsData || allReportsData.length === 0) {
         console.warn("allReportsData is empty, trying to load...");
     }
@@ -191,7 +211,7 @@ window.openReportDetailModal = function(reportId) {
         window.showCustomAlert("Lỗi hệ thống", "Không tìm thấy khung hiển thị báo cáo.", "error");
         return;
     }
-    
+
     // Đảm bảo Modal hiện lên bằng mọi giá
     modal.style.display = 'flex';
     modal.classList.remove('profile-modal-hidden');
@@ -204,31 +224,61 @@ window.openReportDetailModal = function(reportId) {
     document.getElementById('rd-reporter-avatar').src = reporter.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reporter.fullName)}&background=00d1b2&color=fff`;
 
     // Report Info
-    document.getElementById('rd-category-badge').textContent = report.category || 'Nội dung';
-    document.getElementById('rd-category-badge').className = `mod-badge mod-badge-pending`; 
+    const catLabel = report.category === 'APPEAL' ? 'Kháng nghị' : (report.category || 'Nội dung');
+    document.getElementById('rd-category-badge').textContent = catLabel;
+    document.getElementById('rd-category-badge').className = `mod-badge mod-badge-pending`;
     document.getElementById('rd-reason').textContent = report.reason || '(Không có lý do)';
     const reportDate = report.createdAt ? new Date(report.createdAt).toLocaleString('vi-VN') : '---';
     document.getElementById('rd-time').innerHTML = `<i class="fa-regular fa-clock"></i> Gửi lúc: ${reportDate}`;
+
+    const appealedModeratorContainer = document.getElementById('rd-appealed-moderator-container');
+    if (appealedModeratorContainer) {
+        appealedModeratorContainer.remove();
+    }
+    if (report.category === 'APPEAL' && report.appealedModerator) {
+        const infoDiv = document.createElement('div');
+        infoDiv.id = 'rd-appealed-moderator-container';
+        infoDiv.style.marginTop = '8px';
+        infoDiv.style.fontSize = '13px';
+        infoDiv.style.color = '#3b82f6';
+        infoDiv.innerHTML = `<i class="fa-solid fa-user-shield"></i> Người bị kháng cáo: <strong>${escapeHtml(report.appealedModerator)}</strong>`;
+        
+        const rdTime = document.getElementById('rd-time');
+        if (rdTime && rdTime.parentNode) {
+            rdTime.parentNode.insertBefore(infoDiv, rdTime.nextSibling);
+        }
+    }
 
     // Target Info
     const isPost = report.targetType === 'POST';
     const targetObj = isPost ? report.post : report.comment;
     const targetId = targetObj ? targetObj.id : '?';
     const postId = isPost ? (targetObj ? targetObj.id : 'null') : (report.comment && report.comment.postId ? report.comment.postId : 'null');
-    
+
     document.getElementById('rd-target-type').textContent = isPost ? 'Bài viết' : 'Bình luận';
     document.getElementById('rd-target-id').textContent = `Mã số: #${targetId}`;
-    
+
     // Tự động tải nội dung để xem trước
-    fetchAndRenderReportedContent(isPost, targetObj, postId);
+    fetchAndRenderReportedContent(isPost, targetObj, postId, report.category);
 
     // Action Buttons in Modal (Dynamic based on status and targetType)
     const footer = document.getElementById('rd-modal-footer');
     if (footer) {
         footer.innerHTML = ''; // Reset content
-        
+
         if (report.status === 'PENDING') {
-            if (isPost) {
+            if (report.category === 'APPEAL') {
+                footer.innerHTML = `
+                    <button type="button" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600; padding: 10px 25px; cursor: pointer;" 
+                        onclick="resolveReport(${report.id}, 'DISMISSED');">
+                        Từ chối kháng nghị
+                    </button>
+                    <button type="button" class="btn btn-primary" style="background: #3b82f6; color: #fff; border: none; padding: 10px 30px; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); cursor: pointer;" 
+                        onclick="resolveReport(${report.id}, 'RESOLVED');">
+                        Chấp nhận kháng nghị
+                    </button>
+                `;
+            } else if (isPost) {
                 // Render: Bỏ qua, Ẩn bài viết, Xóa bài (không close modal lập tức vì cần nhập lý do qua custom modal)
                 footer.innerHTML = `
                     <button type="button" class="btn btn-secondary" style="border-radius: 8px; font-weight: 600; padding: 10px 25px; cursor: pointer;" 
@@ -266,7 +316,7 @@ window.openReportDetailModal = function(reportId) {
     }
 };
 
-window.closeReportDetailModal = function() {
+window.closeReportDetailModal = function () {
     console.log("Closing modal...");
     const modal = document.getElementById('mod-report-detail-modal');
     if (modal) {
@@ -276,21 +326,34 @@ window.closeReportDetailModal = function() {
     }
 };
 
-async function fetchAndRenderReportedContent(isPost, targetObj, postId) {
+async function fetchAndRenderReportedContent(isPost, targetObj, postId, reportCategory) {
     const bodyEl = document.getElementById('rd-content-body');
     const mediaEl = document.getElementById('rd-content-media');
     const ocrEl = document.getElementById('rd-ocr-content');
-    
+
     // Reset AI scores
     const aiScores = {
         nsfw: document.getElementById('rd-ai-nsfw'),
         violence: document.getElementById('rd-ai-violence'),
-        hate: document.getElementById('rd-ai-hate')
+        hateContent: document.getElementById('rd-ai-hate-content'),
+        hateVideo: document.getElementById('rd-ai-hate-video')
     };
     Object.values(aiScores).forEach(el => {
-        el.textContent = '0%';
-        el.style.color = '#00d1b2';
+        if (el) {
+            el.textContent = '0%';
+            el.style.color = '#00d1b2';
+        }
     });
+    const cLbl = document.getElementById('rd-ai-hate-content-lbl');
+    if (cLbl) {
+        cLbl.textContent = 'CLEAN';
+        cLbl.style.background = '#52c41a';
+    }
+    const vLbl = document.getElementById('rd-ai-hate-video-lbl');
+    if (vLbl) {
+        vLbl.textContent = 'CLEAN';
+        vLbl.style.background = '#52c41a';
+    }
 
     if (!targetObj || postId === 'null') {
         bodyEl.innerHTML = `<div style="color: #ef4444; font-weight: 600;"><i class="fa-solid fa-triangle-exclamation"></i> Nội dung gốc đã bị người dùng xóa hoặc không tồn tại.</div>`;
@@ -308,25 +371,70 @@ async function fetchAndRenderReportedContent(isPost, targetObj, postId) {
         const res = await fetch(`/api/posts/${postId}`, {
             headers: { 'Authorization': `Bearer ${window.token || localStorage.getItem('token')}` }
         });
-        
+
         if (!res.ok) {
             bodyEl.innerHTML = `<div style="color: #ef4444; font-weight: 600;">Nội dung bài viết gốc không khả dụng.</div>`;
             return;
         }
 
         const post = await res.json();
-        
+
         // Populate IDs
         document.getElementById('rd-target-id').textContent = `#${post.id}`;
-        
-        // Populate Author Profile
-        const author = post.user || { fullName: 'Ẩn danh', id: '?', avatar: '' };
-        document.getElementById('rd-author-name').textContent = author.fullName;
-        document.getElementById('rd-author-id-badge').textContent = `ID: ${author.id}`;
-        document.getElementById('rd-author-avatar').src = author.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(author.fullName)}&background=f14668&color=fff`;
+
+        // Populate Author/Reviewer Profile
+        const authorIdBadge = document.getElementById('rd-author-id-badge');
+        if (reportCategory === 'APPEAL') {
+            const authorTitle = document.getElementById('rd-author-title');
+            if (authorTitle) {
+                authorTitle.innerHTML = `<i class="fa-solid fa-user-check"></i> Người duyệt bài (Kháng nghị)`;
+                authorTitle.style.color = '#0056b3';
+            }
+            const authorCard = document.getElementById('rd-author-card');
+            if (authorCard) {
+                authorCard.style.background = '#f0f7ff';
+                authorCard.style.borderColor = '#cce3ff';
+            }
+            if (authorIdBadge) {
+                authorIdBadge.style.color = '#0056b3';
+                authorIdBadge.style.backgroundColor = '#e0efff';
+            }
+
+            if (post.reviewerId === 0 || post.reviewerName === 'Moderator AI' || post.status === 'AUTO_REJECTED') {
+                document.getElementById('rd-author-name').textContent = "Moderator AI";
+                if (authorIdBadge) authorIdBadge.textContent = "ID: AI";
+                document.getElementById('rd-author-avatar').src = "https://ui-avatars.com/api/?name=AI&background=3b82f6&color=fff";
+            } else {
+                const rName = post.reviewerName || "Moderator";
+                document.getElementById('rd-author-name').textContent = rName;
+                if (authorIdBadge) authorIdBadge.textContent = `ID: ${post.reviewerId || '?'}`;
+                document.getElementById('rd-author-avatar').src = post.reviewerAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(rName)}&background=3b82f6&color=fff`;
+            }
+        } else {
+            const authorTitle = document.getElementById('rd-author-title');
+            if (authorTitle) {
+                authorTitle.innerHTML = `<i class="fa-solid fa-user-shield"></i> Tác giả bị báo cáo (Chủ post)`;
+                authorTitle.style.color = '#c53030';
+            }
+            const authorCard = document.getElementById('rd-author-card');
+            if (authorCard) {
+                authorCard.style.background = '#fff5f5';
+                authorCard.style.borderColor = '#feb2b2';
+            }
+            if (authorIdBadge) {
+                authorIdBadge.style.color = '#c53030';
+                authorIdBadge.style.backgroundColor = '#fff1f1';
+            }
+
+            const authorName = post.authorName || 'Ẩn danh';
+            document.getElementById('rd-author-name').textContent = authorName;
+            if (authorIdBadge) authorIdBadge.textContent = `ID: ${post.authorId || '?'}`;
+            document.getElementById('rd-author-avatar').src = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=f14668&color=fff`;
+        }
 
         // Populate AI Scores
         const updateAiScore = (el, score) => {
+            if (!el) return;
             const val = Math.round((score || 0) * 100);
             el.textContent = `${val}%`;
             if (val >= 50) el.style.color = '#f14668'; // Red for high risk
@@ -335,11 +443,150 @@ async function fetchAndRenderReportedContent(isPost, targetObj, postId) {
 
         updateAiScore(aiScores.nsfw, post.nsfwScore);
         updateAiScore(aiScores.violence, post.violenceScore);
-        updateAiScore(aiScores.hate, post.hateSpeechScore);
 
-        // Populate OCR Evidence
-        ocrEl.textContent = post.ocrContent || 'Không phát hiện vi phạm chữ viết trong hình ảnh/video.';
-        if (post.ocrContent) ocrEl.style.color = '#c53030';
+        // Populate detailed hate speech scores & labels
+        let contentHateScore = post.hateSpeechContentScore || 0;
+        let videoHateScore = post.hateSpeechVideoScore || 0;
+        let contentHateLabelVal = 0;
+        let videoHateLabelVal = 0;
+
+        if (post.speechLabels) {
+            try {
+                if (post.speechLabels.includes(';')) {
+                    const parts = post.speechLabels.split(';');
+                    const cPart = parts[0].split(':');
+                    const vPart = parts[1].split(':');
+                    contentHateLabelVal = parseInt(cPart[0]) || 0;
+                    contentHateScore = parseFloat(cPart[1]) || contentHateScore;
+                    videoHateLabelVal = parseInt(vPart[0]) || 0;
+                    videoHateScore = parseFloat(vPart[1]) || videoHateScore;
+                } else if (post.speechLabels.includes(':')) {
+                    const part = post.speechLabels.split(':');
+                    contentHateLabelVal = parseInt(part[0]) || 0;
+                    contentHateScore = parseFloat(part[1]) || contentHateScore;
+                }
+            } catch (err) {
+                console.error("Lỗi parse speechLabels:", err);
+            }
+        }
+
+        const labelNames = { 0: "CLEAN", 1: "OFFENSIVE", 2: "HATE" };
+        const contentHateLabel = labelNames[contentHateLabelVal] || "CLEAN";
+        const videoHateLabel = labelNames[videoHateLabelVal] || "CLEAN";
+
+        // Set Ghét content card
+        updateAiScore(aiScores.hateContent, contentHateScore);
+        const cLblEl = document.getElementById('rd-ai-hate-content-lbl');
+        if (cLblEl) {
+            cLblEl.textContent = contentHateLabel;
+            cLblEl.style.background = contentHateLabelVal === 2 ? '#ff4d4f' : (contentHateLabelVal === 1 ? '#faad14' : '#52c41a');
+        }
+
+        // Set Ghét Media card
+        updateAiScore(aiScores.hateVideo, videoHateScore);
+        const vLblEl = document.getElementById('rd-ai-hate-video-lbl');
+        if (vLblEl) {
+            vLblEl.textContent = videoHateLabel;
+            vLblEl.style.background = videoHateLabelVal === 2 ? '#ff4d4f' : (videoHateLabelVal === 1 ? '#faad14' : '#52c41a');
+        }
+
+        // Reconstruct OCR text if empty but we have hateSpeechWord
+        let ocrText = post.ocrContent;
+        if (!ocrText && post.hateSpeechWord) {
+            try {
+                const cleanHateWord = (text) => {
+                    if (!text) return '';
+                    return text.replace(/\[.*?\]/g, '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+                };
+                if (post.hateSpeechWord.includes('(Video:)') || post.hateSpeechWord.includes('(Content:)')) {
+                    const vMatch = post.hateSpeechWord.match(/\(Video:\)(.*?)(?=\s*\(Content:\)|$)/);
+                    const videoText = vMatch ? vMatch[1].trim() : '';
+                    ocrText = cleanHateWord(videoText);
+                } else {
+                    ocrText = cleanHateWord(post.hateSpeechWord);
+                }
+            } catch (e) {
+                console.error("Lỗi parse hateSpeechWord trong OCR:", e);
+            }
+        }
+
+        // Format violating tokens
+        const formatTokens = (text) => {
+            if (!text || text === 'null' || text.trim() === '') return '';
+            const tokens = text.split(' ');
+            let hasTag = false;
+            const html = tokens.map(t => {
+                const tagMatch = t.match(/\[(.*?)\]/);
+                if (tagMatch) {
+                    const tag = tagMatch[1];
+                    let word = t.replace(/\[.*?\]/g, '').replace(/^["']|["']$/g, '');
+                    if (tag === 'B-T' || tag === 'I-T') {
+                        hasTag = true;
+                        return `<span style="background-color: #f1c40f; color: black; padding: 2px 4px; border-radius: 4px; font-weight: bold; margin: 0 1px;">${escapeHtml(word)}</span>`;
+                    }
+                    return escapeHtml(word);
+                }
+                return escapeHtml(t.replace(/^["']|["']$/g, ''));
+            }).join(' ');
+            return html;
+        };
+
+        // 1. Chữ viết trích xuất (OCR)
+        let ocrDisplayHtml = '';
+        if (post.hateSpeechWord && post.hateSpeechWord.includes('(Video:)')) {
+            try {
+                const vMatch = post.hateSpeechWord.match(/\(Video:\)(.*?)(?=\s*\(Content:\)|$)/);
+                const videoText = vMatch ? vMatch[1].trim() : '';
+                if (videoText && videoText !== 'null') {
+                    ocrDisplayHtml = formatTokens(videoText);
+                }
+            } catch (e) {
+                console.error("Lỗi parse video hateSpeechWord:", e);
+            }
+        }
+        if (!ocrDisplayHtml) {
+            ocrDisplayHtml = ocrText ? `<span style="color: #2d3748; font-weight: 500;">"${escapeHtml(ocrText)}"</span>` : `<span style="color: #718096; font-style: italic;">Không phát hiện chữ viết trong hình ảnh/video.</span>`;
+        }
+
+        // 2. Content
+        let contentDisplayHtml = '';
+        if (post.hateSpeechWord && post.hateSpeechWord.includes('(Content:)')) {
+            try {
+                const cMatch = post.hateSpeechWord.match(/\(Content:\)(.*)/);
+                const contentText = cMatch ? cMatch[1].trim() : '';
+                if (contentText && contentText !== 'null') {
+                    contentDisplayHtml = formatTokens(contentText);
+                }
+            } catch (e) {
+                console.error("Lỗi parse content hateSpeechWord:", e);
+            }
+        }
+        if (!contentDisplayHtml) {
+            contentDisplayHtml = post.content ? `<span style="color: #2d3748; font-weight: 500;">"${escapeHtml(post.content)}"</span>` : `<span style="color: #718096; font-style: italic;">Không có nội dung văn bản.</span>`;
+        }
+
+        // Render dual-evidence section
+        let evidenceHtml = `
+            <div style="margin-bottom: 12px; padding: 10px; background: rgba(255, 255, 255, 0.7); border-radius: 8px; border: 1px solid #fed7d7;">
+                <div style="font-weight: 700; font-size: 11px; color: #742a2a; margin-bottom: 6px; text-transform: uppercase;">
+                    Chữ viết trích xuất (OCR):
+                </div>
+                <div style="font-size: 13px; line-height: 1.6; word-break: break-word;">
+                    ${ocrDisplayHtml}
+                </div>
+            </div>
+            <div style="padding: 10px; background: rgba(255, 255, 255, 0.7); border-radius: 8px; border: 1px solid #fed7d7;">
+                <div style="font-weight: 700; font-size: 11px; color: #742a2a; margin-bottom: 6px; text-transform: uppercase;">
+                    Content:
+                </div>
+                <div style="font-size: 13px; line-height: 1.6; word-break: break-word;">
+                    ${contentDisplayHtml}
+                </div>
+            </div>
+        `;
+
+        ocrEl.innerHTML = evidenceHtml;
+        ocrEl.style.fontStyle = 'normal';
 
         if (isPost) {
             bodyEl.textContent = post.content || '(Không có nội dung văn bản)';
@@ -376,7 +623,7 @@ window.showModPostDetailModal = async function (postId, highlightCommentId = nul
     // Sử dụng hàm viewPostDetail có sẵn trong moderator_core.js để đồng bộ
     if (typeof window.viewPostDetail === 'function') {
         window.viewPostDetail(postId);
-        
+
         // Nếu là báo cáo comment, hiển thị thông báo bổ sung sau khi modal mở
         if (highlightCommentId) {
             setTimeout(() => {
@@ -418,7 +665,22 @@ window.resolveReport = function (reportId, status, action = null) {
     let btnText = 'Xác nhận';
     let btnBg = '#00d1b2';
 
-    if (status === 'DISMISSED') {
+    const report = allReportsData.find(r => r.id === reportId);
+    const isAppeal = report && report.category === 'APPEAL';
+
+    if (isAppeal) {
+        if (status === 'DISMISSED') {
+            title = '<i class="fa-solid fa-circle-xmark" style="color: #ff4d4f;"></i> Từ chối kháng nghị';
+            desc = 'Thao tác này sẽ bác bỏ yêu cầu của tác giả. Bài viết vẫn giữ nguyên trạng thái bị gỡ.';
+            btnText = 'Từ chối kháng nghị';
+            btnBg = '#ff4d4f';
+        } else if (status === 'RESOLVED') {
+            title = '<i class="fa-solid fa-circle-check" style="color: #3b82f6;"></i> Chấp nhận kháng nghị';
+            desc = 'Thao tác này sẽ khôi phục bài viết về trạng thái bình thường (ACTIVE) và trừ 1 điểm vi phạm cho tác giả.';
+            btnText = 'Chấp nhận & Khôi phục';
+            btnBg = '#3b82f6';
+        }
+    } else if (status === 'DISMISSED') {
         title = '<i class="fa-solid fa-circle-minus" style="color: #6e7681;"></i> Bỏ qua báo cáo';
         desc = 'Thao tác này sẽ bỏ qua khiếu nại. Bài viết/bình luận bị báo cáo vẫn sẽ hoạt động bình thường trên hệ thống.';
         btnText = 'Xác nhận bỏ qua';
@@ -458,7 +720,7 @@ async function executeResolveReport(reportId, status, action, note) {
         if (action) {
             url += `&action=${action}`;
         }
-        
+
         const res = await fetch(url, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${window.token || localStorage.getItem('token')}` }

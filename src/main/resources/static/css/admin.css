@@ -1404,6 +1404,8 @@ html[data-theme="dark"] .form-input {
 
 .stat-card.filter-card {
     border-left: 4px solid var(--purple);
+    padding: 20px 10px !important; /* Reduce horizontal padding to gain width */
+    gap: 8px !important; /* Reduce gap to gain width */
 }
 
 .stat-card.filter-card .stat-info {
@@ -1411,6 +1413,7 @@ html[data-theme="dark"] .form-input {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0; /* Allow containment */
 }
 
 .stat-card.filter-card .custom-select-wrapper {
@@ -1419,19 +1422,45 @@ html[data-theme="dark"] .form-input {
     margin-top: 4px;
 }
 
-.stat-card.filter-card .custom-select-trigger {
-    width: 100% !important;
-    background: transparent !important;
-    border: none !important;
-    color: var(--text-main) !important;
-    border-radius: 0 !important;
+/* Reset wrapper styles to prevent double borders/padding */
+.stat-card.filter-card .custom-select-wrapper.filter-select {
     padding: 0 !important;
-    height: auto !important;
+    border: none !important;
+    background: transparent !important;
     box-shadow: none !important;
 }
 
-.stat-card.filter-card .custom-select-wrapper.filter-select:hover {
+/* Styled custom-select-trigger for a compact, balanced look with ellipsis to prevent wrapping */
+.stat-card.filter-card .custom-select-trigger {
+    width: 100% !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-main) !important;
+    border-radius: 6px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    height: auto !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.stat-card.filter-card .custom-select-trigger::after {
+    margin-left: 6px !important;
+    flex-shrink: 0;
+}
+
+.stat-card.filter-card .custom-select-trigger:hover {
     border-color: var(--purple) !important;
+}
+
+html[data-theme="dark"] .stat-card.filter-card .custom-select-trigger {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .stat-card.filter-card .custom-options {

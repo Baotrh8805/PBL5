@@ -104,6 +104,7 @@ function setupNavigation() {
             item.classList.add('active');
             document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
             document.getElementById('page-' + page).classList.remove('hidden');
+            if (page === 'users') loadUsers();
             if (page === 'posts') loadPosts();
             if (page === 'stats') loadStats();
             if (page === 'moderators') loadModerators();

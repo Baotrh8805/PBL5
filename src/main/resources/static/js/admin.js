@@ -3,6 +3,13 @@ const token = localStorage.getItem('token');
 // Giúp việc tìm kiếm (filter) diễn ra ngay trên máy khách mà không cần gọi lại Server.
 let allUsers = [];
 let allModerators = [];
+let usersCurrentPage = 0;
+const USERS_PAGE_SIZE = 10;
+let filteredUsers = [];
+
+let modsCurrentPage = 0;
+const MODS_PAGE_SIZE = 10;
+let filteredMods = [];
 let selectedUserId = null;
 let adminProfile = null;
 let usersChartInstance = null;
@@ -147,13 +154,13 @@ function openAdminProfile() {
     bioEl.className = 'user-detail-bio' + (u.bio ? '' : ' empty');
 
     const fields = [
-        { label: 'Email',           value: u.email },
-        { label: 'Tên đăng nhập',   value: u.username ? '@' + u.username : null },
-        { label: 'Giới tính',       value: formatGender(u.gender) },
-        { label: 'Ngày sinh',       value: u.dateOfBirth ? new Date(u.dateOfBirth).toLocaleDateString('vi-VN') : null },
-        { label: 'Số điện thoại',   value: u.phoneNumber },
-        { label: 'Đăng nhập qua',   value: u.provider === 'GOOGLE' ? '🔵 Google' : '📧 Email/Mật khẩu' },
-        { label: 'ID',              value: '#' + u.id },
+        { label: 'Email', value: u.email },
+        { label: 'Tên đăng nhập', value: u.username ? '@' + u.username : null },
+        { label: 'Giới tính', value: formatGender(u.gender) },
+        { label: 'Ngày sinh', value: u.dateOfBirth ? new Date(u.dateOfBirth).toLocaleDateString('vi-VN') : null },
+        { label: 'Số điện thoại', value: u.phoneNumber },
+        { label: 'Đăng nhập qua', value: u.provider === 'GOOGLE' ? '🔵 Google' : '📧 Email/Mật khẩu' },
+        { label: 'ID', value: '#' + u.id },
     ];
 
     document.getElementById('admin-profile-grid').innerHTML = fields.map(f => `
@@ -322,7 +329,7 @@ async function loadStats() {
                 },
                 plugins: [{
                     id: 'textCenter',
-                    beforeDraw: function(chart) {
+                    beforeDraw: function (chart) {
                         const width = chart.width;
                         const height = chart.height;
                         const ctx = chart.ctx;
@@ -354,12 +361,14 @@ async function loadUsers() {
         // Gửi request Fetch đến backend
         const res = await fetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + token } });
         if (res.status === 403) { showToast('Bạn không có quyền xem danh sách người dùng.', 'error'); return; }
-        
+
         // Gán toàn bộ dữ liệu trả về vào mảng allUsers (lưu vào RAM)
         allUsers = await res.json();
-        
+        filteredUsers = [...allUsers];
+        usersCurrentPage = 0;
+
         // Đem dữ liệu đó đi vẽ lên giao diện
-        renderUsers(allUsers);
+        renderUsersPage();
         updateStatCards(allUsers);
     } catch (e) {
         document.getElementById('users-tbody').innerHTML =
@@ -376,7 +385,6 @@ function updateStatCards(users) {
 // Hàm này làm nhiệm vụ "nhặt" thông tin từ mảng dữ liệu và tạo ra các thẻ HTML <td>
 function renderUsers(users) {
     const tbody = document.getElementById('users-tbody');
-    document.getElementById('table-count').textContent = users.length + ' người dùng';
 
     if (users.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Không tìm thấy người dùng nào.</td></tr>';
@@ -404,13 +412,13 @@ function renderUsers(users) {
             <td>
                 <div class="action-btns">
                     ${u.status !== 'BANNED'
-                        ? `<button class="action-btn danger" title="Khoá tài khoản" onclick="banUser(${u.id}, '${escapeHtml(u.fullName)}')">
+            ? `<button class="action-btn danger" title="Khoá tài khoản" onclick="banUser(${u.id}, '${escapeHtml(u.fullName)}')">
                                <i class="fa-solid fa-ban"></i>
                            </button>`
-                        : `<button class="action-btn success" title="Mở khoá" onclick="unbanUser(${u.id}, '${escapeHtml(u.fullName)}')">
+            : `<button class="action-btn success" title="Mở khoá" onclick="unbanUser(${u.id}, '${escapeHtml(u.fullName)}')">
                                <i class="fa-solid fa-lock-open"></i>
                            </button>`
-                    }
+        }
                     <button class="action-btn warning-btn" title="Cảnh báo" onclick="warnUser(${u.id}, '${escapeHtml(u.fullName)}')">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                     </button>
@@ -424,6 +432,48 @@ function renderUsers(users) {
             </td>
         </tr>
     `).join('');
+}
+
+function renderUsersPage() {
+    const start = usersCurrentPage * USERS_PAGE_SIZE;
+    const end = start + USERS_PAGE_SIZE;
+    const pageUsers = filteredUsers.slice(start, end);
+
+    const totalPages = Math.ceil(filteredUsers.length / USERS_PAGE_SIZE);
+    const showing = pageUsers.length;
+    document.getElementById('table-count').textContent =
+        `Hiển thị ${showing} / ${filteredUsers.length} người dùng (trang ${usersCurrentPage + 1}/${Math.max(1, totalPages)})`;
+
+    renderUsers(pageUsers);
+    renderUsersPagination(totalPages);
+}
+
+function renderUsersPagination(totalPages) {
+    let pagEl = document.getElementById('users-pagination');
+    if (!pagEl) {
+        pagEl = document.createElement('div');
+        pagEl.id = 'users-pagination';
+        pagEl.className = 'pagination-bar';
+        const tableCard = document.getElementById('users-tbody').closest('.table-card');
+        tableCard.appendChild(pagEl);
+    }
+    if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" ${usersCurrentPage === 0 ? 'disabled' : ''} onclick="changeUsersPage(${usersCurrentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    const maxBtns = 5;
+    let start = Math.max(0, usersCurrentPage - Math.floor(maxBtns / 2));
+    let end = Math.min(totalPages, start + maxBtns);
+    if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+    for (let i = start; i < end; i++) {
+        html += `<button class="page-btn${i === usersCurrentPage ? ' active' : ''}" onclick="changeUsersPage(${i})">${i + 1}</button>`;
+    }
+    html += `<button class="page-btn" ${usersCurrentPage >= totalPages - 1 ? 'disabled' : ''} onclick="changeUsersPage(${usersCurrentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    pagEl.innerHTML = html;
+}
+
+function changeUsersPage(page) {
+    usersCurrentPage = page;
+    renderUsersPage();
 }
 
 function roleBadge(role) {
@@ -460,14 +510,14 @@ function filterUsers() {
     const status = document.getElementById('filter-status').value;
 
     // Lọc trực tiếp từ mảng allUsers đang lưu sẵn trong bộ nhớ (Rất nhanh, không cần gọi Server)
-    const filtered = allUsers.filter(u => {
-        const matchName = u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+    filteredUsers = allUsers.filter(u => {
+        const matchName = (u.fullName || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
         const matchStatus = !status || u.status === status;
         return matchName && matchStatus;
     });
-    
-    // Đem danh sách đã lọc đi vẽ lại lên bảng
-    renderUsers(filtered);
+
+    usersCurrentPage = 0;
+    renderUsersPage();
 }
 
 // ===== CÁC THAO TÁC =====
@@ -498,13 +548,13 @@ function warnUser(id, name) {
     const idInput = document.getElementById('warn-user-id');
     if (modal && idInput) {
         idInput.value = id;
-        
+
         // Reset form
         document.getElementById('warn-duration').value = '3';
         document.getElementById('custom-duration-container').style.display = 'none';
         document.getElementById('warn-custom-days').value = '';
         document.querySelector('input[name="warn-type"][value="POST"]').checked = true;
-        
+
         modal.classList.remove('hidden');
     }
 }
@@ -550,7 +600,7 @@ async function submitUserWarning() {
     if (expiryDateObj && expiryDateObj > now) {
         const expiryStr = expiryDateObj.toLocaleString('vi-VN');
         const typeText = (type === 'POST') ? 'đăng bài' : 'bình luận';
-        
+
         showConfirm(
             '<i class="fa-solid fa-triangle-exclamation" style="color:var(--yellow);"></i> Cảnh báo đang hoạt động',
             `Người dùng hiện đang bị cấm ${typeText} đến <b>${expiryStr}</b>. Bạn có chắc chắn muốn <b>CỘNG THÊM</b> ${days} ngày vào thời hạn này không?`,
@@ -606,7 +656,7 @@ let allPosts = [];
 let postsCurrentPage = 0;
 let postsTotalPages = 0;
 let postsTotalElements = 0;
-const POSTS_PAGE_SIZE = 30;
+const POSTS_PAGE_SIZE = 10;
 let _postSearchTimer = null;
 
 async function loadPosts(page = 0) {
@@ -708,10 +758,10 @@ function renderPostsPagination() {
 
 function postStatusBadge(s) {
     const map = {
-        ACTIVE:         ['badge-active',   'fa-circle-check',           'Hoạt động'],
-        PUBLISHED:      ['badge-active',   'fa-circle-check',           'Đã duyệt'],
-        PENDING_REVIEW: ['badge-warning',  'fa-clock',                  'Chờ duyệt'],
-        AUTO_REJECTED:  ['badge-banned',   'fa-triangle-exclamation',   'Tự động ẩn'],
+        ACTIVE: ['badge-active', 'fa-circle-check', 'Hoạt động'],
+        PUBLISHED: ['badge-active', 'fa-circle-check', 'Đã duyệt'],
+        PENDING_REVIEW: ['badge-warning', 'fa-clock', 'Chờ duyệt'],
+        AUTO_REJECTED: ['badge-banned', 'fa-triangle-exclamation', 'Tự động ẩn'],
     };
     const [cls, icon, label] = map[s] || ['badge-inactive', 'fa-circle', s || '--'];
     return `<span class="badge ${cls}"><i class="fa-solid ${icon}"></i> ${label}</span>`;
@@ -733,9 +783,9 @@ function filterPosts() {
 
 function visibilityBadge(v) {
     const map = {
-        PUBLIC:  ['badge-active',   'fa-earth-asia',  'Công khai'],
-        FRIENDS: ['badge-warning',  'fa-user-group',  'Bạn bè'],
-        PRIVATE: ['badge-inactive', 'fa-lock',        'Riêng tư'],
+        PUBLIC: ['badge-active', 'fa-earth-asia', 'Công khai'],
+        FRIENDS: ['badge-warning', 'fa-user-group', 'Bạn bè'],
+        PRIVATE: ['badge-inactive', 'fa-lock', 'Riêng tư'],
     };
     const [cls, icon, label] = map[v] || ['badge-inactive', 'fa-circle', v];
     return `<span class="badge ${cls}"><i class="fa-solid ${icon}"></i> ${label}</span>`;
@@ -746,6 +796,11 @@ async function openPostDetail(id, highlightCommentId = null) {
     document.getElementById('post-detail-id').textContent = '#' + id;
     document.getElementById('post-detail-author').textContent = 'Đang tải...';
     document.getElementById('post-detail-meta').textContent = '';
+    const aiScoresEl = document.getElementById('post-detail-ai-scores');
+    if (aiScoresEl) {
+        aiScoresEl.innerHTML = '';
+        aiScoresEl.style.display = 'none';
+    }
     document.getElementById('post-detail-content').textContent = '';
     document.getElementById('post-detail-image-wrap').innerHTML = '';
     document.getElementById('post-detail-likes').textContent = '-';
@@ -767,11 +822,11 @@ async function openPostDetail(id, highlightCommentId = null) {
         document.getElementById('post-detail-avatar').innerHTML = p.user?.avatar
             ? `<img src="${p.user.avatar}" alt="">`
             : (p.user?.fullName?.charAt(0).toUpperCase() || '?');
-        
+
         document.getElementById('post-detail-author').textContent = p.user?.fullName || 'Ẩn danh';
-        document.getElementById('post-detail-meta').innerHTML = 
+        document.getElementById('post-detail-meta').innerHTML =
             `@${p.user?.username || 'unknown'} • ${formatDate(p.createdAt)}`;
-        
+
         document.getElementById('post-detail-visibility-badge').innerHTML = visibilityBadge(p.visibility);
 
         const contentEl = document.getElementById('post-detail-content');
@@ -816,7 +871,7 @@ async function openPostDetail(id, highlightCommentId = null) {
                         </div>
                     </div>
                 `}).join('');
-            
+
             // Scroll to highlighted comment after a short delay
             if (highlightCommentId) {
                 setTimeout(() => {
@@ -832,14 +887,119 @@ async function openPostDetail(id, highlightCommentId = null) {
 
         document.getElementById('post-detail-delete-btn').onclick = () => deletePost(p.id);
 
+        // Parse decoupled Hate Speech scores & labels
+        let contentHateScore = p.hateSpeechContentScore || 0;
+        let videoHateScore = p.hateSpeechVideoScore || 0;
+        let contentHateLabelVal = 0;
+        let videoHateLabelVal = 0;
+
+        if (p.speechLabels) {
+            try {
+                if (p.speechLabels.includes(';')) {
+                    const parts = p.speechLabels.split(';');
+                    const cPart = parts[0].split(':');
+                    const vPart = parts[1].split(':');
+                    contentHateLabelVal = parseInt(cPart[0]) || 0;
+                    contentHateScore = parseFloat(cPart[1]) || contentHateScore;
+                    videoHateLabelVal = parseInt(vPart[0]) || 0;
+                    videoHateScore = parseFloat(vPart[1]) || videoHateScore;
+                } else if (p.speechLabels.includes(':')) {
+                    const part = p.speechLabels.split(':');
+                    contentHateLabelVal = parseInt(part[0]) || 0;
+                    contentHateScore = parseFloat(part[1]) || contentHateScore;
+                }
+            } catch (err) {
+                console.error("Lỗi parse speechLabels:", err);
+            }
+        }
+
+        // Fallback if labels are 0 but score is non-zero (for legacy posts without saved speechLabels)
+        if (contentHateLabelVal === 0 && contentHateScore > 0) {
+            if (contentHateScore > 0.8) contentHateLabelVal = 2;
+            else if (contentHateScore > 0.4) contentHateLabelVal = 1;
+        }
+        if (videoHateLabelVal === 0 && videoHateScore > 0) {
+            if (videoHateScore > 0.8) videoHateLabelVal = 2;
+            else if (videoHateScore > 0.4) videoHateLabelVal = 1;
+        }
+
+        const labelNames = { 0: "CLEAN", 1: "OFFENSIVE", 2: "HATE" };
+        const labelColors = { 0: "var(--green)", 1: "var(--yellow)", 2: "var(--red)" };
+
+        const contentHateLabelText = labelNames[contentHateLabelVal] || "CLEAN";
+        const contentLabelBg = labelColors[contentHateLabelVal] || "var(--green)";
+
+        const videoHateLabelText = labelNames[videoHateLabelVal] || "CLEAN";
+        const videoLabelBg = labelColors[videoHateLabelVal] || "var(--green)";
+
+        // NSFW formatting
+        const nsfwVal = p.nsfwScore || 0;
+        let nsfwLabel = "CLEAN";
+        let nsfwClass = "badge-active";
+        if (nsfwVal > 0.8) {
+            nsfwLabel = "HATE";
+            nsfwClass = "badge-banned";
+        } else if (nsfwVal > 0.4) {
+            nsfwLabel = "OFFENSIVE";
+            nsfwClass = "badge-warning";
+        }
+
+        // Violence formatting
+        const violenceVal = p.violenceScore || 0;
+        let violenceLabel = "CLEAN";
+        let violenceClass = "badge-active";
+        if (violenceVal > 0.8) {
+            violenceLabel = "HATE";
+            violenceClass = "badge-banned";
+        } else if (violenceVal > 0.4) {
+            violenceLabel = "OFFENSIVE";
+            violenceClass = "badge-warning";
+        }
+
         let scoresHtml = `
-            <div class="ai-scores-container">
-                <div class="ai-score-item"><span class="score-label">NSFW:</span> <span class="score-value">${((p.nsfwScore || 0) * 100).toFixed(1)}%</span></div>
-                <div class="ai-score-item"><span class="score-label">Bạo lực:</span> <span class="score-value">${((p.violenceScore || 0) * 100).toFixed(1)}%</span></div>
-                <div class="ai-score-item"><span class="score-label">Hate Speech:</span> <span class="score-value">${((p.hateSpeechScore || 0) * 100).toFixed(1)}%</span></div>
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-robot" style="color: var(--primary);"></i> Kết quả phân tích AI
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                <!-- NSFW -->
+                <div style="flex: 1; min-width: 120px; background: var(--card-bg); padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; white-space: nowrap;">NSFW</span>
+                    <div style="display: flex; align-items: center; gap: 8px; justify-content: space-between;">
+                        <span style="font-size: 14px; font-weight: 700; color: var(--text-main);">${(nsfwVal * 100).toFixed(1)}%</span>
+                        <span class="badge ${nsfwClass}" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; line-height: 1.2;">${nsfwLabel}</span>
+                    </div>
+                </div>
+                <!-- Bạo lực -->
+                <div style="flex: 1; min-width: 120px; background: var(--card-bg); padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; white-space: nowrap;">Bạo lực</span>
+                    <div style="display: flex; align-items: center; gap: 8px; justify-content: space-between;">
+                        <span style="font-size: 14px; font-weight: 700; color: var(--text-main);">${(violenceVal * 100).toFixed(1)}%</span>
+                        <span class="badge ${violenceClass}" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; line-height: 1.2;">${violenceLabel}</span>
+                    </div>
+                </div>
+                <!-- Hate Speech Bài viết -->
+                <div style="flex: 1; min-width: 160px; background: var(--card-bg); padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; white-space: nowrap;">Hate Speech (Chữ)</span>
+                    <div style="display: flex; align-items: center; gap: 8px; justify-content: space-between;">
+                        <span style="font-size: 14px; font-weight: 700; color: var(--text-main);">${(contentHateScore * 100).toFixed(1)}%</span>
+                        <span style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: ${contentLabelBg}; color: #fff; line-height: 1.2; white-space: nowrap;">${contentHateLabelText}</span>
+                    </div>
+                </div>
+                <!-- Hate Speech Media -->
+                <div style="flex: 1; min-width: 160px; background: var(--card-bg); padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; white-space: nowrap;">Hate Speech (Media)</span>
+                    <div style="display: flex; align-items: center; gap: 8px; justify-content: space-between;">
+                        <span style="font-size: 14px; font-weight: 700; color: var(--text-main);">${(videoHateScore * 100).toFixed(1)}%</span>
+                        <span style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: ${videoLabelBg}; color: #fff; line-height: 1.2; white-space: nowrap;">${videoHateLabelText}</span>
+                    </div>
+                </div>
             </div>
         `;
-        document.getElementById('post-detail-meta').innerHTML += '<br>' + scoresHtml;
+        const aiScoresElVal = document.getElementById('post-detail-ai-scores');
+        if (aiScoresElVal) {
+            aiScoresElVal.innerHTML = scoresHtml;
+            aiScoresElVal.style.display = 'block';
+        }
     } catch (e) {
         showToast('Lỗi kết nối.', 'error');
     }
@@ -900,10 +1060,10 @@ function violationScoreBadge(score) {
     const s = score || 0;
     let cls = 'badge-active';
     let label = (s * 100).toFixed(1) + '%';
-    
+
     if (s > 0.8) cls = 'badge-banned';
     else if (s > 0.4) cls = 'badge-warning';
-    
+
     return `<span class="badge ${cls}">${label}</span>`;
 }
 
@@ -922,7 +1082,7 @@ function showToast(msg, type = '') {
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function formatDate(dateStr) {
@@ -967,14 +1127,14 @@ async function openUserDetail(id) {
 
         // Grid thông tin
         const fields = [
-            { label: 'Email',        value: u.email },
+            { label: 'Email', value: u.email },
             { label: 'Tên đăng nhập', value: u.username ? '@' + u.username : null },
-            { label: 'Giới tính',    value: formatGender(u.gender) },
-            { label: 'Ngày sinh',    value: u.dateOfBirth ? new Date(u.dateOfBirth).toLocaleDateString('vi-VN') : null },
+            { label: 'Giới tính', value: formatGender(u.gender) },
+            { label: 'Ngày sinh', value: u.dateOfBirth ? new Date(u.dateOfBirth).toLocaleDateString('vi-VN') : null },
             { label: 'Số điện thoại', value: u.phoneNumber },
-            { label: 'Tình trạng',   value: u.relationshipStatus },
+            { label: 'Tình trạng', value: u.relationshipStatus },
             { label: 'Đăng nhập qua', value: u.provider === 'GOOGLE' ? '🔵 Google' : '📧 Email/Mật khẩu' },
-            { label: 'ID',           value: '#' + u.id },
+            { label: 'ID', value: '#' + u.id },
         ];
 
         document.getElementById('detail-grid').innerHTML = fields.map(f => `
@@ -1015,9 +1175,9 @@ async function openLoginHistory(id, name) {
                 <td style="font-size:13px;">${formatDate(h.loginAt)}</td>
                 <td style="font-size:13px;font-family:monospace;">${h.ipAddress || '--'}</td>
                 <td>${h.provider === 'GOOGLE'
-                    ? '<span class="provider-google"><i class="fa-brands fa-google"></i> Google</span>'
-                    : '<span class="provider-local"><i class="fa-solid fa-envelope"></i> Email</span>'
-                }</td>
+                ? '<span class="provider-google"><i class="fa-brands fa-google"></i> Google</span>'
+                : '<span class="provider-local"><i class="fa-solid fa-envelope"></i> Email</span>'
+            }</td>
             </tr>
         `).join('');
     } catch (e) {
@@ -1040,7 +1200,9 @@ async function loadModerators() {
         const res = await fetch('/api/admin/moderators', { headers: { 'Authorization': 'Bearer ' + token } });
         if (!res.ok) { showToast('Không thể tải danh sách kiểm duyệt viên.', 'error'); return; }
         allModerators = await res.json();
-        renderModerators(allModerators);
+        filteredMods = [...allModerators];
+        modsCurrentPage = 0;
+        renderModsPage();
         updateModStatCards(allModerators);
     } catch (e) {
         document.getElementById('moderators-tbody').innerHTML =
@@ -1056,7 +1218,6 @@ function updateModStatCards(mods) {
 
 function renderModerators(mods) {
     const tbody = document.getElementById('moderators-tbody');
-    document.getElementById('mod-table-count').textContent = mods.length + ' kiểm duyệt viên';
 
     if (mods.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Không tìm thấy kiểm duyệt viên nào.</td></tr>';
@@ -1092,13 +1253,13 @@ function renderModerators(mods) {
                         <i class="fa-solid fa-pen"></i>
                     </button>
                     ${m.status !== 'BANNED'
-                        ? `<button class="action-btn danger" title="Khoá tài khoản" onclick="lockModerator(${m.id}, '${escapeHtml(m.fullName)}')">
+            ? `<button class="action-btn danger" title="Khoá tài khoản" onclick="lockModerator(${m.id}, '${escapeHtml(m.fullName)}')">
                                <i class="fa-solid fa-ban"></i>
                            </button>`
-                        : `<button class="action-btn success" title="Kích hoạt lại" onclick="activateModerator(${m.id}, '${escapeHtml(m.fullName)}')">
+            : `<button class="action-btn success" title="Kích hoạt lại" onclick="activateModerator(${m.id}, '${escapeHtml(m.fullName)}')">
                                <i class="fa-solid fa-lock-open"></i>
                            </button>`
-                    }
+        }
                     <button class="action-btn danger" title="Xoá tài khoản" onclick="deleteModerator(${m.id}, '${escapeHtml(m.fullName)}')">
                         <i class="fa-solid fa-trash"></i>
                     </button>
@@ -1108,16 +1269,59 @@ function renderModerators(mods) {
     `).join('');
 }
 
+function renderModsPage() {
+    const start = modsCurrentPage * MODS_PAGE_SIZE;
+    const end = start + MODS_PAGE_SIZE;
+    const pageMods = filteredMods.slice(start, end);
+
+    const totalPages = Math.ceil(filteredMods.length / MODS_PAGE_SIZE);
+    const showing = pageMods.length;
+    document.getElementById('mod-table-count').textContent =
+        `Hiển thị ${showing} / ${filteredMods.length} kiểm duyệt viên (trang ${modsCurrentPage + 1}/${Math.max(1, totalPages)})`;
+
+    renderModerators(pageMods);
+    renderModsPagination(totalPages);
+}
+
+function renderModsPagination(totalPages) {
+    let pagEl = document.getElementById('mods-pagination');
+    if (!pagEl) {
+        pagEl = document.createElement('div');
+        pagEl.id = 'mods-pagination';
+        pagEl.className = 'pagination-bar';
+        const tableCard = document.getElementById('moderators-tbody').closest('.table-card');
+        tableCard.appendChild(pagEl);
+    }
+    if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" ${modsCurrentPage === 0 ? 'disabled' : ''} onclick="changeModsPage(${modsCurrentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    const maxBtns = 5;
+    let start = Math.max(0, modsCurrentPage - Math.floor(maxBtns / 2));
+    let end = Math.min(totalPages, start + maxBtns);
+    if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+    for (let i = start; i < end; i++) {
+        html += `<button class="page-btn${i === modsCurrentPage ? ' active' : ''}" onclick="changeModsPage(${i})">${i + 1}</button>`;
+    }
+    html += `<button class="page-btn" ${modsCurrentPage >= totalPages - 1 ? 'disabled' : ''} onclick="changeModsPage(${modsCurrentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    pagEl.innerHTML = html;
+}
+
+function changeModsPage(page) {
+    modsCurrentPage = page;
+    renderModsPage();
+}
+
 function filterModerators() {
     const q = document.getElementById('mod-search-input').value.toLowerCase();
     const status = document.getElementById('mod-filter-status').value;
 
-    const filtered = allModerators.filter(m => {
-        const matchName = m.fullName.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
+    filteredMods = allModerators.filter(m => {
+        const matchName = (m.fullName || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q);
         const matchStatus = !status || m.status === status;
         return matchName && matchStatus;
     });
-    renderModerators(filtered);
+    modsCurrentPage = 0;
+    renderModsPage();
 }
 
 // ===== CHI TIẾT KIỂM DUYỆT VIÊN =====
@@ -1150,13 +1354,13 @@ async function openModeratorDetail(id) {
         bioEl.className = 'user-detail-bio' + (u.bio ? '' : ' empty');
 
         const fields = [
-            { label: 'Email',           value: u.email },
-            { label: 'Tên đăng nhập',   value: u.username ? '@' + u.username : null },
-            { label: 'Giới tính',       value: formatGender(u.gender) },
-            { label: 'Ngày sinh',       value: u.dateOfBirth ? new Date(u.dateOfBirth).toLocaleDateString('vi-VN') : null },
-            { label: 'Số điện thoại',   value: u.phoneNumber },
-            { label: 'Đăng nhập qua',   value: u.provider === 'GOOGLE' ? '🔵 Google' : '📧 Email/Mật khẩu' },
-            { label: 'ID',              value: '#' + u.id },
+            { label: 'Email', value: u.email },
+            { label: 'Tên đăng nhập', value: u.username ? '@' + u.username : null },
+            { label: 'Giới tính', value: formatGender(u.gender) },
+            { label: 'Ngày sinh', value: u.dateOfBirth ? new Date(u.dateOfBirth).toLocaleDateString('vi-VN') : null },
+            { label: 'Số điện thoại', value: u.phoneNumber },
+            { label: 'Đăng nhập qua', value: u.provider === 'GOOGLE' ? '🔵 Google' : '📧 Email/Mật khẩu' },
+            { label: 'ID', value: '#' + u.id },
         ];
 
         document.getElementById('mod-detail-grid').innerHTML = fields.map(f => `
@@ -1212,11 +1416,16 @@ async function createModerator() {
 
 // ===== QUẢN LÝ BÁO CÁO =====
 let allReports = [];
+let postReportsCurrentPage = 0;
+let commentReportsCurrentPage = 0;
+const REPORTS_PAGE_SIZE = 10;
+let filteredPostReports = [];
+let filteredCommentReports = [];
 
 async function loadReports() {
     const postTbody = document.getElementById('reports-post-list');
     const commentTbody = document.getElementById('reports-comment-list');
-    
+
     if (postTbody) postTbody.innerHTML = '<tr><td colspan="7" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>';
     if (commentTbody) commentTbody.innerHTML = '<tr><td colspan="7" class="loading-cell"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</td></tr>';
 
@@ -1224,8 +1433,14 @@ async function loadReports() {
         const res = await fetch('/api/admin/reports', { headers: { 'Authorization': 'Bearer ' + token } });
         if (!res.ok) { showToast('Không thể tải danh sách báo cáo.', 'error'); return; }
         allReports = await res.json();
+
+        filteredPostReports = allReports.filter(r => r.targetType === 'POST' || r.post != null);
+        filteredCommentReports = allReports.filter(r => r.targetType === 'COMMENT' || r.comment != null);
+        postReportsCurrentPage = 0;
+        commentReportsCurrentPage = 0;
+
         updateReportStatCards(allReports);
-        renderReports(allReports);
+        renderReportsPage();
     } catch (e) {
         if (postTbody) postTbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Lỗi khi tải dữ liệu.</td></tr>';
         if (commentTbody) commentTbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Lỗi khi tải dữ liệu.</td></tr>';
@@ -1238,15 +1453,94 @@ function updateReportStatCards(reports) {
     document.getElementById('report-stat-resolved').textContent = reports.filter(r => r.status === 'RESOLVED').length;
 }
 
+function renderReportsPage() {
+    const postStart = postReportsCurrentPage * REPORTS_PAGE_SIZE;
+    const postEnd = postStart + REPORTS_PAGE_SIZE;
+    const pagePostReports = filteredPostReports.slice(postStart, postEnd);
+
+    const commentStart = commentReportsCurrentPage * REPORTS_PAGE_SIZE;
+    const commentEnd = commentStart + REPORTS_PAGE_SIZE;
+    const pageCommentReports = filteredCommentReports.slice(commentStart, commentEnd);
+
+    const postTotalPages = Math.ceil(filteredPostReports.length / REPORTS_PAGE_SIZE);
+    const postShowing = pagePostReports.length;
+    document.getElementById('report-table-count').textContent =
+        `Hiển thị ${postShowing} / ${filteredPostReports.length} báo cáo bài viết (trang ${postReportsCurrentPage + 1}/${Math.max(1, postTotalPages)})`;
+
+    const commentTotalPages = Math.ceil(filteredCommentReports.length / REPORTS_PAGE_SIZE);
+    const commentShowing = pageCommentReports.length;
+    const commentCountEl = document.getElementById('report-comment-table-count');
+    if (commentCountEl) {
+        commentCountEl.textContent =
+            `Hiển thị ${commentShowing} / ${filteredCommentReports.length} báo cáo bình luận (trang ${commentReportsCurrentPage + 1}/${Math.max(1, commentTotalPages)})`;
+    }
+
+    const pageReports = pagePostReports.concat(pageCommentReports);
+    renderReports(pageReports);
+
+    renderPostReportsPagination(postTotalPages);
+    renderCommentReportsPagination(commentTotalPages);
+}
+
+function renderPostReportsPagination(totalPages) {
+    let pagEl = document.getElementById('post-reports-pagination');
+    if (!pagEl) {
+        pagEl = document.createElement('div');
+        pagEl.id = 'post-reports-pagination';
+        pagEl.className = 'pagination-bar';
+        const tableCard = document.getElementById('admin-report-post-container');
+        if (tableCard) tableCard.appendChild(pagEl);
+    }
+    if (totalPages <= 1) { if (pagEl) pagEl.innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" ${postReportsCurrentPage === 0 ? 'disabled' : ''} onclick="changePostReportsPage(${postReportsCurrentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    const maxBtns = 5;
+    let start = Math.max(0, postReportsCurrentPage - Math.floor(maxBtns / 2));
+    let end = Math.min(totalPages, start + maxBtns);
+    if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+    for (let i = start; i < end; i++) {
+        html += `<button class="page-btn${i === postReportsCurrentPage ? ' active' : ''}" onclick="changePostReportsPage(${i})">${i + 1}</button>`;
+    }
+    html += `<button class="page-btn" ${postReportsCurrentPage >= totalPages - 1 ? 'disabled' : ''} onclick="changePostReportsPage(${postReportsCurrentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    pagEl.innerHTML = html;
+}
+
+function changePostReportsPage(page) {
+    postReportsCurrentPage = page;
+    renderReportsPage();
+}
+
+function renderCommentReportsPagination(totalPages) {
+    let pagEl = document.getElementById('comment-reports-pagination');
+    if (!pagEl) {
+        pagEl = document.createElement('div');
+        pagEl.id = 'comment-reports-pagination';
+        pagEl.className = 'pagination-bar';
+        const tableCard = document.getElementById('admin-report-comment-container');
+        if (tableCard) tableCard.appendChild(pagEl);
+    }
+    if (totalPages <= 1) { if (pagEl) pagEl.innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" ${commentReportsCurrentPage === 0 ? 'disabled' : ''} onclick="changeCommentReportsPage(${commentReportsCurrentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    const maxBtns = 5;
+    let start = Math.max(0, commentReportsCurrentPage - Math.floor(maxBtns / 2));
+    let end = Math.min(totalPages, start + maxBtns);
+    if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+    for (let i = start; i < end; i++) {
+        html += `<button class="page-btn${i === commentReportsCurrentPage ? ' active' : ''}" onclick="changeCommentReportsPage(${i})">${i + 1}</button>`;
+    }
+    html += `<button class="page-btn" ${commentReportsCurrentPage >= totalPages - 1 ? 'disabled' : ''} onclick="changeCommentReportsPage(${commentReportsCurrentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    pagEl.innerHTML = html;
+}
+
+function changeCommentReportsPage(page) {
+    commentReportsCurrentPage = page;
+    renderReportsPage();
+}
+
 function renderReports(reports) {
     const postTbody = document.getElementById('reports-post-list');
     const commentTbody = document.getElementById('reports-comment-list');
-    
-    document.getElementById('report-table-count').textContent = reports.filter(r => r.targetType === 'POST' || !r.targetType).length + ' báo cáo bài viết';
-    const commentCountEl = document.getElementById('report-comment-table-count');
-    if (commentCountEl) {
-        commentCountEl.textContent = reports.filter(r => r.targetType === 'COMMENT').length + ' báo cáo bình luận';
-    }
 
     const postReports = reports.filter(r => r.targetType === 'POST' || r.post != null);
     const commentReports = reports.filter(r => r.targetType === 'COMMENT' || r.comment != null);
@@ -1361,7 +1655,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tab.classList.add('active');
             tab.style.borderBottomColor = 'var(--primary)';
             tab.style.color = 'var(--primary)';
-            
+
             const type = tab.getAttribute('data-report-type');
             if (type === 'POST') {
                 document.getElementById('admin-report-post-container').style.display = 'block';
@@ -1376,8 +1670,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function reportStatusBadge(s) {
     const map = {
-        PENDING:   ['badge-warning', 'fa-clock',        'Chờ xử lý'],
-        RESOLVED:  ['badge-active',  'fa-circle-check', 'Đã giải quyết'],
+        PENDING: ['badge-warning', 'fa-clock', 'Chờ xử lý'],
+        RESOLVED: ['badge-active', 'fa-circle-check', 'Đã giải quyết'],
         DISMISSED: ['badge-inactive', 'fa-circle-xmark', 'Đã bỏ qua'],
     };
     const [cls, icon, label] = map[s] || ['badge-inactive', 'fa-circle', s];
@@ -1386,8 +1680,8 @@ function reportStatusBadge(s) {
 
 function updateReportStatus(id, status) {
     const title = status === 'RESOLVED' ? 'Giải quyết báo cáo' : 'Bỏ qua báo cáo';
-    const msg = status === 'RESOLVED' 
-        ? 'Bạn có muốn đánh dấu đã giải quyết báo cáo này không?' 
+    const msg = status === 'RESOLVED'
+        ? 'Bạn có muốn đánh dấu đã giải quyết báo cáo này không?'
         : 'Bạn có muốn bỏ qua báo cáo này không?';
     showConfirm(
         title,
@@ -1455,13 +1749,18 @@ function filterReports() {
     const status = document.getElementById('report-filter-status').value;
 
     const filtered = allReports.filter(r => {
-        const matchText = (r.reason || '').toLowerCase().includes(q) || 
-                         (r.post?.content || '').toLowerCase().includes(q) ||
-                         (r.reporter?.fullName || '').toLowerCase().includes(q);
+        const matchText = (r.reason || '').toLowerCase().includes(q) ||
+            (r.post?.content || '').toLowerCase().includes(q) ||
+            (r.reporter?.fullName || '').toLowerCase().includes(q);
         const matchStatus = !status || r.status === status;
         return matchText && matchStatus;
     });
-    renderReports(filtered);
+
+    filteredPostReports = filtered.filter(r => r.targetType === 'POST' || r.post != null);
+    filteredCommentReports = filtered.filter(r => r.targetType === 'COMMENT' || r.comment != null);
+    postReportsCurrentPage = 0;
+    commentReportsCurrentPage = 0;
+    renderReportsPage();
 }
 
 // ===== CẬP NHẬT THÔNG TIN KIỂM DUYỆT VIÊN =====

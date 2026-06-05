@@ -58,6 +58,7 @@ function renderPostsTable(posts, elementId) {
 
     const pendingPosts = posts
         .filter(post => String(post.status || '').toUpperCase() === 'PENDING_REVIEW' && getViolationRate(post) >= 40)
+        .sort((a, b) => getViolationRate(b) - getViolationRate(a))
         .slice(0, 20);
 
     tbody.innerHTML = pendingPosts.map(post => {
@@ -76,7 +77,7 @@ function renderPostsTable(posts, elementId) {
             <td>
                 ${post.processingModeratorId
                 ? `<span style="color: #e67e22; font-size: 13px; font-weight: bold;"><i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý</span>`
-                : `<button class="btn-action warning" style="font-size: 12px; padding: 4px 8px;" onclick="startProcessingViolation(${post.id})">Chờ xử lý</button>`}
+                : `<button class="btn-action warning" style="font-size: 12px; padding: 4px 8px;" onclick="viewPostDetail(${post.id})">Xem chi tiết</button>`}
             </td>
             <td>${escapeHtml(reviewer || '(Chưa có)')}</td>
         </tr>

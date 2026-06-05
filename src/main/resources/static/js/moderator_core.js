@@ -1035,24 +1035,24 @@ window.fetchModComments = async function (postId) {
     const token = window.token || localStorage.getItem('token');
     const container = document.getElementById('mod-post-modal-comments-section');
     const list = document.getElementById('mod-post-modal-comments-list');
-    
+
     if (!container || !list) return;
-    
+
     container.style.display = 'block';
     list.innerHTML = '<div style="color: var(--text-secondary); font-size: 13px;">Đang tải bình luận...</div>';
-    
+
     try {
         const res = await fetch(`/api/posts/${postId}/comments`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error("Fetch failed");
         const comments = await res.json();
-        
+
         if (!comments || comments.length === 0) {
             list.innerHTML = '<div style="color: var(--text-secondary); font-size: 13px;">Chưa có bình luận nào.</div>';
             return;
         }
-        
+
         list.innerHTML = comments.map(c => renderModCommentItem(c)).join('');
     } catch (err) {
         console.error("Lỗi lấy comment:", err);
@@ -1068,17 +1068,17 @@ window.renderModCommentItem = function (c, isReply = false) {
     } else if (c.videoUrl) {
         mediaHtml = `<video src="${c.videoUrl}" controls style="max-width: 100%; border-radius: 8px; margin-top: 8px; display: block;"></video>`;
     }
-    
+
     let repliesHtml = '';
     if (c.replies && c.replies.length > 0) {
         repliesHtml = `<div class="replies-container" style="margin-left: 30px; border-left: 2px solid var(--border-color, #3e4042); padding-left: 10px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
             ${c.replies.map(r => renderModCommentItem(r, true)).join('')}
         </div>`;
     }
-    
+
     const avatar = c.authorAvatar || '/uploads/default-avatar.png';
     const content = escapeHtml(c.content || '').replace(/\\n/g, "<br>");
-    
+
     return `
         <div class="comment-item" style="display: flex; gap: 10px;">
             <img src="${avatar}" style="width: ${isReply ? '24px' : '32px'}; height: ${isReply ? '24px' : '32px'}; border-radius: 50%; object-fit: cover;" onerror="this.src='/uploads/default-avatar.png'">

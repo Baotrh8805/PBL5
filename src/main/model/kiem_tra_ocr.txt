@@ -384,3 +384,66 @@
 [INIT] Successfully loaded PhoBERT Hate Speech model
 [INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
 [MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=True has_video=False
+[IMAGE] Start processing image_url
+[OCR] START frame=None second=None
+[OCR] frame=None sec=None raw='Ct Tan huong cuốc song nèo henderbarding OCO Promonationalists Stand' clean='Ct Tan huong cuốc song nèo henderbarding OCO Promonationalists Stand' len=68
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] video/image text='Ct Tan huong cuốc song nèo henderbarding OCO Promonationalists Stand'
+[EVAL] label=CLEAN score=0.815945
+[FINAL TEXT] len=68 text='Ct Tan huong cuốc song nèo henderbarding OCO Promonationalists Stand'
+[REQUEST] Complete best_score=0.0540 frames=0 violating_words=(Video:)ct[O] tan[O] huong[O] cuốc[O] song[O] nèo[O] oco[O] stand[O] (Content:) detailed_tags=(Video:)ct[O] tan[O] huong[O] cuốc[O] song[O] nèo[O] oco[O] stand[O] (Content:)
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=True has_video=False
+[CONTENT] len=48 text='Trời đẹp mây trong nhưng cuộc sống tàn tạ quá đi'
+[IMAGE] Start processing image_url
+[OCR] START frame=None second=None
+[OCR] frame=None sec=None raw='ABE' clean='ABE' len=3
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='Trời đẹp mây trong nhưng cuộc sống tàn tạ quá đi'
+[EVAL] label=CLEAN score=0.811794
+[OCR] video/image text='ABE'
+[EVAL] label=CLEAN score=0.810271
+[FINAL TEXT] len=52 text='Trời đẹp mây trong nhưng cuộc sống tàn tạ quá đi ABE'
+[REQUEST] Complete best_score=0.3410 frames=0 violating_words=(Video:)abe[O] (Content:)trời[O] đẹp[O] mây[O] trong[O] nhưng[O] cuộc[O] sống[O] tàn[O] tạ[O] quá[O] đi[O] detailed_tags=(Video:)abe[O] (Content:)trời[O] đẹp[O] mây[O] trong[O] nhưng[O] cuộc[O] sống[O] tàn[O] tạ[O] quá[O] đi[O]
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup

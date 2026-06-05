@@ -1566,3 +1566,28 @@ html[data-theme="dark"] .review-violation-snippet span[style*="background-color:
     color: var(--text-secondary);
     font-weight: 500;
 }
+
+/* ===== PAGINATION ===== */
+.pagination-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-color);
+}
+.page-btn {
+    min-width: 34px; height: 34px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--surface-bg);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+}
+.page-btn:hover:not(:disabled) { border-color: var(--mod-primary); color: var(--mod-primary); background: var(--mod-primary-light); }
+.page-btn.active { background: var(--mod-primary); color: #fff; border-color: var(--mod-primary); }
+.page-btn:disabled { opacity: 0.35; cursor: not-allowed; }

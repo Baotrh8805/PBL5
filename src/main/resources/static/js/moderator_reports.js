@@ -1,4 +1,9 @@
 let allReportsData = []; // Biến toàn cục lưu trữ dữ liệu gốc để lọc cục bộ
+let modPostReportsCurrentPage = 0;
+let modCommentReportsCurrentPage = 0;
+const MOD_REPORTS_PAGE_SIZE = 10;
+let modFilteredPostReports = [];
+let modFilteredCommentReports = [];
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -108,21 +113,42 @@ function filterReports() {
         });
     }
 
-    renderReportsTable(filtered);
+    modFilteredPostReports = filtered.filter(r => r.targetType === 'POST');
+    modFilteredCommentReports = filtered.filter(r => r.targetType === 'COMMENT');
+
+    modPostReportsCurrentPage = 0;
+    modCommentReportsCurrentPage = 0;
+
+    renderModReportsPage();
 }
 
-function renderReportsTable(reports) {
+function renderModReportsPage() {
+    const postStart = modPostReportsCurrentPage * MOD_REPORTS_PAGE_SIZE;
+    const postEnd = postStart + MOD_REPORTS_PAGE_SIZE;
+    const pagePostReports = modFilteredPostReports.slice(postStart, postEnd);
+    const postTotalPages = Math.ceil(modFilteredPostReports.length / MOD_REPORTS_PAGE_SIZE);
+
+    const commentStart = modCommentReportsCurrentPage * MOD_REPORTS_PAGE_SIZE;
+    const commentEnd = commentStart + MOD_REPORTS_PAGE_SIZE;
+    const pageCommentReports = modFilteredCommentReports.slice(commentStart, commentEnd);
+    const commentTotalPages = Math.ceil(modFilteredCommentReports.length / MOD_REPORTS_PAGE_SIZE);
+
+    renderReportsTable(pagePostReports, pageCommentReports);
+
+    renderModPostReportsPagination(postTotalPages);
+    renderModCommentReportsPagination(commentTotalPages);
+}
+
+function renderReportsTable(postReports, commentReports) {
     const postTbody = document.getElementById('reports-post-list');
     const commentTbody = document.getElementById('reports-comment-list');
     if (!postTbody || !commentTbody) return;
 
-    if (!Array.isArray(reports)) reports = [];
+    if (!Array.isArray(postReports)) postReports = [];
+    if (!Array.isArray(commentReports)) commentReports = [];
 
-    const postReports = reports.filter(r => r.targetType === 'POST');
-    const commentReports = reports.filter(r => r.targetType === 'COMMENT');
-
-    document.getElementById('report-post-count').textContent = `Tìm thấy ${postReports.length} báo cáo bài viết`;
-    document.getElementById('report-comment-count').textContent = `Tìm thấy ${commentReports.length} báo cáo bình luận`;
+    document.getElementById('report-post-count').textContent = `Tìm thấy ${modFilteredPostReports.length} báo cáo bài viết`;
+    document.getElementById('report-comment-count').textContent = `Tìm thấy ${modFilteredCommentReports.length} báo cáo bình luận`;
 
     const renderRow = (report) => {
         const isPost = report.targetType === 'POST';
@@ -191,6 +217,62 @@ function renderReportsTable(reports) {
         : commentReports.map(renderRow).join('');
 }
 
+function renderModPostReportsPagination(totalPages) {
+    let pagEl = document.getElementById('mod-post-reports-pagination');
+    if (!pagEl) {
+        pagEl = document.createElement('div');
+        pagEl.id = 'mod-post-reports-pagination';
+        pagEl.className = 'pagination-bar';
+        const card = document.getElementById('report-post-container');
+        if (card) card.appendChild(pagEl);
+    }
+    if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" ${modPostReportsCurrentPage === 0 ? 'disabled' : ''} onclick="changeModPostReportsPage(${modPostReportsCurrentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    const maxBtns = 5;
+    let start = Math.max(0, modPostReportsCurrentPage - Math.floor(maxBtns / 2));
+    let end = Math.min(totalPages, start + maxBtns);
+    if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+    for (let i = start; i < end; i++) {
+        html += `<button class="page-btn${i === modPostReportsCurrentPage ? ' active' : ''}" onclick="changeModPostReportsPage(${i})">${i + 1}</button>`;
+    }
+    html += `<button class="page-btn" ${modPostReportsCurrentPage >= totalPages - 1 ? 'disabled' : ''} onclick="changeModPostReportsPage(${modPostReportsCurrentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    pagEl.innerHTML = html;
+}
+
+function renderModCommentReportsPagination(totalPages) {
+    let pagEl = document.getElementById('mod-comment-reports-pagination');
+    if (!pagEl) {
+        pagEl = document.createElement('div');
+        pagEl.id = 'mod-comment-reports-pagination';
+        pagEl.className = 'pagination-bar';
+        const card = document.getElementById('report-comment-container');
+        if (card) card.appendChild(pagEl);
+    }
+    if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" ${modCommentReportsCurrentPage === 0 ? 'disabled' : ''} onclick="changeModCommentReportsPage(${modCommentReportsCurrentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    const maxBtns = 5;
+    let start = Math.max(0, modCommentReportsCurrentPage - Math.floor(maxBtns / 2));
+    let end = Math.min(totalPages, start + maxBtns);
+    if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+    for (let i = start; i < end; i++) {
+        html += `<button class="page-btn${i === modCommentReportsCurrentPage ? ' active' : ''}" onclick="changeModCommentReportsPage(${i})">${i + 1}</button>`;
+    }
+    html += `<button class="page-btn" ${modCommentReportsCurrentPage >= totalPages - 1 ? 'disabled' : ''} onclick="changeModCommentReportsPage(${modCommentReportsCurrentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    pagEl.innerHTML = html;
+}
+
+window.changeModPostReportsPage = function (page) {
+    modPostReportsCurrentPage = page;
+    renderModReportsPage();
+};
+
+window.changeModCommentReportsPage = function (page) {
+    modCommentReportsCurrentPage = page;
+    renderModReportsPage();
+};
+
 window.openReportDetailModal = function (reportId) {
     console.log("--- openReportDetailModal called with ID:", reportId);
 
@@ -242,7 +324,7 @@ window.openReportDetailModal = function (reportId) {
         infoDiv.style.fontSize = '13px';
         infoDiv.style.color = '#3b82f6';
         infoDiv.innerHTML = `<i class="fa-solid fa-user-shield"></i> Người bị kháng cáo: <strong>${escapeHtml(report.appealedModerator)}</strong>`;
-        
+
         const rdTime = document.getElementById('rd-time');
         if (rdTime && rdTime.parentNode) {
             rdTime.parentNode.insertBefore(infoDiv, rdTime.nextSibling);

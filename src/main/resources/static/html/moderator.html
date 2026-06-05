@@ -610,7 +610,8 @@
     </div>
 
     <!-- 2. Post Detail Modal -->
-    <div id="mod-post-detail-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
+    <div id="mod-post-detail-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true"
+        style="z-index: 2500;">
         <div class="modal-card"
             style="width: 800px; max-width: 95vw; padding: 0; background: var(--surface-bg); color: var(--text-primary); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--border-color); box-shadow: var(--card-shadow);">
             <div class="modal-header"
@@ -680,8 +681,10 @@
                 <div id="mod-post-modal-interactions"></div>
 
                 <!-- Comments Section -->
-                <div id="mod-post-modal-comments-section" style="margin-top: 15px; border-top: 1px solid #3e4042; padding-top: 15px; display: none;">
-                    <div style="font-size: 14px; font-weight: 600; margin-bottom: 15px; color: var(--text-primary);">Bình luận</div>
+                <div id="mod-post-modal-comments-section"
+                    style="margin-top: 15px; border-top: 1px solid #3e4042; padding-top: 15px; display: none;">
+                    <div style="font-size: 14px; font-weight: 600; margin-bottom: 15px; color: var(--text-primary);">
+                        Bình luận</div>
                     <div id="mod-post-modal-comments-list" style="display: flex; flex-direction: column; gap: 12px;">
                         <!-- Comments will be injected here -->
                     </div>
@@ -743,7 +746,7 @@
 
     <!-- 5. Warn User Penalty Modal -->
     <div id="warn-user-modal" class="modal-overlay profile-modal-hidden"
-        style="display: none; align-items: center; justify-content: center;">
+        style="display: none; align-items: center; justify-content: center; z-index: 3000;">
         <div class="profile-modal-content"
             style="max-width: 450px; background: var(--surface-bg); border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); border: 1px solid var(--border-color);">
             <div class="profile-modal-header"
@@ -884,7 +887,8 @@
 
     <!-- 7. Violation Report Tickets Detail Modal -->
     <div id="mod-report-detail-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true">
-        <div class="modal-card profile-modal" style="width: 1000px; max-width: 98vw; height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="modal-card profile-modal"
+            style="width: 1000px; max-width: 98vw; height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
             <div class="modal-header">
                 <h2>Chi tiết báo cáo vi phạm</h2>
                 <button type="button" onclick="closeReportDetailModal()" class="close-modal" aria-label="Đóng">
@@ -991,16 +995,20 @@
                             <div
                                 style="font-size: 10px; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; font-weight: 700; white-space: nowrap;">
                                 Ghét content</div>
-                            <div id="rd-ai-hate-content" style="font-weight: 800; font-size: 16px; color: #00d1b2;">0%</div>
-                            <span id="rd-ai-hate-content-lbl" style="font-weight: 800; padding: 1px 4px; border-radius: 4px; font-size: 9px; color: #fff; background: #52c41a; margin-top: 4px;">CLEAN</span>
+                            <div id="rd-ai-hate-content" style="font-weight: 800; font-size: 16px; color: #00d1b2;">0%
+                            </div>
+                            <span id="rd-ai-hate-content-lbl"
+                                style="font-weight: 800; padding: 1px 4px; border-radius: 4px; font-size: 9px; color: #fff; background: #52c41a; margin-top: 4px;">CLEAN</span>
                         </div>
                         <div class="ai-stat-item"
                             style="padding: 12px 8px; background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center; align-items: center;">
                             <div
                                 style="font-size: 10px; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; font-weight: 700; white-space: nowrap;">
                                 Ghét Media</div>
-                            <div id="rd-ai-hate-video" style="font-weight: 800; font-size: 16px; color: #00d1b2;">0%</div>
-                            <span id="rd-ai-hate-video-lbl" style="font-weight: 800; padding: 1px 4px; border-radius: 4px; font-size: 9px; color: #fff; background: #52c41a; margin-top: 4px;">CLEAN</span>
+                            <div id="rd-ai-hate-video" style="font-weight: 800; font-size: 16px; color: #00d1b2;">0%
+                            </div>
+                            <span id="rd-ai-hate-video-lbl"
+                                style="font-weight: 800; padding: 1px 4px; border-radius: 4px; font-size: 9px; color: #fff; background: #52c41a; margin-top: 4px;">CLEAN</span>
                         </div>
                     </div>
 
@@ -1040,7 +1048,7 @@
 
     <!-- 8. Action Note Logging Popup -->
     <div id="mod-action-note-modal" class="modal-overlay profile-modal-hidden" aria-hidden="true"
-        style="z-index: 2500; display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); transition: all 0.3s ease;">
+        style="z-index: 3500; display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); transition: all 0.3s ease;">
         <div class="modal-card profile-modal"
             style="width: 480px; max-width: 90vw; border-radius: 16px; background: var(--surface-bg); color: var(--text-primary); box-shadow: 0 15px 35px rgba(0,0,0,0.25); overflow: hidden; border: 1px solid var(--border-color); margin: auto;">
             <div class="modal-header"

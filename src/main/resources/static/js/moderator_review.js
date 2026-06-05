@@ -1,4 +1,8 @@
 
+let modReviewCurrentPage = 0;
+const MOD_REVIEW_PAGE_SIZE = 10;
+let modFilteredReviewPosts = [];
+
 window.addEventListener('resize', () => {
     document.querySelectorAll('.overlay-target').forEach(el => {
         if (window.drawMediaBoxes) window.drawMediaBoxes(el);
@@ -15,7 +19,10 @@ function renderReviewPostsTable(posts) {
 
     if (searchInput && !searchInput.dataset.listening) {
         searchInput.dataset.listening = "true";
-        const refresh = () => renderReviewPostsTable(window.cache.posts);
+        const refresh = () => {
+            modReviewCurrentPage = 0;
+            renderReviewPostsTable(window.cache.posts);
+        };
         searchInput.addEventListener('input', refresh);
         filterSelect.addEventListener('change', () => {
             if (filterSelect.value === 'AI_REVIEWED') {
@@ -70,7 +77,7 @@ function renderReviewPostsTable(posts) {
         return true;
     });
 
-    reviewPosts = reviewPosts.sort((a, b) => {
+    modFilteredReviewPosts = reviewPosts.sort((a, b) => {
         const rateA = getViolationRate(a);
         const rateB = getViolationRate(b);
         if (rateB !== rateA) {
@@ -78,9 +85,14 @@ function renderReviewPostsTable(posts) {
         }
         // Thời gian: bài đăng càng sớm hiển thị trước (cũ hơn lên trước)
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    }).slice(0, 30);
+    });
 
-    const cards = reviewPosts.map(post => {
+    const start = modReviewCurrentPage * MOD_REVIEW_PAGE_SIZE;
+    const end = start + MOD_REVIEW_PAGE_SIZE;
+    const pagePosts = modFilteredReviewPosts.slice(start, end);
+    const totalPages = Math.ceil(modFilteredReviewPosts.length / MOD_REVIEW_PAGE_SIZE);
+
+    const cards = pagePosts.map(post => {
         const postStatus = String(post.status || '').toUpperCase();
         const violationRate = getViolationRate(post);
         const level = getSeverityLabel(violationRate);
@@ -293,7 +305,37 @@ function renderReviewPostsTable(posts) {
     }).join('');
 
     tbody.innerHTML = cards || '<div class="review-empty">Không có bài viết vi phạm nào đang chờ duyệt.</div>';
+    renderModReviewPagination(totalPages);
 }
+
+function renderModReviewPagination(totalPages) {
+    let pagEl = document.getElementById('mod-review-pagination');
+    if (!pagEl) {
+        pagEl = document.createElement('div');
+        pagEl.id = 'mod-review-pagination';
+        pagEl.className = 'pagination-bar';
+        const card = document.getElementById('review-posts-list').parentNode;
+        card.appendChild(pagEl);
+    }
+    if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" ${modReviewCurrentPage === 0 ? 'disabled' : ''} onclick="changeModReviewPage(${modReviewCurrentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    const maxBtns = 5;
+    let start = Math.max(0, modReviewCurrentPage - Math.floor(maxBtns / 2));
+    let end = Math.min(totalPages, start + maxBtns);
+    if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+    for (let i = start; i < end; i++) {
+        html += `<button class="page-btn${i === modReviewCurrentPage ? ' active' : ''}" onclick="changeModReviewPage(${i})">${i + 1}</button>`;
+    }
+    html += `<button class="page-btn" ${modReviewCurrentPage >= totalPages - 1 ? 'disabled' : ''} onclick="changeModReviewPage(${modReviewCurrentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    pagEl.innerHTML = html;
+}
+
+window.changeModReviewPage = function (page) {
+    modReviewCurrentPage = page;
+    renderReviewPostsTable(window.cache.posts);
+    document.getElementById('review-posts-list')?.scrollIntoView({ behavior: 'smooth' });
+};
 
 function getMediaLabel(post) {
     if (post.imageUrl && post.videoUrl) return 'Ảnh + Video';

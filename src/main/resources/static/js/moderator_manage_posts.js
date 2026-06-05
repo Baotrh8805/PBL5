@@ -1,3 +1,7 @@
+let modPostsCurrentPage = 0;
+const MOD_POSTS_PAGE_SIZE = 10;
+let modFilteredPosts = [];
+
 function renderManagePostsFeed(posts) {
     const container = document.getElementById('manage-posts-feed');
     if (!container) return;
@@ -9,7 +13,10 @@ function renderManagePostsFeed(posts) {
 
     if (searchInput && !searchInput.dataset.listening) {
         searchInput.dataset.listening = "true";
-        const update = () => renderManagePostsFeed(window.cache.posts);
+        const update = () => {
+            modPostsCurrentPage = 0;
+            renderManagePostsFeed(window.cache.posts);
+        };
         searchInput.addEventListener('input', update);
         if (typeFilter) typeFilter.addEventListener('change', update);
         if (visibilityFilter) visibilityFilter.addEventListener('change', update);
@@ -19,7 +26,7 @@ function renderManagePostsFeed(posts) {
     const typeVal = typeFilter ? typeFilter.value : 'ALL';
     const visibilityVal = visibilityFilter ? visibilityFilter.value : 'ALL';
 
-    let filteredPosts = posts.filter(post => {
+    modFilteredPosts = posts.filter(post => {
         // Search
         let searchMatch = true;
         if (searchVal) {
@@ -48,10 +55,15 @@ function renderManagePostsFeed(posts) {
         return searchMatch && typeMatch && visibilityMatch;
     });
 
-    const cards = filteredPosts.slice(0, 100).map(post => {
+    const start = modPostsCurrentPage * MOD_POSTS_PAGE_SIZE;
+    const end = start + MOD_POSTS_PAGE_SIZE;
+    const pagePosts = modFilteredPosts.slice(start, end);
+    const totalPages = Math.ceil(modFilteredPosts.length / MOD_POSTS_PAGE_SIZE);
+
+    const cards = pagePosts.map(post => {
         const authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName || 'User')}&background=00d1b2&color=fff`;
         const postTime = typeof timeSince === 'function' ? timeSince(post.createdAt) : 'Vừa xong';
-        
+
         let mediaHtml = '';
         if (post.imageUrl) mediaHtml += `<div class="post-media-container" style="margin-bottom: 12px; text-align: center; background: #000; border-radius: 8px; overflow: hidden;"><img src="${escapeHtml(post.imageUrl)}" style="max-height: 400px; width: 100%; object-fit: contain; display: block; margin: 0 auto;"></div>`;
         if (post.videoUrl) mediaHtml += `<div class="post-media-container" style="margin-bottom: 12px; text-align: center; background: #000; border-radius: 8px; overflow: hidden;"><video src="${escapeHtml(post.videoUrl)}" controls style="max-height: 400px; width: 100%; object-fit: contain; display: block; margin: 0 auto;"></video></div>`;
@@ -59,7 +71,7 @@ function renderManagePostsFeed(posts) {
         const postStatus = String(post.status || '').toUpperCase();
         const isRejected = postStatus === 'REJECTED' || postStatus === 'AUTO_REJECTED';
         const isPending = postStatus === 'PENDING_REVIEW';
-        
+
         let statusLabel = '';
         if (isRejected) statusLabel = `<span style="font-size: 11px; color: #ff4d4f; font-weight: 800; background: rgba(255, 77, 79, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #ff4d4f;">ĐÃ GỠ</span>`;
         else if (!isPending) statusLabel = `<span style="font-size: 11px; color: #00d1b2; font-weight: 800; background: rgba(0, 209, 178, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #00d1b2;">ĐÃ DUYỆT</span>`;
@@ -119,9 +131,39 @@ function renderManagePostsFeed(posts) {
     }).join('');
 
     container.innerHTML = cards || '<div class="review-empty">Không tìm thấy bài viết nào phù hợp với bộ lọc hiện tại.</div>';
+    renderModPostsPagination(totalPages);
 }
 
-window.hidePostAdmin = async function(id) {
+function renderModPostsPagination(totalPages) {
+    let pagEl = document.getElementById('mod-posts-pagination');
+    if (!pagEl) {
+        pagEl = document.createElement('div');
+        pagEl.id = 'mod-posts-pagination';
+        pagEl.className = 'pagination-bar';
+        const section = document.getElementById('manage-posts-feed').parentNode;
+        section.appendChild(pagEl);
+    }
+    if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+    let html = '';
+    html += `<button class="page-btn" ${modPostsCurrentPage === 0 ? 'disabled' : ''} onclick="changeModPostsPage(${modPostsCurrentPage - 1})"><i class="fa-solid fa-chevron-left"></i></button>`;
+    const maxBtns = 5;
+    let start = Math.max(0, modPostsCurrentPage - Math.floor(maxBtns / 2));
+    let end = Math.min(totalPages, start + maxBtns);
+    if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+    for (let i = start; i < end; i++) {
+        html += `<button class="page-btn${i === modPostsCurrentPage ? ' active' : ''}" onclick="changeModPostsPage(${i})">${i + 1}</button>`;
+    }
+    html += `<button class="page-btn" ${modPostsCurrentPage >= totalPages - 1 ? 'disabled' : ''} onclick="changeModPostsPage(${modPostsCurrentPage + 1})"><i class="fa-solid fa-chevron-right"></i></button>`;
+    pagEl.innerHTML = html;
+}
+
+window.changeModPostsPage = function (page) {
+    modPostsCurrentPage = page;
+    renderManagePostsFeed(window.cache.posts);
+    document.getElementById('manage-posts-feed')?.scrollIntoView({ behavior: 'smooth' });
+};
+
+window.hidePostAdmin = async function (id) {
     showCustomConfirm('Ẩn bài viết', 'Bạn có chắc chắn muốn ẨN bài viết này? Bài viết sẽ không hiển thị trên bảng tin công cộng nhưng không tính điểm vi phạm cho người dùng.', async () => {
         try {
             const res = await fetch(`/api/moderator/posts/${id}/hide`, {
@@ -142,7 +184,7 @@ window.hidePostAdmin = async function(id) {
     });
 };
 
-window.restorePost = async function(id) {
+window.restorePost = async function (id) {
     showCustomConfirm('Khôi phục bài viết', 'Bạn có chắc chắn muốn KHÔI PHỤC bài viết này? Người dùng sẽ được TRỪ 1 điểm vi phạm vì bài viết đã được xác định là hợp lệ.', async () => {
         try {
             const res = await fetch(`/api/moderator/posts/${id}/restore`, {

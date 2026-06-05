@@ -42,7 +42,7 @@ function handleNotification(notification) {
 
     // Small toast (optional, replacing alert)
     const toast = document.createElement('div');
-    toast.style.cssText = "position:fixed; bottom:20px; left:20px; background:#00d1b2; color:#fff; padding:12px 20px; border-radius:8px; z-index:9999; font-size:14px; box-shadow:0 4px 6px rgba(0,0,0,0.1); cursor:pointer;";
+    toast.style.cssText = "position:fixed; bottom:20px; left:20px; background:#5e6ad2; color:#fff; padding:12px 20px; border-radius:8px; z-index:9999; font-size:14px; box-shadow:0 4px 6px rgba(0,0,0,0.1); cursor:pointer;";
     toast.innerText = notification.message;
     if(notification.link) {
         toast.onclick = () => window.location.href = notification.link;
@@ -143,7 +143,7 @@ async function loadInboxDropdown() {
         contacts.forEach(f => {
             let avatarUrl = f.avatar;
             if (!avatarUrl || avatarUrl.trim() === '') {
-                 avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff`;
+                 avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=5e6ad2&color=fff`;
             }
             let msgStr = f.lastMessage || 'Bạn bè';
             let isUnread = f.unreadCount > 0;
@@ -160,12 +160,12 @@ async function loadInboxDropdown() {
             };
 
             item.innerHTML = `
-                <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff'">
+                <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=5e6ad2&color=fff'">
                 <div class="notification-content">
                     <div style="font-weight: ${isUnread ? '700' : '600'}; font-size: 15px; color: var(--text-main);">${f.fullName}</div>
                     <div class="notification-msg" style="color: ${isUnread ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: ${isUnread ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
                 </div>
-                ${isUnread ? '<div class="notification-dot" style="background-color: #00d1b2; width: 10px; height: 10px; border-radius: 50%; margin-left: auto;"></div>' : ''}
+                ${isUnread ? '<div class="notification-dot" style="background-color: #5e6ad2; width: 10px; height: 10px; border-radius: 50%; margin-left: auto;"></div>' : ''}
             `;
             inboxList.appendChild(item);
         });
@@ -218,7 +218,7 @@ function renderNotifications(notifications) {
     notifications.forEach(n => {
         let avatarUrl = n.senderAvatar;
         if (!avatarUrl || avatarUrl.trim() === '') {
-            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(n.senderName || 'User')}&background=00d1b2&color=fff`;
+            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(n.senderName || 'User')}&background=5e6ad2&color=fff`;
         }
         
         let dateStr = "";
@@ -246,7 +246,7 @@ function renderNotifications(notifications) {
         };
         
         item.innerHTML = `
-            <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(n.senderName || 'User')}&background=00d1b2&color=fff'">
+            <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(n.senderName || 'User')}&background=5e6ad2&color=fff'">
             <div class="notification-content">
                 <div class="notification-msg">${n.message || ''}</div>
                 <div class="notification-time">${dateStr}</div>
@@ -345,7 +345,7 @@ function renderChatContacts(contacts, emptyMessage = 'Chưa có người liên h
     contacts.forEach(f => {
         let avatarUrl = f.avatar;
         if (!avatarUrl || avatarUrl.trim() === '') {
-            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff`;
+            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=5e6ad2&color=fff`;
         }
 
         const div = document.createElement('div');
@@ -353,7 +353,7 @@ function renderChatContacts(contacts, emptyMessage = 'Chưa có người liên h
         div.id = `chat-contact-${f.id}`;
         div.onclick = () => openChatBox(f.id, f.fullName, avatarUrl);
         div.innerHTML = `
-            <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff'">
+            <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=5e6ad2&color=fff'">
             <div class="chat-contact-name">${f.fullName}</div>
             <div id="unread-badge-${f.id}" class="chat-unread-badge" style="display:none;"></div>
         `;
@@ -368,7 +368,7 @@ function openChatBox(userId, name, avatar) {
     
     let targetAvatar = avatar;
     if (!targetAvatar || targetAvatar.trim() === '') {
-        targetAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00d1b2&color=fff`;
+        targetAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=5e6ad2&color=fff`;
     }
 
     document.getElementById('chat-target-name').innerHTML = `<a href="/html/profile.html?userId=${userId}" style="text-decoration:none; color:inherit;">${name}</a>`;
@@ -376,7 +376,7 @@ function openChatBox(userId, name, avatar) {
     document.getElementById('chat-target-avatar').onclick = () => { window.location.href = `/html/profile.html?userId=${userId}`; };
     document.getElementById('chat-target-avatar').style.cursor = 'pointer';
     document.getElementById('chat-target-avatar').onerror = function() {
-        this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00d1b2&color=fff`;
+        this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=5e6ad2&color=fff`;
     };
     
     // Lưu lại targetAvatar để dùng trong appendMessageToUI nếu cần

@@ -24,7 +24,7 @@
     <header class="top-header">
         <div class="header-left">
             <a href="/html/home.html" class="logo">
-                <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i>
+                <img src="/images/lc_logo.png" alt="LC Logo" class="logo-img">
                 <span class="logo-text">LC Network</span>
             </a>
             <div class="search-bar" style="position: relative;">
@@ -109,13 +109,13 @@
             </div>
 
             <!-- Theme Toggle Button -->
-            <button class="icon-btn tooltip" id="theme-toggle-btn" data-tooltip="Chuyển chế độ tối/sáng" onclick="toggleTheme()">
+            <button class="icon-btn tooltip" id="theme-toggle-btn" data-tooltip="Chuyển chế độ tối/sáng" onclick="toggleTheme()" style="display: none;">
                 <i class="fa-solid fa-moon"></i>
             </button>
 
             <!-- User Avatar -->
             <div class="user-avatar-btn">
-                <img src="/uploads/default-avatar.png" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <img src="/uploads/default-avatar.png" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'">
             </div>
         </div>
     </header>
@@ -128,7 +128,7 @@
         <aside class="left-sidebar">
             <!-- Tương tác clickable vào thẻ -->
             <div class="card profile-card" onclick="window.location.href='profile.html'" style="cursor: pointer; transition: 0.2s;">
-                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'">
                 <div class="profile-info">
                     <h3 class="user-name">Đỗ Ngọc Lễ</h3>
                     <p class="status"><span class="status-dot"></span> Đang trực truyến</p>
@@ -173,9 +173,9 @@
             <div class="card ai-banner modern-ai-banner">
                 <div class="ai-banner-content">
                     <div class="ai-badge">
-                        <i class="fa-solid fa-shield-halved"></i> AI Khang Trang
+                        <i class="fa-solid fa-shield-halved"></i> AI Guardian
                     </div>
-                    <p>Hệ thống giám sát bảo mật nội dung chủ động.</p>
+                    <p>Kết nối an toàn, chia sẻ văn minh.</p>
                 </div>
             </div>
         </aside>
@@ -186,7 +186,7 @@
             <div class="card create-post-box">
                 <div class="create-post-top">
                     <!-- ID added to input & image -->
-                    <img src="/uploads/default-avatar.png" id="create-post-avatar" alt="Avatar" class="avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                    <img src="/uploads/default-avatar.png" id="create-post-avatar" alt="Avatar" class="avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'">
                     <input type="text" id="post-content-input" placeholder="Bạn đang nghĩ gì?" class="post-input" readonly onclick="openPostModal()">
                 </div>
             </div>
@@ -233,6 +233,26 @@
                 </div>
                 <div id="sidebar-suggestions" class="suggestions-list">
                     <div class="empty-state">Chưa có gợi ý</div>
+                </div>
+            </div>
+
+            <!-- Active Contacts integration directly into Right Sidebar -->
+            <div class="card contacts-card">
+                <div class="card-header-sidebar">
+                    <h3>Người liên hệ</h3>
+                </div>
+                <div class="contacts-search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="chat-sidebar-search-input" placeholder="Tìm kiếm liên hệ..." onkeyup="searchChatUsers(this.value)">
+                </div>
+                <div id="chat-contact-list" class="contacts-list">
+                    <!-- Dynamic chat contacts will load here -->
+                    <div class="skeleton-chat-contacts" style="padding: 10px; display: flex; flex-direction: column; gap: 12px;">
+                        <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                            <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                            <div class="skeleton-line" style="height: 10px; width: 60%; margin-bottom: 0;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -338,7 +358,7 @@
                         </div>
                     </div>
 
-                    <button class="modal-submit-btn" id="onboard-submit-btn" style="width: 100%; background: #00d1b2; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: 600; font-size: 15px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#00b398'" onmouseout="this.style.background='#00d1b2'" onclick="submitOnboarding()">Cập nhật thông tin</button>
+                    <button class="modal-submit-btn" id="onboard-submit-btn" style="width: 100%; background: #5e6ad2; color: #fff; border: none; padding: 10px; border-radius: var(--rounded-md); font-weight: 600; font-size: 15px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#828fff'" onmouseout="this.style.background='#5e6ad2'" onclick="submitOnboarding()">Cập nhật thông tin</button>
                     <p id="onboard-error" style="color: red; font-size: 12px; margin-top: 10px; display: none;"></p>
                 </div>
             </div>
@@ -346,29 +366,8 @@
 
     </main>
 
-    <!-- Chat Sidebar -->
-    <div id="chat-sidebar" class="chat-sidebar">
-        <div class="chat-sidebar-title">Người liên hệ</div>
-        <div class="chat-sidebar-search" style="padding: 10px; border-bottom: 1px solid #ddd;">
-            <input type="text" id="chat-sidebar-search-input" placeholder="Tìm kiếm người dùng..." style="width:100%; padding: 8px; border-radius: 20px; border: 1px solid #ced0d4; outline:none;" onkeyup="searchChatUsers(this.value)">
-        </div>
-        <div id="chat-contact-list">
-            <!-- Fetch friends dynamically -->
-            <div class="skeleton-chat-contacts" style="padding: 10px; display: flex; flex-direction: column; gap: 12px;">
-                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
-                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
-                    <div class="skeleton-line" style="height: 10px; width: 60%; margin-bottom: 0;"></div>
-                </div>
-                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
-                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
-                    <div class="skeleton-line" style="height: 10px; width: 50%; margin-bottom: 0;"></div>
-                </div>
-                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
-                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
-                    <div class="skeleton-line" style="height: 10px; width: 55%; margin-bottom: 0;"></div>
-                </div>
-            </div>
-        </div>
+    <!-- Chat Sidebar hidden in HTML but kept for JS compatibility -->
+    <div id="chat-sidebar" class="chat-sidebar" style="display: none !important;">
     </div>
 
     <!-- Chat Box -->

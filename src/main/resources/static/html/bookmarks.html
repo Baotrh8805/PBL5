@@ -19,12 +19,13 @@
     <header class="top-header">
         <div class="header-left">
             <a href="/html/home.html" class="logo">
-                <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i>
+                <img src="/images/lc_logo.png" alt="LC Logo" class="logo-img">
                 <span class="logo-text">LC Network</span>
             </a>
-            <div class="search-bar">
+            <div class="search-bar" style="position: relative;">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Tìm mọi người hoặc bài viết...">
+                <input type="text" id="global-search-input" placeholder="Tìm mọi người hoặc bài viết..." oninput="handleGlobalSearch(this.value)">
+                <div id="global-search-results" class="search-results-dropdown" style="display: none;"></div>
             </div>
         </div>
 
@@ -46,12 +47,69 @@
             <button class="icon-btn tooltip create-btn" data-tooltip="Tạo bài viết" onclick="window.location.href='/html/home.html'">
                 <i class="fa-solid fa-plus"></i>
             </button>
+
+            <!-- Inbox Dropdown -->
+            <div class="notification-container" style="position: relative;">
+                <button class="icon-btn tooltip" data-tooltip="Tin nhắn" id="nav-message-btn" onclick="toggleInboxDropdown()">
+                    <i class="fa-brands fa-facebook-messenger"></i>
+                </button>
+                <div id="inbox-dropdown" class="messenger-dropdown" style="display:none; right: -50px;">
+                    <div class="messenger-header">
+                        <h2>Đoạn chat</h2>
+                        <div class="messenger-header-actions">
+                        </div>
+                    </div>
+                    
+                    <div class="messenger-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="messenger-search-input" placeholder="Tìm kiếm trên Messenger" oninput="handleMessengerSearch(this.value)">
+                    </div>
+
+                    <div class="messenger-filters">
+                        <button class="filter-chip active" onclick="setMessengerFilter('all', this)">Tất cả</button>
+                        <button class="filter-chip" onclick="setMessengerFilter('unread', this)">Chưa đọc</button>
+                    </div>
+
+                    <div class="messenger-body" id="inbox-list">
+                        <!-- Nạp động qua JS loadInboxDropdown() -->
+                        <div class="skeleton-post card" style="width: 100%; border: none; box-shadow: none; margin-bottom: 0; padding: 12px;">
+                            <div class="skeleton-header" style="margin-bottom: 0; gap: 8px;">
+                                <div class="skeleton-avatar" style="width: 36px; height: 36px;"></div>
+                                <div class="skeleton-meta">
+                                    <div class="skeleton-line short" style="height: 8px; margin-bottom: 4px;"></div>
+                                    <div class="skeleton-line x-short" style="height: 6px; margin-bottom: 0;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification Dropdown -->
+            <div class="notification-container" style="position: relative;">
+                <button class="icon-btn notification-btn tooltip" data-tooltip="Thông báo" onclick="toggleNotificationDropdown()">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="badge" id="notification-badge" style="display:none;">0</span>
+                </button>
+                <div id="notification-dropdown" class="notification-dropdown" style="display:none;">
+                    <div class="dropdown-header">
+                        <h4>Thông báo</h4>
+                        <button class="mark-all-read-btn" onclick="markAllNotificationsAsRead()">Đánh dấu đã đọc</button>
+                    </div>
+                    <div class="dropdown-body" id="notification-list">
+                        <!-- Notifications appended here dynamically -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Theme Toggle Button -->
-            <button class="icon-btn tooltip" id="theme-toggle-btn" data-tooltip="Chuyển chế độ tối/sáng" onclick="toggleTheme()">
+            <button class="icon-btn tooltip" id="theme-toggle-btn" data-tooltip="Chuyển chế độ tối/sáng" onclick="toggleTheme()" style="display: none;">
                 <i class="fa-solid fa-moon"></i>
             </button>
+
+            <!-- User Avatar -->
             <div class="user-avatar-btn" onclick="window.location.href='/html/profile.html'">
-                <img src="https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff" alt="User Avatar" id="header-avatar" style="cursor:pointer;">
+                <img src="https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff" alt="User Avatar" id="header-avatar" style="cursor:pointer;">
             </div>
         </div>
     </header>
@@ -62,7 +120,7 @@
         <!-- Left Sidebar -->
         <aside class="left-sidebar">
             <div class="card profile-card" onclick="window.location.href='profile.html'" style="cursor: pointer; transition: 0.2s;">
-                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'">
                 <div class="profile-info">
                     <h3 class="user-name">Người dùng</h3>
                     <p class="status"><span class="status-dot"></span> Đang trực truyến</p>
@@ -148,6 +206,27 @@
                     Bạn có thể nhấn biểu tượng <i class="fa-solid fa-bookmark" style="color: var(--primary-color);"></i> trên bất kỳ bài viết nào để lưu lại. Bài viết đã lưu sẽ xuất hiện tại đây.
                 </p>
             </div>
+
+            <!-- Active Contacts integration directly into Right Sidebar -->
+            <div class="card contacts-card">
+                <div class="card-header-sidebar">
+                    <h3>Người liên hệ</h3>
+                </div>
+                <div class="contacts-search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="chat-sidebar-search-input" placeholder="Tìm kiếm liên hệ..." onkeyup="searchChatUsers(this.value)">
+                </div>
+                <div id="chat-contact-list" class="contacts-list">
+                    <!-- Dynamic chat contacts will load here -->
+                    <div class="skeleton-chat-contacts" style="padding: 10px; display: flex; flex-direction: column; gap: 12px;">
+                        <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                            <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                            <div class="skeleton-line" style="height: 10px; width: 60%; margin-bottom: 0;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <footer class="sidebar-footer">
                 <div class="footer-links">
                     <a href="#">Chính sách bảo mật</a>
@@ -160,25 +239,8 @@
         </aside>
     </main>
 
-    <!-- Chat Sidebar -->
-    <div id="chat-sidebar" class="chat-sidebar">
-        <div class="chat-sidebar-title">Người liên hệ</div>
-        <div id="chat-contact-list">
-            <div class="skeleton-chat-contacts" style="padding: 10px; display: flex; flex-direction: column; gap: 12px;">
-                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
-                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
-                    <div class="skeleton-line" style="height: 10px; width: 60%; margin-bottom: 0;"></div>
-                </div>
-                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
-                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
-                    <div class="skeleton-line" style="height: 10px; width: 50%; margin-bottom: 0;"></div>
-                </div>
-                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
-                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
-                    <div class="skeleton-line" style="height: 10px; width: 55%; margin-bottom: 0;"></div>
-                </div>
-            </div>
-        </div>
+    <!-- Chat Sidebar hidden in HTML but kept for JS compatibility -->
+    <div id="chat-sidebar" class="chat-sidebar" style="display: none !important;">
     </div>
 
     <!-- Chat Box -->
@@ -223,7 +285,7 @@
                 if (res.ok) {
                     const data = await res.json();
                     document.querySelectorAll('.user-name').forEach(el => el.textContent = data.fullName || 'Người dùng');
-                    let avatarUrl = data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=00d1b2&color=fff`;
+                    let avatarUrl = data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=5e6ad2&color=fff`;
                     document.querySelectorAll('#header-avatar, .avatar-large').forEach(img => img.src = avatarUrl);
                 }
             } catch (err) { console.error(err); }

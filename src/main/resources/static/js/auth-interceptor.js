@@ -14,12 +14,12 @@ window.fetch = async function(...args) {
 
 // --- Theme Loader & Manager ---
 (function() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 })();
 
 window.toggleTheme = function() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
@@ -29,7 +29,7 @@ window.toggleTheme = function() {
 };
 
 window.updateThemeToggleIcons = function() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
     const toggleBtns = document.querySelectorAll('#theme-toggle-btn i');
     toggleBtns.forEach(icon => {
         if (currentTheme === 'dark') {

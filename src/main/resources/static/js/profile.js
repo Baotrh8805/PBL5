@@ -38,7 +38,7 @@ function fetchUserProfile() {
 
             let avatarUrl = currentUser.avatar;
             if (!avatarUrl && currentUser.fullName) {
-                avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=00d1b2&color=fff`;
+                avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=5e6ad2&color=fff`;
             }
 
             document.querySelectorAll('#header-avatar, .avatar-large, .avatar-small, #modal-avatar').forEach(img => {
@@ -127,7 +127,7 @@ function fillProfileData(user, isCurrentUser) {
                 el.textContent = curr.fullName || 'Người dùng';
             });
             const modalAvt = document.getElementById('modal-avatar');
-            if (modalAvt) modalAvt.src = curr.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(curr.fullName)}&background=00d1b2&color=fff`;
+            if (modalAvt) modalAvt.src = curr.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(curr.fullName)}&background=5e6ad2&color=fff`;
         });
 
     if (isCurrentUser) {
@@ -170,7 +170,7 @@ function fillProfileData(user, isCurrentUser) {
                 }
             }
             btnMsg.style.display = 'inline-block';
-            let avt = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+            let avt = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=5e6ad2&color=fff`;
             btnMsg.onclick = () => {
                 if (typeof openChatBox === "function") {
                     openChatBox(user.id, user.fullName, avt);
@@ -245,10 +245,10 @@ async function fetchAndDisplayFriends(userId) {
 
             if (displayedFriends.length > 0) {
                 container.innerHTML = displayedFriends.map(f => {
-                    const avt = f.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff`;
+                    const avt = f.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=5e6ad2&color=fff`;
                     return `
                         <a href="/html/profile.html?userId=${f.id}" class="friend-item">
-                            <img src="${avt}" alt="${f.fullName}" class="friend-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff'">
+                            <img src="${avt}" alt="${f.fullName}" class="friend-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=5e6ad2&color=fff'">
                             <span class="friend-name">${f.fullName}</span>
                         </a>
                     `;
@@ -1056,12 +1056,12 @@ window.prependCreatedPostToFeed = function (post) {
 
     const isMine = true; // Bài mới tạo chắc chắn là của mình
 
-    let authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff`;
+    let authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=5e6ad2&color=fff`;
     let postHtml = `
     <article class="card post" id="post-${post.id}">
         <div class="post-header">
             <a href="/html/profile.html">
-                <img src="${authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff'">
+                <img src="${authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=5e6ad2&color=fff'">
             </a>
             <div class="post-meta">
                 <h4 class="post-author"><a href="/html/profile.html" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
@@ -1115,7 +1115,7 @@ window.prependCreatedPostToFeed = function (post) {
         </div>
         <div id="comments-${post.id}" class="comments-section" style="display: none; padding: 15px; border-top: 1px solid #ced0d4;">
             <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <img src="${document.getElementById('header-avatar') ? document.getElementById('header-avatar').src : 'https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'}" alt="Avatar" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <img src="${document.getElementById('header-avatar') ? document.getElementById('header-avatar').src : 'https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'}" alt="Avatar" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'">
                 <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." onkeypress="handleCommentKeyPress(event, ${post.id})">
                 <button class="btn btn-primary" onclick="submitComment(${post.id})"><i class="fa-solid fa-paper-plane"></i></button>
             </div>

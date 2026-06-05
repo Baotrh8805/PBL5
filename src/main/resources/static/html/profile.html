@@ -22,7 +22,7 @@
     <header class="top-header">
         <div class="header-left">
             <a href="/html/home.html" class="logo">
-                <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i>
+                <img src="/images/lc_logo.png" alt="LC Logo" class="logo-img">
                 <span class="logo-text">LC Network</span>
             </a>
             <div class="search-bar">
@@ -109,13 +109,13 @@
             </div>
 
             <!-- Theme Toggle Button -->
-            <button class="icon-btn tooltip" id="theme-toggle-btn" data-tooltip="Chuyển chế độ tối/sáng" onclick="toggleTheme()">
+            <button class="icon-btn tooltip" id="theme-toggle-btn" data-tooltip="Chuyển chế độ tối/sáng" onclick="toggleTheme()" style="display: none;">
                 <i class="fa-solid fa-moon"></i>
             </button>
 
             <!-- User Avatar -->
             <div class="user-avatar-btn" onclick="window.location.href='/html/profile.html'">
-                <img src="https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'" style="cursor:pointer;">
+                <img src="https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'" style="cursor:pointer;">
             </div>
         </div>
     </header>
@@ -131,7 +131,7 @@
             
             <div class="profile-info-section">
                 <div class="profile-avatar-wrapper">
-                    <img src="https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff" alt="Avatar" id="profile-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                    <img src="https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff" alt="Avatar" id="profile-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'">
                     <input type="file" id="avatar-upload-input" accept="image/*" style="display:none;" onchange="uploadImage('avatar', event)"><button class="edit-avatar-btn" onclick="document.getElementById('avatar-upload-input').click()"><i class="fa-solid fa-camera"></i></button>
                 </div>
                 
@@ -210,7 +210,7 @@
                     <!-- Create Post Box -->
                     <div class="card create-post-box">
                         <div class="create-post-top">
-                            <img src="https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff" id="create-post-avatar" alt="Avatar" class="avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                            <img src="https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff" id="create-post-avatar" alt="Avatar" class="avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'">
                             <input type="text" id="post-content-input" placeholder="Bạn đang nghĩ gì?" class="post-input" readonly onclick="openPostModal()">
                         </div>
                     </div>
@@ -303,29 +303,8 @@
         </div>
     </div>
 
-    <!-- Chat Sidebar -->
-    <div id="chat-sidebar" class="chat-sidebar">
-        <div class="chat-sidebar-title">Người liên hệ</div>
-        <div class="chat-sidebar-search" style="padding: 10px; border-bottom: 1px solid #ddd;">
-            <input type="text" id="chat-sidebar-search-input" placeholder="Tìm kiếm người dùng..." style="width:100%; padding: 8px; border-radius: 20px; border: 1px solid #ced0d4; outline:none;" onkeyup="searchChatUsers(this.value)">
-        </div>
-        <div id="chat-contact-list">
-            <!-- Fetch friends dynamically -->
-            <div class="skeleton-chat-contacts" style="padding: 10px; display: flex; flex-direction: column; gap: 12px;">
-                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
-                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
-                    <div class="skeleton-line" style="height: 10px; width: 60%; margin-bottom: 0;"></div>
-                </div>
-                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
-                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
-                    <div class="skeleton-line" style="height: 10px; width: 50%; margin-bottom: 0;"></div>
-                </div>
-                <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
-                    <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
-                    <div class="skeleton-line" style="height: 10px; width: 55%; margin-bottom: 0;"></div>
-                </div>
-            </div>
-        </div>
+    <!-- Chat Sidebar hidden in HTML but kept for JS compatibility -->
+    <div id="chat-sidebar" class="chat-sidebar" style="display: none !important;">
     </div>
 
     <!-- Chat Box -->
@@ -381,23 +360,23 @@
     <script src="/js/profile.js"></script>
     <script src="/js/chat.js"></script>
 <!-- Modal Edit Profile -->
-<div id="edit-profile-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
-    <div class="modal-content" style="background:#fff; width:450px; border-radius:10px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.2);">
-        <h2 style="margin-bottom: 20px; text-align:center;">Chỉnh sửa Trang Cá Nhân</h2>
+<div id="edit-profile-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:2000; align-items:center; justify-content:center;">
+    <div class="modal-content" style="background:var(--surface-1); color:var(--text-main); width:450px; border-radius:var(--rounded-lg); padding:24px; border:1px solid var(--border-color); box-shadow:0 24px 60px rgba(0,0,0,0.6);">
+        <h2 style="margin-bottom: 20px; text-align:center; font-size:18px; font-weight:600; letter-spacing:-0.4px;">Chỉnh sửa Trang Cá Nhân</h2>
         
         <div style="margin-bottom:15px;">
-            <label style="display:block; font-weight:bold; margin-bottom:5px;">Họ và Tên</label>
-            <input type="text" id="edit-fullname" class="post-input" style="width:100%; border:1px solid #ccc; padding:10px; border-radius:5px;">
+            <label style="display:block; font-weight:500; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Họ và Tên</label>
+            <input type="text" id="edit-fullname" class="post-input" style="width:100%; border:1px solid var(--border-color); padding:10px 12px; border-radius:var(--rounded-md); background:var(--surface-2); color:var(--text-main); outline:none;">
         </div>
         
         <div style="margin-bottom:15px;">
-            <label style="display:block; font-weight:bold; margin-bottom:5px;">Tiểu sử (Bio)</label>
-            <textarea id="edit-bio" class="post-input" style="width:100%; border:1px solid #ccc; padding:10px; border-radius:5px; height:80px;"></textarea>
+            <label style="display:block; font-weight:500; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Tiểu sử (Bio)</label>
+            <textarea id="edit-bio" class="post-input" style="width:100%; border:1px solid var(--border-color); padding:10px 12px; border-radius:var(--rounded-md); background:var(--surface-2); color:var(--text-main); outline:none; height:80px; resize:none;"></textarea>
         </div>
         
         <div style="margin-bottom:15px;">
-            <label style="display:block; font-weight:bold; margin-bottom:5px;">Tình trạng mối quan hệ</label>
-            <select id="edit-relationship" class="post-input" style="width:100%; border:1px solid #ccc; padding:10px; border-radius:5px;">
+            <label style="display:block; font-weight:500; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Tình trạng mối quan hệ</label>
+            <select id="edit-relationship" class="post-input" style="width:100%; border:1px solid var(--border-color); padding:10px 12px; border-radius:var(--rounded-md); background:var(--surface-2); color:var(--text-main); outline:none;">
                 <option value="Độc thân">Độc thân</option>
                 <option value="Đang hẹn hò">Đang hẹn hò</option>
                 <option value="Đã kết hôn">Đã kết hôn</option>
@@ -406,18 +385,18 @@
         </div>
         
         <div style="margin-bottom:15px;">
-            <label style="display:block; font-weight:bold; margin-bottom:5px;">Số điện thoại</label>
-            <input type="text" id="edit-phone" class="post-input" style="width:100%; border:1px solid #ccc; padding:10px; border-radius:5px;">
+            <label style="display:block; font-weight:500; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Số điện thoại</label>
+            <input type="text" id="edit-phone" class="post-input" style="width:100%; border:1px solid var(--border-color); padding:10px 12px; border-radius:var(--rounded-md); background:var(--surface-2); color:var(--text-main); outline:none;">
         </div>
         
         <div style="margin-bottom:15px;">
-            <label style="display:block; font-weight:bold; margin-bottom:5px;">Ngày sinh</label>
-            <input type="date" id="edit-dob" class="post-input" style="width:100%; border:1px solid #ccc; padding:10px; border-radius:5px;">
+            <label style="display:block; font-weight:500; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Ngày sinh</label>
+            <input type="date" id="edit-dob" class="post-input" style="width:100%; border:1px solid var(--border-color); padding:10px 12px; border-radius:var(--rounded-md); background:var(--surface-2); color:var(--text-main); outline:none; font-family:inherit;">
         </div>
         
         <div style="margin-bottom:20px;">
-            <label style="display:block; font-weight:bold; margin-bottom:5px;">Giới tính</label>
-            <select id="edit-gender" class="post-input" style="width:100%; border:1px solid #ccc; padding:10px; border-radius:5px;">
+            <label style="display:block; font-weight:500; margin-bottom:6px; font-size:13px; color:var(--text-muted);">Giới tính</label>
+            <select id="edit-gender" class="post-input" style="width:100%; border:1px solid var(--border-color); padding:10px 12px; border-radius:var(--rounded-md); background:var(--surface-2); color:var(--text-main); outline:none;">
                 <option value="Nam">Nam</option>
                 <option value="Nữ">Nữ</option>
                 <option value="Khác">Khác</option>
@@ -425,22 +404,22 @@
         </div>
         
         <div style="display:flex; justify-content:flex-end; gap:10px;">
-            <button onclick="closeEditProfileModal()" style="padding:10px 15px; border:none; background:#e4e6eb; border-radius:5px; cursor:pointer;">Hủy</button>
-            <button onclick="saveProfileChanges()" style="padding:10px 15px; border:none; background:#0866ff; color:white; border-radius:5px; cursor:pointer;">Lưu thay đổi</button>
+            <button onclick="closeEditProfileModal()" style="padding:10px 16px; border:1px solid var(--border-color); background:var(--button-bg); color:var(--text-main); border-radius:var(--rounded-md); cursor:pointer; font-weight:500; transition:0.2s;">Hủy</button>
+            <button onclick="saveProfileChanges()" style="padding:10px 16px; border:none; background:var(--primary-color); color:var(--on-primary); border-radius:var(--rounded-md); cursor:pointer; font-weight:500; transition:0.2s;">Lưu thay đổi</button>
         </div>
     </div>
 </div>
 
 <!-- Cropper Modal -->
-<div id="cropper-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:3000; align-items:center; justify-content:center;">
-    <div class="modal-content" style="background:#fff; width:90%; max-width:800px; border-radius:10px; padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height:90vh;">
-        <h2 id="cropper-title" style="margin-bottom: 20px; text-align:center; font-size: 20px; font-weight: 700;">Cắt ảnh</h2>
-        <div style="flex:1; overflow:hidden; display:flex; justify-content:center; align-items:center; background:#eee; border-radius:8px; min-height:300px;">
+<div id="cropper-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); z-index:3000; align-items:center; justify-content:center;">
+    <div class="modal-content" style="background:var(--surface-1); color:var(--text-main); width:90%; max-width:800px; border-radius:var(--rounded-lg); padding:24px; border:1px solid var(--border-color); box-shadow:0 24px 60px rgba(0,0,0,0.6); display: flex; flex-direction: column; max-height:90vh;">
+        <h2 id="cropper-title" style="margin-bottom: 20px; text-align:center; font-size: 18px; font-weight: 600; letter-spacing:-0.4px;">Cắt ảnh</h2>
+        <div style="flex:1; overflow:hidden; display:flex; justify-content:center; align-items:center; background:var(--canvas); border-radius:var(--rounded-md); min-height:300px; border:1px solid var(--border-color);">
             <img id="cropper-image" src="" style="max-width: 100%; display: block;">
         </div>
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-            <button onclick="closeCropperModal()" style="padding:10px 20px; font-weight:600; border:none; background:#e4e6eb; color:#050505; border-radius:6px; cursor:pointer;">Hủy</button>
-            <button id="cropper-btn-save" onclick="saveCroppedImage()" style="padding:10px 20px; font-weight:600; border:none; background:#0866ff; color:white; border-radius:6px; cursor:pointer;">Lưu ảnh</button>
+            <button onclick="closeCropperModal()" style="padding:10px 20px; font-weight:500; border:1px solid var(--border-color); background:var(--button-bg); color:var(--text-main); border-radius:var(--rounded-md); cursor:pointer; transition:0.2s;">Hủy</button>
+            <button id="cropper-btn-save" onclick="saveCroppedImage()" style="padding:10px 20px; font-weight:500; border:none; background:var(--primary-color); color:var(--on-primary); border-radius:var(--rounded-md); cursor:pointer; transition:0.2s;">Lưu ảnh</button>
         </div>
     </div>
 </div>

@@ -101,7 +101,7 @@ async function fetchUserProfile(token) {
             // Cập nhật avatar (nếu có custom url, hiện tại tạm xài chữ cái đầu)
             let avatarUrl = data.avatar;
             if (!avatarUrl && data.fullName) {
-                avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=00d1b2&color=fff`;
+                avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=5e6ad2&color=fff`;
             }
 
             document.querySelectorAll('#header-avatar, .avatar-large, .avatar-small, #modal-avatar').forEach(img => {
@@ -660,10 +660,10 @@ function renderSearchResults(users, posts, query) {
         if (users.length > 0) {
             html += '<div class="search-section-header">Mọi người</div>';
             html += users.slice(0, 5).map(user => {
-                const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+                const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=5e6ad2&color=fff`;
                 return `
                     <a href="/html/profile.html?userId=${user.id}" class="search-result-item">
-                        <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                        <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=5e6ad2&color=fff'">
                         <div class="search-item-info">
                             <span class="user-name-result">${user.fullName}</span>
                             <span class="search-item-sub">Người dùng</span>
@@ -1280,11 +1280,11 @@ function renderSidebarSuggestions(users) {
     }
 
     container.innerHTML = users.map(user => {
-        const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+        const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=5e6ad2&color=fff`;
         return `
             <div class="suggestion-item" id="suggestion-item-${user.id}">
                 <a href="/html/profile.html?userId=${user.id}">
-                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=5e6ad2&color=fff'">
                 </a>
                 <div class="suggestion-info">
                     <a href="/html/profile.html?userId=${user.id}" class="suggestion-name">${user.fullName}</a>

@@ -160,7 +160,7 @@ function renderPostDetail(post) {
 
     // Author
     document.getElementById('post-author-name').innerHTML = `<a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a>`;
-    const authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff`;
+    const authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=5e6ad2&color=fff`;
     const authorAvatarImg = document.getElementById('post-author-avatar');
     authorAvatarImg.src = authorAvatar;
     authorAvatarImg.style.cursor = 'pointer';
@@ -257,7 +257,7 @@ function renderComments(comments) {
 }
 
 function renderCommentItem(c, isReply = false) {
-    const avatar = c.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.authorName)}&background=00d1b2&color=fff`;
+    const avatar = c.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.authorName)}&background=5e6ad2&color=fff`;
     let mediaHtml = '';
     if (c.imageUrl) {
         mediaHtml = `<img src="${c.imageUrl}" loading="lazy" style="max-width: 100%; border-radius: 8px; margin-top: 8px; display: block;">`;
@@ -494,7 +494,7 @@ async function fetchMyProfile(token) {
         });
         if (res.ok) {
             const user = await res.json();
-            const avatar = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+            const avatar = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=5e6ad2&color=fff`;
             document.getElementById('my-avatar').src = avatar;
         }
     } catch (err) {

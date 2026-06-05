@@ -36,3 +36,6 @@ Thumbs.db
 .gemini/
 src/main/model/*.pt
 src/main/model/*.pth
+
+# Node modules
+node_modules/

@@ -44,11 +44,11 @@ window.showCustomAlert = function (title, message, type = "warning") {
     const icon = type === "warning" ? "fa-triangle-exclamation" : (type === "error" ? "fa-circle-xmark" : "fa-circle-check");
 
     const popupHtml = `
-        <div id="custom-alert-popup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 999999;">
-            <div style="background: #242526; border-radius: 8px; padding: 20px; min-width: 300px; max-width: 400px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); color: #e4e6eb; border-top: 4px solid ${color};">
+        <div id="custom-alert-popup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 999999;">
+            <div style="background: var(--surface-bg); border-radius: 8px; padding: 20px; min-width: 300px; max-width: 400px; text-align: center; box-shadow: var(--card-shadow); color: var(--text-primary); border: 1px solid var(--border-color); border-top: 4px solid ${color};">
                 <i class="fa-solid ${icon}" style="font-size: 40px; color: ${color}; margin-bottom: 15px;"></i>
                 <h3 style="margin: 0 0 10px 0; font-size: 18px;">${title}</h3>
-                <p style="margin: 0 0 20px 0; font-size: 14px; color: #b0b3b8;">${message}</p>
+                <div style="margin: 0 0 20px 0; font-size: 14px; color: var(--text-secondary); line-height: 1.5; text-align: left; max-height: 300px; overflow-y: auto; word-break: break-word;">${message}</div>
                 <button onclick="document.getElementById('custom-alert-popup').remove()" style="background: ${color}; color: ${type === "warning" ? "#000" : "#fff"}; border: none; padding: 8px 24px; border-radius: 4px; font-weight: 600; cursor: pointer;">Đóng</button>
             </div>
         </div>
@@ -56,19 +56,19 @@ window.showCustomAlert = function (title, message, type = "warning") {
     document.body.insertAdjacentHTML('beforeend', popupHtml);
 };
 
-window.showCustomConfirm = function (title, message, onConfirm) {
+window.showCustomConfirm = function (title, message, onConfirm, confirmColor = '#10b981') {
     const oldPopup = document.getElementById('custom-alert-popup');
     if (oldPopup) oldPopup.remove();
 
     const popupHtml = `
-        <div id="custom-alert-popup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 999999;">
-            <div style="background: #242526; border-radius: 8px; padding: 25px; min-width: 350px; max-width: 450px; text-align: center; box-shadow: 0 4px 25px rgba(0,0,0,0.4); color: #e4e6eb; border-top: 4px solid #3498db;">
-                <i class="fa-solid fa-circle-question" style="font-size: 45px; color: #3498db; margin-bottom: 20px;"></i>
+        <div id="custom-alert-popup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 999999;">
+            <div style="background: var(--surface-bg); border-radius: 8px; padding: 25px; min-width: 350px; max-width: 450px; text-align: center; box-shadow: var(--card-shadow); color: var(--text-primary); border: 1px solid var(--border-color); border-top: 4px solid ${confirmColor};">
+                <i class="fa-solid fa-circle-question" style="font-size: 45px; color: ${confirmColor}; margin-bottom: 20px;"></i>
                 <h3 style="margin: 0 0 10px 0; font-size: 20px;">${title}</h3>
-                <p style="margin: 0 0 25px 0; font-size: 15px; color: #b0b3b8; line-height: 1.5;">${message}</p>
+                <p style="margin: 0 0 25px 0; font-size: 15px; color: var(--text-secondary); line-height: 1.5;">${message}</p>
                 <div style="display: flex; gap: 15px; justify-content: center;">
-                    <button id="custom-confirm-yes" style="background: #3498db; color: #fff; border: none; padding: 10px 25px; border-radius: 6px; font-weight: 600; cursor: pointer; flex: 1;">Xác nhận</button>
-                    <button id="custom-confirm-no" style="background: #3e4042; color: #e4e6eb; border: none; padding: 10px 25px; border-radius: 6px; font-weight: 600; cursor: pointer; flex: 1;">Hủy bỏ</button>
+                    <button id="custom-confirm-no" style="background: var(--bg-main); color: var(--text-primary); border: 1px solid var(--border-color); padding: 10px 25px; border-radius: 6px; font-weight: 600; cursor: pointer; flex: 1;">Hủy bỏ</button>
+                    <button id="custom-confirm-yes" style="background: ${confirmColor}; color: #fff; border: none; padding: 10px 25px; border-radius: 6px; font-weight: 600; cursor: pointer; flex: 1;">Xác nhận</button>
                 </div>
             </div>
         </div>
@@ -727,8 +727,19 @@ function createToastContainer() {
 
 
 window.logout = function () {
-    localStorage.removeItem('token');
-    window.location.href = '/index.html';
+    if (typeof window.showCustomConfirm === 'function') {
+        window.showCustomConfirm(
+            'Xác nhận đăng xuất', 
+            'Bạn có chắc chắn muốn đăng xuất khỏi hệ thống kiểm duyệt không?', 
+            () => {
+                localStorage.removeItem('token');
+                window.location.href = '/index.html';
+            }
+        );
+    } else {
+        localStorage.removeItem('token');
+        window.location.href = '/index.html';
+    }
 };
 
 
@@ -1371,27 +1382,27 @@ function renderConvItem(item) {
     // Xử lý hiển thị tin nhắn cuối cùng (nếu có)
     const lastMsgText = item.lastMessage ? escapeHtml(item.lastMessage) : 'Mở để nhắn tin';
 
-    // Màu sắc tối ưu cho độ tương phản cao
-    const nameColor = hasUnread ? '#050505' : '#444444';
-    const msgColor = hasUnread ? '#1c1e21' : '#65676b';
-    const bgColor = hasUnread ? 'rgba(0, 209, 178, 0.08)' : 'transparent';
+    // Màu sắc tối ưu sử dụng CSS variables để hỗ trợ cả 2 theme
+    const nameColor = 'var(--text-primary)';
+    const msgColor = hasUnread ? 'var(--text-primary)' : 'var(--text-secondary)';
+    const bgColor = hasUnread ? 'var(--mod-primary-light)' : 'transparent';
     const fontWeightName = hasUnread ? '700' : '600';
     const fontWeightMsg = hasUnread ? '600' : '400';
 
     return `
         <div class="rail-item ${hasUnread ? 'unread' : ''}" onclick="selectPartner(${item.id})" 
-             style="cursor: pointer; padding: 15px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; background: ${bgColor}; border-bottom: 1px solid rgba(0,0,0,0.03);">
+             style="cursor: pointer; padding: 15px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; background: ${bgColor}; border-bottom: 1px solid var(--border-color);">
             <div style="position: relative; flex-shrink: 0;">
                 <img class="rail-avatar" src="${item.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.fullName || 'User')}" 
-                     style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(0,0,0,0.05);">
-                ${item.online ? '<div style="position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: #2ecc71; border: 2px solid #fff; border-radius: 50%;"></div>' : ''}
+                     style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color);">
+                ${item.online ? '<div style="position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: #2ecc71; border: 2px solid var(--surface-bg); border-radius: 50%;"></div>' : ''}
             </div>
             <div style="flex: 1; overflow: hidden;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                     <span style="font-size: 15px; font-weight: ${fontWeightName}; color: ${nameColor}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         ${escapeHtml(item.fullName || 'Người dùng')}
                     </span>
-                    <span style="font-size: 11px; color: #8a8d91; flex-shrink: 0; margin-left: 5px;">${item.lastMessageTime ? timeSince(item.lastMessageTime) : ''}</span>
+                    <span style="font-size: 11px; color: var(--text-secondary); flex-shrink: 0; margin-left: 5px;">${item.lastMessageTime ? timeSince(item.lastMessageTime) : ''}</span>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <div style="font-size: 13px; color: ${msgColor}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: ${fontWeightMsg}; flex: 1; line-height: 1.4;">
@@ -1407,46 +1418,7 @@ function renderConvItem(item) {
 let stompClient = null;
 let currentChatPartnerId = null;
 
-// Tự động khởi tạo khi trang tải xong
-document.addEventListener('DOMContentLoaded', () => {
-    injectCommonModals();
-    connectWebSocket();
-    loadNotifications();
-    loadMessages();
-});
 
-function injectCommonModals() {
-    if (document.getElementById('mod-chat-window')) return;
-
-    const chatHtml = `
-    <!-- Chat Window Container Injected Globally -->
-    <div id="mod-chat-window" class="chat-box" style="display: none; position: fixed; bottom: 20px; right: 350px; width: 330px; height: 450px; background: #242526; border-radius: 8px 8px 0 0; border: 1px solid #3e4042; flex-direction: column; z-index: 10000; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
-        <div class="chat-header" style="padding: 10px 15px; border-bottom: 1px solid #3e4042; display: flex; align-items: center; justify-content: space-between; background: #242526; border-radius: 8px 8px 0 0;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <img id="chat-partner-avatar" src="" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
-                <span id="chat-partner-name" style="font-weight: 600; color: #e4e6eb; font-size: 14px;">Tên người dùng</span>
-            </div>
-            <button onclick="closeModChat()" style="background: none; border: none; color: #b0b3b8; cursor: pointer; font-size: 18px;"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div id="chat-messages-body" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #18191a;"></div>
-        <div class="chat-input-row" style="padding: 10px; border-top: 1px solid #3e4042; display: flex; gap: 10px; align-items: center;">
-            <input type="text" id="chat-input-field" placeholder="Aa" style="flex: 1; background: #3a3b3c; border: none; border-radius: 20px; padding: 8px 15px; color: #e4e6eb; font-size: 14px; outline: none;">
-            <button id="send-chat-btn" style="background: none; border: none; color: #00d1b2; cursor: pointer; font-size: 18px;"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
-    </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', chatHtml);
-
-    // Re-bind events for the new injected elements
-    const sendBtn = document.getElementById('send-chat-btn');
-    const inputField = document.getElementById('chat-input-field');
-    if (sendBtn) sendBtn.onclick = sendModChat;
-    if (inputField) {
-        inputField.onkeypress = (e) => {
-            if (e.key === 'Enter') sendModChat();
-        };
-    }
-}
 
 function connectWebSocket() {
     // Kiểm tra xem thư viện đã sẵn sàng chưa
@@ -1615,7 +1587,7 @@ function appendModMessage(msg, isMine) {
         separator.style.textAlign = 'center';
         separator.style.margin = '10px 0';
         separator.style.fontSize = '12px';
-        separator.style.color = '#8a8d91';
+        separator.style.color = 'var(--text-secondary)';
         separator.innerHTML = `<span>${formatModDateSeparator(currentMsgDate)}</span>`;
         body.appendChild(separator);
     }
@@ -1630,13 +1602,7 @@ function appendModMessage(msg, isMine) {
 
     const content = document.createElement('div');
     content.textContent = msg.content;
-    content.style.background = isMine ? '#00d1b2' : '#3a3b3c';
-    content.style.color = '#fff';
-    content.style.padding = '8px 12px';
-    content.style.borderRadius = '18px';
-    content.style.fontSize = '14px';
-    content.style.maxWidth = '80%';
-    content.style.wordBreak = 'break-word';
+    content.className = isMine ? 'chat-bubble mine' : 'chat-bubble partner';
 
     div.appendChild(content);
 
@@ -1653,7 +1619,7 @@ function appendModMessage(msg, isMine) {
     const timeDiv = document.createElement('div');
     timeDiv.textContent = timeStr;
     timeDiv.style.fontSize = '11px';
-    timeDiv.style.color = '#8a8d91';
+    timeDiv.style.color = 'var(--text-secondary)';
     timeDiv.style.marginTop = '4px';
     timeDiv.style.marginRight = isMine ? '5px' : '0';
     timeDiv.style.marginLeft = isMine ? '0' : '5px';
@@ -2061,18 +2027,18 @@ function injectCommonModals() {
     // 1. Tiêm Khung Chat
     if (!document.getElementById('mod-chat-window')) {
         const chatHtml = `
-        <div id="mod-chat-window" class="chat-box" style="display: none; position: fixed; bottom: 20px; right: 350px; width: 330px; height: 450px; background: #242526; border-radius: 8px 8px 0 0; border: 1px solid #3e4042; flex-direction: column; z-index: 10000; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
-            <div class="chat-header" style="padding: 10px 15px; border-bottom: 1px solid #3e4042; display: flex; align-items: center; justify-content: space-between; background: #242526; border-radius: 8px 8px 0 0;">
+        <div id="mod-chat-window" class="chat-box" style="display: none; position: fixed; bottom: 20px; right: 350px; width: 330px; height: 450px; background: var(--surface-bg); border-radius: 8px 8px 0 0; border: 1px solid var(--border-color); flex-direction: column; z-index: 10000; box-shadow: var(--card-shadow); color: var(--text-primary);">
+            <div class="chat-header" style="padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: var(--surface-bg); border-radius: 8px 8px 0 0;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <img id="chat-partner-avatar" src="" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
-                    <span id="chat-partner-name" style="font-weight: 600; color: #e4e6eb; font-size: 14px;">Tên người dùng</span>
+                    <span id="chat-partner-name" style="font-weight: 600; color: var(--text-primary); font-size: 14px;">Tên người dùng</span>
                 </div>
-                <button onclick="closeModChat()" style="background: none; border: none; color: #b0b3b8; cursor: pointer; font-size: 18px;"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeModChat()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 18px;"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div id="chat-messages-body" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #18191a;"></div>
-            <div class="chat-input-row" style="padding: 10px; border-top: 1px solid #3e4042; display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="chat-input-field" placeholder="Aa" style="flex: 1; background: #3a3b3c; border: none; border-radius: 20px; padding: 8px 15px; color: #e4e6eb; font-size: 14px; outline: none;">
-                <button id="send-chat-btn" onclick="sendModChat()" style="background: none; border: none; color: #00d1b2; cursor: pointer; font-size: 18px;"><i class="fa-solid fa-paper-plane"></i></button>
+            <div id="chat-messages-body" style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: var(--bg-main);"></div>
+            <div class="chat-input-row" style="padding: 10px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center; background: var(--surface-bg);">
+                <input type="text" id="chat-input-field" placeholder="Aa" style="flex: 1; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 20px; padding: 8px 15px; color: var(--text-primary); font-size: 14px; outline: none;">
+                <button id="send-chat-btn" onclick="sendModChat()" style="background: none; border: none; color: var(--mod-primary); cursor: pointer; font-size: 18px;"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>`;
         document.body.insertAdjacentHTML('beforeend', chatHtml);
@@ -2085,34 +2051,34 @@ function injectCommonModals() {
     // 2. Tiêm Modal Cảnh cáo (Warn)
     if (!document.getElementById('warn-user-modal')) {
         const warnHtml = `
-        <div id="warn-user-modal" class="modal-overlay profile-modal-hidden" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 20000; align-items: center; justify-content: center;">
-            <div class="profile-modal-content" style="max-width: 450px; background: #242526; border-radius: 8px; overflow: hidden; box-shadow: 0 12px 28px rgba(0,0,0,0.5);">
-                <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid #3e4042; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0; font-size: 18px; color: #e4e6eb;">Thiết lập cảnh cáo</h3>
-                    <button onclick="closeWarnUserModal()" style="background: none; border: none; color: #b0b3b8; font-size: 24px; cursor: pointer;">&times;</button>
+        <div id="warn-user-modal" class="modal-overlay profile-modal-hidden" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 20000; align-items: center; justify-content: center;">
+            <div class="profile-modal-content" style="max-width: 450px; background: var(--surface-bg); border-radius: 8px; overflow: hidden; box-shadow: var(--card-shadow); border: 1px solid var(--border-color);">
+                <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--surface-bg);">
+                    <h3 style="margin: 0; font-size: 18px; color: var(--text-primary);">Thiết lập cảnh cáo</h3>
+                    <button onclick="closeWarnUserModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
                 </div>
                 <div class="profile-modal-body" style="padding: 20px;">
                     <input type="hidden" id="warn-user-id">
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Hình thức cảnh cáo:</label>
+                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Hình thức cảnh cáo:</label>
                         <div style="display: flex; gap: 20px;">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e6eb;"><input type="radio" name="warn-type" value="POST" checked> Cảnh cáo đăng bài</label>
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #e4e6eb;"><input type="radio" name="warn-type" value="COMMENT"> Cảnh cáo bình luận</label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary);"><input type="radio" name="warn-type" value="POST" checked> Cảnh cáo đăng bài</label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary);"><input type="radio" name="warn-type" value="COMMENT"> Cảnh cáo bình luận</label>
                         </div>
                     </div>
                     <div style="margin-bottom: 25px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Thời hạn cảnh cáo:</label>
-                        <select id="warn-duration" onchange="toggleCustomDuration()" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Thời hạn cảnh cáo:</label>
+                        <select id="warn-duration" onchange="toggleCustomDuration()" style="width: 100%; padding: 10px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
                             <option value="3">3 ngày</option><option value="7">7 ngày</option><option value="30">1 tháng (30 ngày)</option><option value="custom">Tùy chọn khác...</option>
                         </select>
                     </div>
                     <div id="custom-duration-container" style="display: none; margin-bottom: 25px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Nhập số ngày:</label>
-                        <input type="number" id="warn-custom-days" min="1" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Nhập số ngày:</label>
+                        <input type="number" id="warn-custom-days" min="1" style="width: 100%; padding: 10px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
                     </div>
                     <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                        <button onclick="closeWarnUserModal()" style="padding: 8px 20px; background: #3a3b3c; color: #e4e6eb; border: none; border-radius: 6px; cursor: pointer;">Hủy</button>
-                        <button onclick="submitUserWarning()" style="padding: 8px 20px; background: #f02849; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Gửi cảnh cáo</button>
+                        <button onclick="closeWarnUserModal()" style="padding: 8px 20px; background: var(--bg-main); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">Hủy</button>
+                        <button onclick="submitUserWarning()" style="padding: 8px 20px; background: var(--danger-color); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Gửi cảnh cáo</button>
                     </div>
                 </div>
             </div>
@@ -2123,37 +2089,37 @@ function injectCommonModals() {
     // 3. Tiêm Modal Khóa (Lock)
     if (!document.getElementById('lock-user-modal')) {
         const lockHtml = `
-        <div id="lock-user-modal" class="profile-modal-overlay profile-modal-hidden" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 20000; align-items: center; justify-content: center;">
-            <div class="profile-modal-content" style="background: #242526; width: 450px; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 28px rgba(0,0,0,0.5);">
-                <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid #3e4042; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0; font-size: 18px; color: #e4e6eb;">Khóa tài khoản người dùng</h3>
-                    <button onclick="closeLockUserModal()" style="background: none; border: none; color: #b0b3b8; font-size: 24px; cursor: pointer;">&times;</button>
+        <div id="lock-user-modal" class="profile-modal-overlay profile-modal-hidden" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 20000; align-items: center; justify-content: center;">
+            <div class="profile-modal-content" style="background: var(--surface-bg); width: 450px; border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); border: 1px solid var(--border-color);">
+                <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--surface-bg);">
+                    <h3 style="margin: 0; font-size: 18px; color: var(--text-primary);">Khóa tài khoản người dùng</h3>
+                    <button onclick="closeLockUserModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
                 </div>
                 <div class="profile-modal-body" style="padding: 20px;">
                     <input type="hidden" id="lock-user-id">
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Hình thức khóa:</label>
+                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Hình thức khóa:</label>
                         <div style="display: flex; gap: 20px;">
-                            <label style="color: #e4e6eb; cursor: pointer;"><input type="radio" name="lock-type" value="TEMP" checked onchange="toggleLockType()"> Khóa tạm thời</label>
-                            <label style="color: #e4e6eb; cursor: pointer;"><input type="radio" name="lock-type" value="PERM" onchange="toggleLockType()"> Khóa vĩnh viễn</label>
+                            <label style="color: var(--text-primary); cursor: pointer;"><input type="radio" name="lock-type" value="TEMP" checked onchange="toggleLockType()"> Khóa tạm thời</label>
+                            <label style="color: var(--text-primary); cursor: pointer;"><input type="radio" name="lock-type" value="PERM" onchange="toggleLockType()"> Khóa vĩnh viễn</label>
                         </div>
                     </div>
                     <div id="lock-duration-section" style="margin-bottom: 25px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Thời hạn khóa:</label>
-                        <select id="lock-duration" onchange="toggleCustomLockDuration()" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Thời hạn khóa:</label>
+                        <select id="lock-duration" onchange="toggleCustomLockDuration()" style="width: 100%; padding: 10px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
                             <option value="3">3 ngày</option><option value="7">7 ngày</option><option value="30">1 tháng</option><option value="custom">Tùy chọn...</option>
                         </select>
                         <div id="lock-custom-days-container" style="display: none; margin-top: 15px;">
-                            <input type="number" id="lock-custom-days" placeholder="Số ngày" style="width: 100%; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb;">
+                            <input type="number" id="lock-custom-days" placeholder="Số ngày" style="width: 100%; padding: 10px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
                         </div>
                     </div>
                     <div style="margin-bottom: 25px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: #e4e6eb;">Lý do khóa:</label>
-                        <textarea id="lock-reason" placeholder="Nhập lý do..." style="width: 100%; height: 80px; padding: 10px; background: #3a3b3c; border: 1px solid #4e4f50; border-radius: 6px; color: #e4e6eb; resize: none;"></textarea>
+                        <label style="display: block; font-weight: 600; margin-bottom: 10px; color: var(--text-primary);">Lý do khóa:</label>
+                        <textarea id="lock-reason" placeholder="Nhập lý do..." style="width: 100%; height: 80px; padding: 10px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); resize: none; outline: none;"></textarea>
                     </div>
                     <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                        <button onclick="closeLockUserModal()" style="padding: 8px 20px; background: #3a3b3c; color: #e4e6eb; border: none; border-radius: 6px; cursor: pointer;">Hủy</button>
-                        <button onclick="submitLockUser()" style="padding: 8px 20px; background: #f02849; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Xác nhận</button>
+                        <button onclick="closeLockUserModal()" style="padding: 8px 20px; background: var(--bg-main); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">Hủy</button>
+                        <button onclick="submitLockUser()" style="padding: 8px 20px; background: var(--danger-color); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Xác nhận</button>
                     </div>
                 </div>
             </div>

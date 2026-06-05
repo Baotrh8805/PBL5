@@ -36,6 +36,9 @@
             title="Chuyển chế độ tối/sáng" style="position: static; margin: 0; box-shadow: none;">
             <i class="fa-solid fa-moon"></i>
         </button>
+        <button type="button" class="control-btn logout-control-btn" id="topbar-logout-btn" title="Đăng xuất">
+            <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
     </div>
 
     <!-- PHẦN KHUNG CHÍNH (CONTAINER): Chứa thanh điều hướng bên trái và nội dung bên phải -->
@@ -72,7 +75,7 @@
                     <i class="fa-solid fa-flag"></i> Báo cáo vi phạm
                 </a>
                 <a href="#" class="nav-link" id="nav-statistics-view">
-                    <i class="fa-solid fa-chart-simple"></i> Lịch sử hoạt động
+                    <i class="fa-solid fa-chart-simple"></i> Thống kê hệ thống
                 </a>
             </nav>
 
@@ -128,14 +131,9 @@
                 <!-- Sidebar toggle and Logout buttons row -->
                 <div style="display: flex; gap: 10px; width: 100%;">
                     <button type="button" class="sidebar-btn" id="toggle-right-rail"
-                        style="flex: 1; height: 38px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--sidebar-border); color: var(--sidebar-text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s ease;"
+                        style="width: 100%; height: 38px; border-radius: 32px; background: var(--mod-primary-light); border: 1px solid var(--sidebar-border); color: var(--mod-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; gap: 8px; font-weight: 600; transition: all 0.2s ease;"
                         title="Ẩn/Hiện thanh bên">
-                        <i class="fa-solid fa-bars-staggered"></i>
-                    </button>
-                    <button type="button" class="sidebar-btn" id="topbar-logout-btn"
-                        style="flex: 2; height: 38px; border-radius: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--red); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; gap: 8px; transition: all 0.2s ease;"
-                        title="Đăng xuất">
-                        <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                        <i class="fa-solid fa-bars-staggered"></i> Ẩn/Hiện thanh bên
                     </button>
                 </div>
             </div>
@@ -174,34 +172,26 @@
                     </div>
                 </div>
 
-                <div class="split-layout dashboard-split">
-                    <div class="card flex-2">
+                <div class="dashboard-split" style="margin-top: 20px;">
+                    <div class="card" style="width: 100%;">
                         <h3 class="card-heading"><i class="fa-solid fa-bolt text-caution"></i> Vi phạm đang xử lý chung
                         </h3>
                         <div class="table-wrapper">
                             <table class="mod-table">
                                 <thead>
                                     <tr>
-                                        <th>Mã vi phạm</th>
-                                        <th>Mã bài viết</th>
-                                        <th>Mức độ</th>
-                                        <th>Tỉ lệ vi phạm</th>
-                                        <th>Tên người đăng</th>
-                                        <th>Thời gian duyệt</th>
-                                        <th>Phụ trách</th>
+                                        <th style="width: 12%;">Mã vi phạm</th>
+                                        <th style="width: 12%;">Mã bài viết</th>
+                                        <th style="width: 12%;">Mức độ</th>
+                                        <th style="width: 12%;">Tỉ lệ vi phạm</th>
+                                        <th style="width: 18%;">Tên người đăng</th>
+                                        <th style="width: 16%;">Thời gian duyệt</th>
+                                        <th style="width: 18%;">Phụ trách</th>
                                     </tr>
                                 </thead>
                                 <tbody id="dashboard-posts-list">
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-
-                    <div class="card flex-1">
-                        <h3 class="card-heading"><i class="fa-solid fa-chart-pie text-primary"></i> Hiệu suất tuần</h3>
-                        <div class="chart-container"
-                            style="position: relative; width: 100%; height: 220px; margin-top: 10px;">
-                            <canvas id="miniChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -447,8 +437,8 @@
             <!-- Section 6: Activity Logs & Stats -->
             <section id="statistics-view" class="mod-section">
                 <div class="section-title">
-                    <h2>Lịch sử hoạt động</h2>
-                    <p>Theo dõi số liệu xử lý của điều phối viên theo thời gian thực.</p>
+                    <h2>Thống kê & Hoạt động</h2>
+                    <p>Theo dõi các chỉ số đo lường hiệu suất và hoạt động kiểm duyệt theo thời gian thực.</p>
                 </div>
 
                 <div class="stats-grid compact-grid">
@@ -471,6 +461,23 @@
                         <div class="stat-info">
                             <h3>Thành viên đang bị khóa</h3>
                             <p class="stat-number" id="log-banned-users">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="split-layout" style="margin-top: 20px; margin-bottom: 24px; display: flex; gap: 16px;">
+                    <div class="card flex-1" style="min-height: 320px; display: flex; flex-direction: column;">
+                        <h3 class="card-heading"><i class="fa-solid fa-chart-pie text-primary"></i> Trạng thái hệ thống</h3>
+                        <div style="flex: 1; position: relative; width: 100%; height: 260px; margin-top: 15px;">
+                            <canvas id="statisticsPieChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card flex-2" style="min-height: 320px; display: flex; flex-direction: column;">
+                        <h3 class="card-heading"><i class="fa-solid fa-chart-column text-caution"></i> Thống kê hành động tuần</h3>
+                        <div style="flex: 1; position: relative; width: 100%; height: 260px; margin-top: 15px;">
+                            <canvas id="statisticsBarChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -717,29 +724,28 @@
 
     <!-- 4. WebSocket Chat Box Window -->
     <div id="mod-chat-window" class="chat-box"
-        style="display: none; position: fixed; bottom: 20px; right: 350px; width: 330px; height: 450px; background: #242526; border-radius: 8px 8px 0 0; border: 1px solid #3e4042; flex-direction: column; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.4);">
+        style="display: none; position: fixed; bottom: 20px; right: 350px; width: 330px; height: 450px; background: var(--surface-bg); border-radius: 8px 8px 0 0; border: 1px solid var(--border-color); flex-direction: column; z-index: 1000; box-shadow: var(--card-shadow); color: var(--text-primary);">
         <div class="chat-header"
-            style="padding: 10px 15px; border-bottom: 1px solid #3e4042; display: flex; align-items: center; justify-content: space-between; background: #242526; border-radius: 8px 8px 0 0;">
+            style="padding: 10px 15px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: var(--surface-bg); border-radius: 8px 8px 0 0;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <img id="chat-partner-avatar" src=""
                     style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
-                <span id="chat-partner-name" style="font-weight: 600; color: #e4e6eb; font-size: 14px;">Tên người
-                    dùng</span>
+                <span id="chat-partner-name" style="font-weight: 600; color: var(--text-primary); font-size: 14px;">Tên người dùng</span>
             </div>
             <button onclick="closeModChat()"
-                style="background: none; border: none; color: #b0b3b8; cursor: pointer; font-size: 18px;"><i
+                style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 18px;"><i
                     class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="chat-messages-body"
-            style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #18191a;">
+            style="flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: var(--bg-main);">
             <!-- Messages load here -->
         </div>
         <div class="chat-input-row"
-            style="padding: 10px; border-top: 1px solid #3e4042; display: flex; gap: 10px; align-items: center;">
+            style="padding: 10px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center; background: var(--surface-bg);">
             <input type="text" id="chat-input-field" placeholder="Aa"
-                style="flex: 1; background: #3a3b3c; border: none; border-radius: 20px; padding: 8px 15px; color: #e4e6eb; font-size: 14px; outline: none;">
+                style="flex: 1; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 20px; padding: 8px 15px; color: var(--text-primary); font-size: 14px; outline: none;">
             <button id="send-chat-btn"
-                style="background: none; border: none; color: #0046a0; cursor: pointer; font-size: 18px;"><i
+                style="background: none; border: none; color: var(--mod-primary); cursor: pointer; font-size: 18px;"><i
                     class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
@@ -1098,6 +1104,113 @@
     <script src="../js/moderator_reports.js"></script>
     <script src="../js/moderator_logs.js"></script>
 
+    <script>
+        function convertSingleSelectToCustom(select) {
+            if (select.classList.contains('custom-select-hidden') || select.style.display === 'none') {
+                return;
+            }
+            
+            select.classList.add('custom-select-hidden');
+            select.style.display = 'none';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-select-wrapper';
+            if (select.style.width) wrapper.style.width = select.style.width;
+            if (select.className) wrapper.classList.add(...select.className.split(' ').filter(c => c !== 'custom-select-hidden'));
+
+            const trigger = document.createElement('div');
+            trigger.className = 'custom-select-trigger';
+            
+            const updateTriggerText = () => {
+                const selectedOption = select.options[select.selectedIndex];
+                trigger.textContent = selectedOption ? selectedOption.textContent : 'Chọn...';
+            };
+            updateTriggerText();
+
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'custom-options';
+
+            const rebuildOptions = () => {
+                optionsContainer.innerHTML = '';
+                Array.from(select.options).forEach((opt) => {
+                    const optDiv = document.createElement('div');
+                    optDiv.className = 'custom-option';
+                    optDiv.textContent = opt.textContent;
+                    optDiv.setAttribute('data-value', opt.value);
+                    if (opt.selected) {
+                        optDiv.classList.add('selected');
+                    }
+
+                    optDiv.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        optionsContainer.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+                        optDiv.classList.add('selected');
+                        
+                        trigger.textContent = opt.textContent;
+                        select.value = opt.value;
+                        
+                        select.dispatchEvent(new Event('change', { bubbles: true }));
+                        wrapper.classList.remove('open');
+                    });
+
+                    optionsContainer.appendChild(optDiv);
+                });
+            };
+            rebuildOptions();
+
+            wrapper.appendChild(trigger);
+            wrapper.appendChild(optionsContainer);
+            
+            select.parentNode.insertBefore(wrapper, select.nextSibling);
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+                    if (w !== wrapper) w.classList.remove('open');
+                });
+                wrapper.classList.toggle('open');
+            });
+
+            const selectChangeObserver = new MutationObserver(() => {
+                updateTriggerText();
+                rebuildOptions();
+            });
+            selectChangeObserver.observe(select, { childList: true, characterData: true, subtree: true });
+
+            select.addEventListener('change', () => {
+                updateTriggerText();
+                optionsContainer.querySelectorAll('.custom-option').forEach(o => {
+                    o.classList.toggle('selected', o.getAttribute('data-value') === select.value);
+                });
+            });
+        }
+
+        // Tự động convert tất cả select trong tương lai và hiện tại bằng MutationObserver
+        const selectObserver = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.tagName === 'SELECT') {
+                            convertSingleSelectToCustom(node);
+                        } else {
+                            node.querySelectorAll('select').forEach(convertSingleSelectToCustom);
+                        }
+                    }
+                });
+            });
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Convert các select hiện có lúc load trang
+            document.querySelectorAll('select').forEach(convertSingleSelectToCustom);
+            selectObserver.observe(document.body, { childList: true, subtree: true });
+        });
+
+        // Đóng dropdown khi click ra ngoài
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
+        });
+    </script>
 </body>
 
 </html>

@@ -445,29 +445,29 @@ window.showUserFullInfo = function (userId) {
 
     const infoHtml = `
         <div style="text-align: left; padding: 10px;">
-            <div style="margin-bottom: 12px; border-bottom: 1px solid #3a3b3c; padding-bottom: 8px;">
-                <label style="color: #b0b3b8; font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Họ và tên</label>
-                <div style="color: #e4e6eb; font-weight: 600; font-size: 14.5px;">${user.fullName}</div>
+            <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Họ và tên</label>
+                <div style="color: var(--text-primary); font-weight: 600; font-size: 14.5px;">${user.fullName}</div>
             </div>
-            <div style="margin-bottom: 12px; border-bottom: 1px solid #3a3b3c; padding-bottom: 8px;">
-                <label style="color: #b0b3b8; font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Email</label>
-                <div style="color: #e4e6eb; font-size: 14px;">${user.email}</div>
+            <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Email</label>
+                <div style="color: var(--text-primary); font-size: 14px;">${user.email}</div>
             </div>
-            <div style="margin-bottom: 12px; border-bottom: 1px solid #3a3b3c; padding-bottom: 8px;">
-                <label style="color: #b0b3b8; font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Số điện thoại</label>
-                <div style="color: #e4e6eb; font-size: 14px;">${user.phoneNumber || '(Chưa cập nhật)'}</div>
+            <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Số điện thoại</label>
+                <div style="color: var(--text-primary); font-size: 14px;">${user.phoneNumber || '(Chưa cập nhật)'}</div>
             </div>
-            <div style="margin-bottom: 12px; border-bottom: 1px solid #3a3b3c; padding-bottom: 8px;">
-                <label style="color: #b0b3b8; font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Ngày sinh</label>
-                <div style="color: #e4e6eb; font-size: 14px;">${user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : '(Chưa cập nhật)'}</div>
+            <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Ngày sinh</label>
+                <div style="color: var(--text-primary); font-size: 14px;">${user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('vi-VN') : '(Chưa cập nhật)'}</div>
             </div>
-            <div style="margin-bottom: 12px; border-bottom: 1px solid #3a3b3c; padding-bottom: 8px;">
-                <label style="color: #b0b3b8; font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Giới tính</label>
-                <div style="color: #e4e6eb; font-size: 14px;">${user.gender === 'MALE' ? 'Nam' : user.gender === 'FEMALE' ? 'Nữ' : 'Khác'}</div>
+            <div style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Giới tính</label>
+                <div style="color: var(--text-primary); font-size: 14px;">${user.gender === 'MALE' ? 'Nam' : user.gender === 'FEMALE' ? 'Nữ' : 'Khác'}</div>
             </div>
             <div style="margin-bottom: 0;">
-                <label style="color: #b0b3b8; font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Ngày tham gia</label>
-                <div style="color: #e4e6eb; font-size: 14px;">${new Date(user.createdAt).toLocaleDateString('vi-VN')}</div>
+                <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 2px; font-weight: 500;">Ngày tham gia</label>
+                <div style="color: var(--text-primary); font-size: 14px;">${new Date(user.createdAt).toLocaleDateString('vi-VN')}</div>
             </div>
         </div>
     `;

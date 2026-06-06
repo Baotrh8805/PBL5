@@ -191,7 +191,7 @@ public class ContentModerationService {
 
         } catch (Exception e) {
             // Nếu có lỗi, cho phép đăng bài (fail-open approach)
-            logger.error("[MODERATION] Lỗi kiểm tra nội dung: {}", e.getMessage(), e);
+            logger.error("[MODERATION] Content check error: {}", e.getMessage(), e);
             // Vẫn trả về cấu trúc prefix rỗng để không lỗi UI
             return new ModerationResult(PostStatus.ACTIVE, 0.0, 0.0, 0.0, 0.0, false, "", mediaType,
                     null, null, "(Video:) (Content:)", null, null, 0, 30.0, "0:0.000000;0:0.000000", 0.0, 0.0);
@@ -206,11 +206,11 @@ public class ContentModerationService {
     @Async("moderationExecutor")
     public void moderatePostAsync(long postId, String content, String imageUrl, String videoUrl) {
         try {
-            logger.info("[MODERATION] Bắt đầu kiểm duyệt nền cho postId={}", postId);
+            logger.info("[MODERATION] Beginning background moderation for postId={}", postId);
             ModerationResult moderationResult = moderateContent(content, imageUrl, videoUrl);
             Optional<Post> postOptional = postRepository.findById(postId);
             if (postOptional.isEmpty()) {
-                logger.warn("[MODERATION] Không tìm thấy bài viết để cập nhật kết quả kiểm duyệt, postId={}", postId);
+                logger.warn("[MODERATION] Post not found to update moderation result, postId={}", postId);
                 return;
             }
 
@@ -218,7 +218,7 @@ public class ContentModerationService {
 
             if (isAutoRejected(moderationResult.getStatus())) {
                 logger.warn(
-                        "[MODERATION] postId={} bị AUTO_REJECTED, bestScore={} => cập nhật trạng thái và cộng điểm vi phạm",
+                        "[MODERATION] postId={} is AUTO_REJECTED, bestScore={} => updating status and penalizing violation points",
                         postId,
                         String.format("%.4f", moderationResult.getBestScore()));
 
@@ -251,9 +251,9 @@ public class ContentModerationService {
                         notification.put("link", notifEntity.getLink());
 
                         messagingTemplate.convertAndSend("/topic/notifications/" + author.getId(), notification);
-                        logger.info("[MODERATION] Gửi thông báo AUTO_REJECTED cho tác giả bài viết ID={}", postId);
+                        logger.info("[MODERATION] Sent AUTO_REJECTED notification to post author ID={}", postId);
                     } catch (Exception notifEx) {
-                        logger.error("[MODERATION] Lỗi gửi thông báo: {}", notifEx.getMessage());
+                        logger.error("[MODERATION] Notification delivery error: {}", notifEx.getMessage());
                     }
                 }
             }
@@ -280,7 +280,7 @@ public class ContentModerationService {
 
             postRepository.save(post);
             logger.info(
-                    "[MODERATION] Hoàn tất kiểm duyệt nền postId={} status={} bestScore={} nsfw={} violence={} hateSpeech={} speechLabels={} nsfwBox={} violenBox={} hateSpeechWord={} frameSecond={}",
+                    "[MODERATION] Finished background moderation postId={} status={} bestScore={} nsfw={} violence={} hateSpeech={} speechLabels={} nsfwBox={} violenBox={} hateSpeechWord={} frameSecond={}",
                     postId,
                     post.getStatus(),
                     String.format("%.4f", post.getBestScore()),
@@ -293,7 +293,7 @@ public class ContentModerationService {
                     post.getHateSpeechWord(),
                     post.getHighestScoreFrameSecond());
         } catch (Exception e) {
-            logger.error("[MODERATION] Lỗi kiểm duyệt nền bài viết {}: {}", postId, e.getMessage(), e);
+            logger.error("[MODERATION] Background moderation error for postId {}: {}", postId, e.getMessage(), e);
         }
     }
 

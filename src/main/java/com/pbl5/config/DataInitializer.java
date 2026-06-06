@@ -42,9 +42,9 @@ public class DataInitializer {
 
                 userRepository.save(modUser);
                 System.out.println("------------------------------------------------------");
-                System.out.println("Đã tự động tạo tài khoản Moderator mặc định!");
+                System.out.println("Default Moderator account automatically created!");
                 System.out.println("Email: " + modEmail);
-                System.out.println("Mật khẩu: 123456");
+                System.out.println("Password: 123456");
                 System.out.println("------------------------------------------------------");
             }
         };
@@ -60,7 +60,7 @@ public class DataInitializer {
                 jdbcTemplate.execute("ALTER TABLE posts DROP COLUMN IF EXISTS violation_detected");
                 jdbcTemplate.execute("ALTER TABLE reports DROP CONSTRAINT IF EXISTS reports_category_check");
             } catch (Exception e) {
-                System.out.println("Không thể dọn các cột moderation cũ hoặc constraint: " + e.getMessage());
+                System.out.println("Failed to clean up deprecated moderation columns or constraints: " + e.getMessage());
             }
         };
     }

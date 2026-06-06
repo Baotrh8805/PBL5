@@ -508,6 +508,11 @@ html[data-theme="dark"] .mod-sidebar .nav-link:hover {
     box-shadow: var(--card-shadow);
 }
 
+.mod-layout .card:hover {
+    background: var(--surface-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
 .mod-section {
     display: none;
 }

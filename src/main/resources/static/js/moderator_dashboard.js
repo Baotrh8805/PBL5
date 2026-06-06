@@ -47,6 +47,7 @@ function initStatisticsCharts(solved = 0, pending = 0, banned = 0) {
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: '70%',
+                animation: false,
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -85,9 +86,7 @@ function initStatisticsCharts(solved = 0, pending = 0, banned = 0) {
             const prefix = `${yyyy}-${mm}-${ddStr}`;
             
             const realCount = logs.filter(item => String(item.time || '').startsWith(prefix)).length;
-            // Cộng thêm mock data cơ sở để biểu đồ trông sinh động
-            const baseMock = [8, 14, 6, 12, 18, 10, 4][6 - i];
-            counts.push(baseMock + realCount);
+            counts.push(realCount);
         }
 
         modBarChart = new Chart(barCtx, {
@@ -105,6 +104,7 @@ function initStatisticsCharts(solved = 0, pending = 0, banned = 0) {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: false,
                 scales: {
                     x: {
                         grid: { display: false },

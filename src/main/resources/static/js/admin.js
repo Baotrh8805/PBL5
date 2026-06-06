@@ -256,6 +256,7 @@ async function loadStats() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: false,
                     plugins: {
                         legend: {
                             position: 'bottom',
@@ -284,6 +285,7 @@ async function loadStats() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: false,
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -318,6 +320,7 @@ async function loadStats() {
                     responsive: true,
                     maintainAspectRatio: false,
                     cutout: '70%',
+                    animation: false,
                     plugins: {
                         legend: {
                             position: 'bottom',

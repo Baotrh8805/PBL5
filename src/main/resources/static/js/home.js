@@ -410,7 +410,7 @@ function renderPosts(posts, token) {
         const isMine = post.mine ?? post.isMine ?? false;
         const status = String(post.status || '').toUpperCase();
         const isRejected = status === 'REJECTED' || status === 'AUTO_REJECTED';
-        const isPending = status === 'PENDING_REVIEW';
+        const isPending = false; // Render pending posts like normal active posts
 
         let warningBanner = '';
         let cardStyle = '';

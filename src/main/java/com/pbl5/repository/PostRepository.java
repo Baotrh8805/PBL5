@@ -24,7 +24,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
        List<Post> findByUserIdAndStatusOrderByCreatedAtDesc(Long userId, com.pbl5.enums.PostStatus status);
 
-       @Query("SELECT p FROM Post p WHERE p.status = 'ACTIVE' " +
+       @Query("SELECT p FROM Post p WHERE (p.status = 'ACTIVE' OR p.status = 'PENDING_REVIEW') " +
                      "AND (p.visibility = 'PUBLIC' " +
                      "OR p.user.id = :currentUserId " +
                      "OR (p.visibility = 'FRIENDS' AND EXISTS (" +
@@ -35,7 +35,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                      "ORDER BY p.createdAt DESC")
        List<Post> findHomeFeed(@Param("currentUserId") Long currentUserId);
 
-       @Query("SELECT p FROM Post p WHERE p.status = 'ACTIVE' AND " +
+       @Query("SELECT p FROM Post p WHERE (p.status = 'ACTIVE' OR p.status = 'PENDING_REVIEW') AND " +
                      "(LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
                      " LOWER(p.user.fullName) LIKE LOWER(CONCAT('%', :query, '%'))) " +
                      "ORDER BY p.createdAt DESC")
@@ -44,4 +44,3 @@ public interface PostRepository extends JpaRepository<Post, Long> {
        @Query("SELECT p FROM Post p WHERE (p.status = 'REJECTED' OR p.status = 'AUTO_REJECTED') AND p.reviewedAt < :boundary")
        List<Post> findPostsForCleanup(@Param("boundary") java.time.LocalDateTime boundary);
 }
-

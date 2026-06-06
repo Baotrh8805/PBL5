@@ -314,7 +314,7 @@ function renderProfilePosts(posts) {
         const isMine = post.mine ?? post.isMine ?? false;
 
         const isRejected = post.status === 'AUTO_REJECTED' || post.status === 'REJECTED';
-        const isPending = post.status === 'PENDING_REVIEW';
+        const isPending = false; // Render pending posts like normal active posts
         const isDeleted = post.status === 'DELETED';
 
         const rejectedHtml = isRejected ? `

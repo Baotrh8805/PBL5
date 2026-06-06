@@ -28,7 +28,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
        List<Post> findByUserIdAndStatusOrderByCreatedAtDesc(Long userId, com.pbl5.enums.PostStatus status);
 
-       @Query("SELECT p FROM Post p WHERE p.status = 'ACTIVE' " +
+       @Query("SELECT p FROM Post p WHERE (p.status = 'ACTIVE' OR p.status = 'PENDING_REVIEW') " +
                      "AND (p.visibility = 'PUBLIC' " +
                      "OR p.user.id = :currentUserId " +
                      "OR (p.visibility = 'FRIENDS' AND EXISTS (" +
@@ -48,7 +48,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
               "  :isAdminOrMod = true " +
               "  OR p.user.id = :currentUserId " +
               "  OR (" +
-              "    p.status = 'ACTIVE' AND (" +
+              "    (p.status = 'ACTIVE' OR p.status = 'PENDING_REVIEW') AND (" +
               "      p.visibility = 'PUBLIC' " +
               "      OR (p.visibility = 'FRIENDS' AND EXISTS (" +
               "        SELECT f FROM Friendship f WHERE f.status = 'ACCEPTED' " +
@@ -64,7 +64,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                @Param("isAdminOrMod") boolean isAdminOrMod,
                Pageable pageable);
 
-       @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.processingModerator WHERE p.status = 'ACTIVE' AND " +
+       @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.user LEFT JOIN FETCH p.processingModerator WHERE (p.status = 'ACTIVE' OR p.status = 'PENDING_REVIEW') AND " +
                      "(LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
                      " LOWER(p.user.fullName) LIKE LOWER(CONCAT('%', :query, '%'))) " +
                      "ORDER BY p.createdAt DESC")
@@ -73,4 +73,3 @@ public interface PostRepository extends JpaRepository<Post, Long> {
        @Query("SELECT p FROM Post p WHERE (p.status = 'REJECTED' OR p.status = 'AUTO_REJECTED') AND p.reviewedAt < :boundary")
        List<Post> findPostsForCleanup(@Param("boundary") java.time.LocalDateTime boundary);
 }
-

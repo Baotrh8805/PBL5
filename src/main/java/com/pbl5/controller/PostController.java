@@ -127,10 +127,8 @@ public class PostController {
                 || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR)
             return true;
 
-        // Other users cannot see pending review posts
-        if (p.getStatus() == com.pbl5.enums.PostStatus.PENDING_REVIEW) {
-            return false;
-        }
+        // Other users can see pending review posts while they wait for review
+        // (the restriction for PENDING_REVIEW has been removed so they follow normal visibility rules)
 
         if (p.getVisibility() == PostVisibility.PUBLIC || p.getVisibility() == null)
             return true;

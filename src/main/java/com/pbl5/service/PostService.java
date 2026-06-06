@@ -35,6 +35,21 @@ public class PostService {
      * @return PostResponse nếu thành công hoặc null nếu bị từ chối tự động
      */
     public PostResponse createPost(User user, CreatePostRequest request) {
+        if (user.getPostWarningExpiresAt() != null
+                && user.getPostWarningExpiresAt().isAfter(java.time.LocalDateTime.now())) {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter
+                    .ofPattern("HH:mm 'ngày' dd/MM/yyyy");
+            String expiryStr = user.getPostWarningExpiresAt().format(formatter);
+            throw new IllegalStateException("Bạn đang bị cấm đăng bài do vi phạm. Vui lòng quay lại sau " + expiryStr);
+        }
+
+        boolean hasContent = request.getContent() != null && !request.getContent().trim().isEmpty();
+        boolean hasMedia = (request.getImageUrl() != null && !request.getImageUrl().trim().isEmpty())
+                || (request.getVideoUrl() != null && !request.getVideoUrl().trim().isEmpty());
+        if (!hasContent && !hasMedia) {
+            throw new IllegalArgumentException("Nội dung bài đăng không được trống.");
+        }
+
         // Tạo bài đăng mới
         Post post = new Post();
         post.setContent(request.getContent());
@@ -59,7 +74,7 @@ public class PostService {
         post.setHateSpeechScore(0.0);
         post.setNsfwBox(null);
         post.setViolenBox(null);
-        post.setHateSpeechWord(null);
+        post.setHateSpeechWord("(Video:) (Content:)");
         post.setViolationRate(0.0);
 
         // Lưu bài đăng
@@ -92,7 +107,7 @@ public class PostService {
         String authorAvatar = post.getUser().getAvatar() != null ? post.getUser().getAvatar()
                 : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
 
-        return new PostResponse(
+        PostResponse response = new PostResponse(
                 post.getId(),
                 post.getContent(),
                 post.getImageUrl(),
@@ -105,6 +120,16 @@ public class PostService {
                 commentCount,
                 false,
                 true,
-                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC");
+                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
+                post.getStatus() != null ? post.getStatus().name() : "ACTIVE");
+        response.setNsfwScore(post.getNsfwScore());
+        response.setViolenceScore(post.getViolenceScore());
+        response.setHateSpeechScore(post.getHateSpeechScore());
+        response.setOcrContent(post.getDetectedText());
+        response.setSpeechLabels(post.getSpeechLabels());
+        response.setHateSpeechContentScore(post.getHateSpeechContentScore());
+        response.setHateSpeechVideoScore(post.getHateSpeechVideoScore());
+        response.setHateSpeechWord(post.getHateSpeechWord());
+        return response;
     }
 }

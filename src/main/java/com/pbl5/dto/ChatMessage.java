@@ -8,10 +8,15 @@ public class ChatMessage {
     private Long receiverId;
     private String content;
     private LocalDateTime timestamp;
+    private boolean isRead;
     private String type; // CHAT, JOIN, LEAVE
+    private String senderName;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getSenderName() { return senderName; }
+    public void setSenderName(String senderName) { this.senderName = senderName; }
 
     public Long getSenderId() { return senderId; }
     public void setSenderId(Long senderId) { this.senderId = senderId; }
@@ -27,4 +32,7 @@ public class ChatMessage {
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
+
+    public boolean isRead() { return isRead; }
+    public void setRead(boolean read) { isRead = read; }
 }

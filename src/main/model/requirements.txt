@@ -6,3 +6,5 @@ numpy==1.26.4
 requests==2.32.3
 easyocr==1.7.1
 vietocr==0.3.17
+librosa==0.10.0
+soundfile==0.12.1

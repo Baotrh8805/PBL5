@@ -1,0 +1,145 @@
+﻿[INFO] Error stacktraces are turned on.
+[INFO] Processing build on daemon 9889189e
+[INFO] Scanning for projects...
+[INFO] BuildTimeEventSpy is registered.
+[INFO] 
+[INFO] Using the SmartBuilder implementation with a thread count of 15
+[INFO] 
+[INFO] ----------------------------< com.pbl5:app >----------------------------
+[INFO] Building app 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.2.5:run (default-cli) > test-compile @ app >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ app ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 39 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ app ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ app ---
+[INFO] skip non existing resourceDirectory D:\University\PBL5\PBL5\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ app ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] <<< spring-boot:3.2.5:run (default-cli) < test-compile @ app <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.2.5:run (default-cli) @ app ---
+[INFO] Attaching agents: []
+[INFO] [stdout] Picked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
+[INFO] [stdout] Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+[INFO] [stdout] 
+[INFO] [stdout]   .   ____          _            __ _ _
+[INFO] [stdout]  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+[INFO] [stdout] ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+[INFO] [stdout]  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+[INFO] [stdout]   '  |____| .__|_| |_|_| |_\__, | / / / /
+[INFO] [stdout]  =========|_|==============|___/=/_/_/_/
+[INFO] [stdout]  :: Spring Boot ::                (v3.2.5)
+[INFO] [stdout] 
+[INFO] [stdout] 2026-05-15T23:25:55.189+07:00  INFO 18684 --- [           main] com.pbl5.Application                     : Starting Application using Java 26 with PID 18684 (D:\University\PBL5\PBL5\target\classes started by DELL in D:\University\PBL5\PBL5)
+[INFO] [stdout] 2026-05-15T23:25:55.193+07:00  INFO 18684 --- [           main] com.pbl5.Application                     : No active profile set, falling back to 1 default profile: "default"
+[INFO] [stdout] 2026-05-15T23:25:56.177+07:00  INFO 18684 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+[INFO] [stdout] 2026-05-15T23:25:56.317+07:00  INFO 18684 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 131 ms. Found 12 JPA repository interfaces.
+[INFO] [stdout] WARNING: A restricted method in java.lang.System has been called
+[INFO] [stdout] WARNING: java.lang.System::load has been called by org.apache.tomcat.jni.Library in an unnamed module (file:/C:/Users/DELL/.m2/repository/org/apache/tomcat/embed/tomcat-embed-core/10.1.20/tomcat-embed-core-10.1.20.jar)
+[INFO] [stdout] WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+[INFO] [stdout] WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+[INFO] [stdout] 
+[INFO] [stdout] 2026-05-15T23:25:57.148+07:00  INFO 18684 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+[INFO] [stdout] 2026-05-15T23:25:57.163+07:00  INFO 18684 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+[INFO] [stdout] 2026-05-15T23:25:57.163+07:00  INFO 18684 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+[INFO] [stdout] 2026-05-15T23:25:57.247+07:00  INFO 18684 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+[INFO] [stdout] 2026-05-15T23:25:57.248+07:00  INFO 18684 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1988 ms
+[INFO] [stdout] Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+[INFO] [stdout] 2026-05-15T23:25:57.479+07:00  INFO 18684 --- [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+[INFO] [stdout] 2026-05-15T23:25:57.549+07:00  INFO 18684 --- [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.4.Final
+[INFO] [stdout] 2026-05-15T23:25:57.589+07:00  INFO 18684 --- [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+[INFO] [stdout] 2026-05-15T23:25:57.905+07:00  INFO 18684 --- [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+[INFO] [stdout] 2026-05-15T23:25:57.935+07:00  INFO 18684 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+[INFO] [stdout] 2026-05-15T23:25:59.085+07:00  INFO 18684 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6d420cdd
+[INFO] [stdout] 2026-05-15T23:25:59.087+07:00  INFO 18684 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+[INFO] [stdout] 2026-05-15T23:25:59.192+07:00  WARN 18684 --- [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+[INFO] [stdout] 2026-05-15T23:26:00.790+07:00  INFO 18684 --- [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+[INFO] [stdout] 2026-05-15T23:26:05.193+07:00  INFO 18684 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+[INFO] [stdout] 2026-05-15T23:26:05.763+07:00  INFO 18684 --- [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+[INFO] [stdout] 2026-05-15T23:26:08.067+07:00  WARN 18684 --- [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+[INFO] [stdout] 2026-05-15T23:26:08.260+07:00  INFO 18684 --- [           main] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page: class path resource [static/index.html]
+[INFO] [stdout] 2026-05-15T23:26:08.524+07:00  INFO 18684 --- [           main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@1ab35c93, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@6695986b, org.springframework.security.web.context.SecurityContextHolderFilter@5b0466b9, org.springframework.security.web.header.HeaderWriterFilter@3d40ccb, org.springframework.web.filter.CorsFilter@53c99f32, org.springframework.security.web.authentication.logout.LogoutFilter@14b05758, org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter@45382eba, org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter@60f39523, com.pbl5.security.JwtAuthenticationFilter@496004e3, org.springframework.security.web.authentication.ui.DefaultLoginPageGeneratingFilter@b83e7bc, org.springframework.security.web.authentication.ui.DefaultLogoutPageGeneratingFilter@2c998f66, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@4397328b, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@69445921, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@2cce19a2, org.springframework.security.web.access.ExceptionTranslationFilter@8fb3842, org.springframework.security.web.access.intercept.AuthorizationFilter@c356848]
+[INFO] [stdout] 2026-05-15T23:26:08.878+07:00  INFO 18684 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+[INFO] [stdout] 2026-05-15T23:26:08.881+07:00  INFO 18684 --- [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+[INFO] [stdout] 2026-05-15T23:26:08.882+07:00  INFO 18684 --- [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@6b726b51]]
+[INFO] [stdout] 2026-05-15T23:26:08.882+07:00  INFO 18684 --- [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+[INFO] [stdout] 2026-05-15T23:26:08.891+07:00  INFO 18684 --- [           main] com.pbl5.Application                     : Started Application in 14.135 seconds (process running for 14.625)
+[INFO] [stdout] ?ang ki?m tra k?t n?i t?i PostgreSQL...
+[INFO] [stdout] ? ?∩┐╜ k?t n?i PostgreSQL th∩┐╜nh c∩┐╜ng!
+[INFO] [stdout] ? Database: PostgreSQL 17.6
+[INFO] [stdout] Hibernate: select u1_0.id,u1_0.avatar,u1_0.bio,u1_0.cover,u1_0.date_of_birth,u1_0.email,u1_0.full_name,u1_0.gender,u1_0.password,u1_0.phone_number,u1_0.provider,u1_0.relationship_status,u1_0.reset_password_token,u1_0.role,u1_0.status,u1_0.username,u1_0.verification_code from users u1_0
+[INFO] [stdout] ? T∩┐╜i kho?n Admin ?∩┐╜ t?n t?i, b? qua kh?i t?o.
+[INFO] [stdout] 2026-05-15T23:26:09.204+07:00  INFO 18684 --- [           main] c.pbl5.config.DatabaseMigrationRunner    : Checking and altering columns to TEXT to prevent DataIntegrityViolationException...
+[INFO] [stdout] 2026-05-15T23:26:09.608+07:00  INFO 18684 --- [           main] c.pbl5.config.DatabaseMigrationRunner    : Successfully dropped check constraint and altered columns to TEXT.
+[INFO] [stdout] Hibernate: select u1_0.id,u1_0.avatar,u1_0.bio,u1_0.cover,u1_0.date_of_birth,u1_0.email,u1_0.full_name,u1_0.gender,u1_0.password,u1_0.phone_number,u1_0.provider,u1_0.relationship_status,u1_0.reset_password_token,u1_0.role,u1_0.status,u1_0.username,u1_0.verification_code from users u1_0 where u1_0.email=?
+[INFO] [stdout] ? Python moderation API ?∩┐╜ s?n s∩┐╜ng t?i http://127.0.0.1:5000/health
+[INFO] [stdout] 
+[INFO] [stdout] 
+[INFO] [stdout] ==========================================================
+[INFO] [stdout] ? M∩┐╜Y CH? JAVA SPRING BOOT ?∩┐╜ CH?Y TH∩┐╜NH C∩┐╜NG R?C R?! ?
+[INFO] [stdout] ? ??a ch? n?i b? Mac:  http://localhost:8080 / g∩┐╜ ipconfig getifaddr en0
+[INFO] [stdout] ? T∩┐╜n mi?n tr∩┐╜n m?ng lan: https://pbl5-omru.onrender.com
+[INFO] [stdout] ==========================================================
+[INFO] [stdout] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:01 min (Wall Clock)
+[INFO] Finished at: 2026-05-15T23:26:55+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.2.5:run (default-cli) on project app: Process terminated with exit code: 1 -> [Help 1]
+org.apache.maven.lifecycle.LifecycleExecutionException: Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.2.5:run (default-cli) on project app: Process terminated with exit code: 1
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:333)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
+    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
+    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
+    at io.takari.maven.builder.smart.SmartBuilderImpl.buildProject (SmartBuilderImpl.java:206)
+    at io.takari.maven.builder.smart.SmartBuilderImpl$ProjectBuildTask.run (SmartBuilderImpl.java:71)
+    at java.util.concurrent.Executors$RunnableAdapter.call (Executors.java:545)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:330)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1090)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:614)
+    at java.lang.Thread.run (Thread.java:1516)
+Caused by: org.apache.maven.plugin.MojoExecutionException: Process terminated with exit code: 1
+    at org.springframework.boot.maven.JavaProcessExecutor.run (JavaProcessExecutor.java:74)
+    at org.springframework.boot.maven.RunMojo.run (RunMojo.java:76)
+    at org.springframework.boot.maven.AbstractRunMojo.run (AbstractRunMojo.java:242)
+    at org.springframework.boot.maven.AbstractRunMojo.execute (AbstractRunMojo.java:209)
+    at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo (DefaultBuildPluginManager.java:126)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2 (MojoExecutor.java:328)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute (MojoExecutor.java:316)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:212)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:174)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.access$000 (MojoExecutor.java:75)
+    at org.apache.maven.lifecycle.internal.MojoExecutor$1.run (MojoExecutor.java:162)
+    at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute (DefaultMojosExecutionStrategy.java:39)
+    at org.apache.maven.lifecycle.internal.MojoExecutor.execute (MojoExecutor.java:159)
+    at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject (LifecycleModuleBuilder.java:105)
+    at io.takari.maven.builder.smart.SmartBuilderImpl.buildProject (SmartBuilderImpl.java:206)
+    at io.takari.maven.builder.smart.SmartBuilderImpl$ProjectBuildTask.run (SmartBuilderImpl.java:71)
+    at java.util.concurrent.Executors$RunnableAdapter.call (Executors.java:545)
+    at java.util.concurrent.FutureTask.run (FutureTask.java:330)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker (ThreadPoolExecutor.java:1090)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run (ThreadPoolExecutor.java:614)
+    at java.lang.Thread.run (Thread.java:1516)
+[ERROR] 
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

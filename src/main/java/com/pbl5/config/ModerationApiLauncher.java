@@ -25,12 +25,17 @@ public class ModerationApiLauncher {
     @EventListener(ApplicationReadyEvent.class)
     public void startModerationApi() {
         if (isHealthy()) {
-            System.out.println("✅ Python moderation API đã sẵn sàng tại " + HEALTH_URI);
+            System.out.println("✅ Python moderation API is ready at " + HEALTH_URI);
             return;
         }
 
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("python", "moderate.py");
+            String pythonCmd = "python";
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("mac") || os.contains("nix") || os.contains("nux")) {
+                pythonCmd = "python3";
+            }
+            ProcessBuilder processBuilder = new ProcessBuilder(pythonCmd, "moderate.py");
             processBuilder.directory(MODEL_DIR.toFile());
             processBuilder.redirectErrorStream(true);
             processBuilder.inheritIO();
@@ -38,7 +43,7 @@ public class ModerationApiLauncher {
 
             waitForHealthy(Duration.ofSeconds(20));
         } catch (IOException e) {
-            System.out.println("❌ Không thể khởi động Python moderation API: " + e.getMessage());
+            System.out.println("❌ Failed to start Python moderation API: " + e.getMessage());
         }
     }
 
@@ -46,7 +51,7 @@ public class ModerationApiLauncher {
         long deadline = System.currentTimeMillis() + timeout.toMillis();
         while (System.currentTimeMillis() < deadline) {
             if (isHealthy()) {
-                System.out.println("✅ Python moderation API đã khởi động từ thư mục: " + MODEL_DIR);
+                System.out.println("✅ Python moderation API started from directory: " + MODEL_DIR);
                 return;
             }
 
@@ -58,7 +63,7 @@ public class ModerationApiLauncher {
             }
         }
 
-        System.out.println("⚠️ Đã khởi động tiến trình Python, nhưng /health chưa sẵn sàng sau thời gian chờ.");
+        System.out.println("⚠️ Python process started, but /health endpoint is not ready after timeout.");
     }
 
     private boolean isHealthy() {

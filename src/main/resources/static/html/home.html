@@ -7,6 +7,7 @@
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,18 +17,20 @@
     <!-- WebSocket libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="/js/auth-interceptor.js"></script>
 </head>
 <body>
     <!-- Header Navigation -->
     <header class="top-header">
         <div class="header-left">
             <a href="/html/home.html" class="logo">
-                <i class="fa-solid fa-triangle-exclamation" style="rotate: 180deg; color: #00d1b2;"></i>
+                <img src="/images/Logo.png" alt="LC Logo" class="logo-img">
                 <span class="logo-text">LC Network</span>
             </a>
-            <div class="search-bar">
+            <div class="search-bar" style="position: relative;">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Tìm kiếm LC Network...">
+                <input type="text" id="global-search-input" placeholder="Tìm mọi người hoặc bài viết..." oninput="handleGlobalSearch(this.value)">
+                <div id="global-search-results" class="search-results-dropdown" style="display: none;"></div>
             </div>
         </div>
 
@@ -39,8 +42,8 @@
                 <a href="/html/friends.html" class="nav-link" title="Bạn bè">
                     <i class="fa-solid fa-user-group"></i>
                 </a>
-                <a href="#" class="nav-link" title="Khám phá">
-                    <i class="fa-regular fa-compass"></i>
+                <a href="/html/bookmarks.html" class="nav-link" title="Đã lưu">
+                    <i class="fa-regular fa-bookmark"></i>
                 </a>
             </nav>
         </div>
@@ -60,26 +63,30 @@
                     <div class="messenger-header">
                         <h2>Đoạn chat</h2>
                         <div class="messenger-header-actions">
-                            <button class="icon-btn-small tooltip" data-tooltip="Tùy chọn"><i class="fa-solid fa-ellipsis"></i></button>
-                            <button class="icon-btn-small tooltip" data-tooltip="Mở rộng"><i class="fa-solid fa-expand"></i></button>
-                            <button class="icon-btn-small tooltip" data-tooltip="Soạn tin nhắn mới"><i class="fa-regular fa-pen-to-square"></i></button>
                         </div>
                     </div>
                     
                     <div class="messenger-search">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" placeholder="Tìm kiếm trên Messenger">
+                        <input type="text" id="messenger-search-input" placeholder="Tìm kiếm trên Messenger" oninput="handleMessengerSearch(this.value)">
                     </div>
 
                     <div class="messenger-filters">
-                        <button class="filter-chip active">Tất cả</button>
-                        <button class="filter-chip">Chưa đọc</button>
-                        <button class="filter-chip">Nhóm</button>
+                        <button class="filter-chip active" onclick="setMessengerFilter('all', this)">Tất cả</button>
+                        <button class="filter-chip" onclick="setMessengerFilter('unread', this)">Chưa đọc</button>
                     </div>
 
                     <div class="messenger-body" id="inbox-list">
                         <!-- Nạp động qua JS loadInboxDropdown() -->
-                        <div style="padding: 15px; text-align: center; color: #65676B;">Đang tải...</div>
+                        <div class="skeleton-post card" style="width: 100%; border: none; box-shadow: none; margin-bottom: 0; padding: 12px;">
+                            <div class="skeleton-header" style="margin-bottom: 0; gap: 8px;">
+                                <div class="skeleton-avatar" style="width: 36px; height: 36px;"></div>
+                                <div class="skeleton-meta">
+                                    <div class="skeleton-line short" style="height: 8px; margin-bottom: 4px;"></div>
+                                    <div class="skeleton-line x-short" style="height: 6px; margin-bottom: 0;"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -101,9 +108,14 @@
                 </div>
             </div>
 
+            <!-- Theme Toggle Button -->
+            <button class="icon-btn tooltip" id="theme-toggle-btn" data-tooltip="Chuyển chế độ tối/sáng" onclick="toggleTheme()">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
             <!-- User Avatar -->
             <div class="user-avatar-btn">
-                <img src="/uploads/default-avatar.png" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <img src="/uploads/default-avatar.png" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'">
             </div>
         </div>
     </header>
@@ -116,7 +128,7 @@
         <aside class="left-sidebar">
             <!-- Tương tác clickable vào thẻ -->
             <div class="card profile-card" onclick="window.location.href='profile.html'" style="cursor: pointer; transition: 0.2s;">
-                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'">
                 <div class="profile-info">
                     <h3 class="user-name">Đỗ Ngọc Lễ</h3>
                     <p class="status"><span class="status-dot"></span> Đang trực truyến</p>
@@ -132,9 +144,6 @@
                     <a href="/html/friends.html" class="menu-item">
                         <i class="fa-solid fa-user-group"></i> <span>Bạn bè & Cộng đồng</span>
                     </a>
-                    <a href="#" class="menu-item">
-                        <i class="fa-solid fa-fire text-yellow"></i> <span>Thịnh hành</span>
-                    </a>
                 </div>
 
                 <div class="nav-separator"></div>
@@ -144,7 +153,7 @@
                     <a href="profile.html" class="menu-item">
                         <i class="fa-regular fa-user"></i> <span>Hồ sơ của tôi</span>
                     </a>
-                    <a href="#" class="menu-item">
+                    <a href="/html/bookmarks.html" class="menu-item">
                         <i class="fa-regular fa-bookmark"></i> <span>Đã lưu</span>
                     </a>
                     <!-- JS append admin links here if authorized -->
@@ -155,9 +164,6 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Tài Khoản</div>
-                    <a href="#" class="menu-item">
-                        <i class="fa-solid fa-gear"></i> <span>Cài đặt & Quyền riêng tư</span>
-                    </a>
                     <a href="#" class="menu-item logout-btn" onclick="logout()">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Đăng xuất</span>
                     </a>
@@ -167,9 +173,9 @@
             <div class="card ai-banner modern-ai-banner">
                 <div class="ai-banner-content">
                     <div class="ai-badge">
-                        <i class="fa-solid fa-shield-halved"></i> AI Khang Trang
+                        <i class="fa-solid fa-shield-halved"></i> AI Guardian
                     </div>
-                    <p>Hệ thống giám sát bảo mật nội dung chủ động.</p>
+                    <p>Kết nối an toàn, chia sẻ văn minh.</p>
                 </div>
             </div>
         </aside>
@@ -180,26 +186,74 @@
             <div class="card create-post-box">
                 <div class="create-post-top">
                     <!-- ID added to input & image -->
-                    <img src="/uploads/default-avatar.png" id="create-post-avatar" alt="Avatar" class="avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                    <img src="/uploads/default-avatar.png" id="create-post-avatar" alt="Avatar" class="avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=User&background=5e6ad2&color=fff'">
                     <input type="text" id="post-content-input" placeholder="Bạn đang nghĩ gì?" class="post-input" readonly onclick="openPostModal()">
                 </div>
             </div>
 
             <!-- Posts Feed -->
             <div class="posts-container" id="posts-container">
+                <!-- Skeleton Loading State -->
+                <div class="skeleton-post card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-meta">
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-line x-short"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line medium"></div>
+                    </div>
+                </div>
+                <div class="skeleton-post card">
+                    <div class="skeleton-header">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-meta">
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-line x-short"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line medium"></div>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- Right Sidebar -->
         <aside class="right-sidebar">
             <div class="card suggestions-card">
-                <h3>Gợi ý cho bạn</h3>
-                <div class="empty-state">Chưa có gợi ý</div>
+                <div class="card-header-sidebar">
+                    <h3>Gợi ý cho bạn</h3>
+                    <a href="/html/friends.html" class="view-all-link">Xem tất cả</a>
+                </div>
+                <div id="sidebar-suggestions" class="suggestions-list">
+                    <div class="empty-state">Chưa có gợi ý</div>
+                </div>
             </div>
 
-            <div class="card trending-card">
-                <h3>Chủ đề thịnh hành</h3>
-                <div class="empty-state">Chưa có chủ đề nào</div>
+            <!-- Active Contacts integration directly into Right Sidebar -->
+            <div class="card contacts-card">
+                <div class="card-header-sidebar">
+                    <h3>Người liên hệ</h3>
+                </div>
+                <div class="contacts-search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="chat-sidebar-search-input" placeholder="Tìm kiếm liên hệ..." onkeyup="searchChatUsers(this.value)">
+                </div>
+                <div id="chat-contact-list" class="contacts-list">
+                    <!-- Dynamic chat contacts will load here -->
+                    <div class="skeleton-chat-contacts" style="padding: 10px; display: flex; flex-direction: column; gap: 12px;">
+                        <div class="skeleton-header" style="margin-bottom: 0; gap: 10px; align-items: center;">
+                            <div class="skeleton-avatar" style="width: 32px; height: 32px; border-radius: 50%;"></div>
+                            <div class="skeleton-line" style="height: 10px; width: 60%; margin-bottom: 0;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <footer class="sidebar-footer">
@@ -233,11 +287,11 @@
                             <!-- Hidden actual select for function overlapping a beautiful button -->
                             <div style="position: relative; display: inline-block;">
                                 <button type="button" class="modal-visibility-btn">
-                                    <i class="fa-solid fa-user-group"></i>Công khai<i class="fa-solid fa-caret-down" style="font-size: 12px; margin-left: 4px;"></i>
+                                    <i class="fa-solid fa-earth-americas"></i>Công khai<i class="fa-solid fa-caret-down" style="font-size: 12px; margin-left: 4px;"></i>
                                 </button>
                                 <select id="modal-post-visibility" onchange="updateModalVisibility(this.value)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
-                                    <option value="PUBLIC">Công khai</option>
-                                    <option value="FRIENDS" selected>Bạn bè</option>
+                                    <option value="PUBLIC" selected>Công khai</option>
+                                    <option value="FRIENDS">Bạn bè</option>
                                     <option value="PRIVATE">Mình tôi</option>
                                 </select>
                             </div>
@@ -304,7 +358,7 @@
                         </div>
                     </div>
 
-                    <button class="modal-submit-btn" id="onboard-submit-btn" style="width: 100%; background: #00d1b2; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: 600; font-size: 15px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#00b398'" onmouseout="this.style.background='#00d1b2'" onclick="submitOnboarding()">Cập nhật thông tin</button>
+                    <button class="modal-submit-btn" id="onboard-submit-btn" style="width: 100%; background: #5e6ad2; color: #fff; border: none; padding: 10px; border-radius: var(--rounded-md); font-weight: 600; font-size: 15px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#828fff'" onmouseout="this.style.background='#5e6ad2'" onclick="submitOnboarding()">Cập nhật thông tin</button>
                     <p id="onboard-error" style="color: red; font-size: 12px; margin-top: 10px; display: none;"></p>
                 </div>
             </div>
@@ -312,16 +366,8 @@
 
     </main>
 
-    <!-- Chat Sidebar -->
-    <div id="chat-sidebar" class="chat-sidebar">
-        <div class="chat-sidebar-title">Người liên hệ</div>
-        <div class="chat-sidebar-search" style="padding: 10px; border-bottom: 1px solid #ddd;">
-            <input type="text" id="chat-sidebar-search-input" placeholder="Tìm kiếm người dùng..." style="width:100%; padding: 8px; border-radius: 20px; border: 1px solid #ced0d4; outline:none;" onkeyup="searchChatUsers(this.value)">
-        </div>
-        <div id="chat-contact-list">
-            <!-- Fetch friends dynamically -->
-            <div style="padding: 15px; color:#65676B; font-size:14px;">Đang tải...</div>
-        </div>
+    <!-- Chat Sidebar hidden in HTML but kept for JS compatibility -->
+    <div id="chat-sidebar" class="chat-sidebar" style="display: none !important;">
     </div>
 
     <!-- Chat Box -->
@@ -344,8 +390,40 @@
         </div>
     </div>
 
-    <script src="/js/post-creation.js"></script>
-    <script src="/js/home.js"></script>
-    <script src="/js/chat.js"></script>
+    <!-- Toast notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Report Modal -->
+    <div id="report-modal" class="modal-overlay" style="display: none; z-index: 3000;">
+        <div class="modal-content" style="max-width: 400px; padding: 25px;">
+            <div class="modal-header" style="border-bottom: 1px solid #e4e6eb; padding-bottom: 15px; margin-bottom: 20px;">
+                <h2 id="report-modal-title" style="font-size: 20px; font-weight: 700;">Báo cáo bài viết</h2>
+                <button class="close-modal" onclick="closeReportModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #65676b; margin-bottom: 15px; font-size: 14px;">Tại sao bạn muốn báo cáo nội dung này?</p>
+                <select id="report-category" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none;">
+                    <option value="SPAM">Spam / Nội dung rác</option>
+                    <option value="VIOLENCE">Bạo lực</option>
+                    <option value="HARASSMENT">Quấy rối</option>
+                    <option value="HATE_SPEECH">Ngôn từ thù ghét</option>
+                    <option value="NSFW">Nội dung nhạy cảm</option>
+                    <option value="FALSE_INFO">Thông tin sai lệch</option>
+                    <option value="OTHER" selected>Khác</option>
+                </select>
+                <textarea id="report-reason" placeholder="Nhập lý do chi tiết..." style="width: 100%; height: 100px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; resize: none; margin-bottom: 20px; font-family: inherit; outline: none;"></textarea>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="closeReportModal()">Hủy</button>
+                    <button class="btn btn-primary" id="confirm-report-btn">Gửi báo cáo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/gsap.min.js"></script>
+    <script src="/js/animations.js" defer></script>
+    <script src="/js/post-creation.js" defer></script>
+    <script src="/js/home.js" defer></script>
+    <script src="/js/chat.js" defer></script>
 </body>
 </html>

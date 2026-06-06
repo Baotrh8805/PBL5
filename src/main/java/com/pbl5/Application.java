@@ -15,7 +15,10 @@ import java.sql.Connection;
 import jakarta.annotation.PostConstruct;
 import java.util.TimeZone;
 
+import org.springframework.scheduling.annotation.EnableScheduling;
+
 @SpringBootApplication
+@EnableScheduling
 public class Application implements CommandLineRunner {
 
     @Autowired
@@ -45,22 +48,22 @@ public class Application implements CommandLineRunner {
         SpringApplication.run(Application.class, args);
         System.out.println("\n");
         System.out.println("==========================================================");
-        System.out.println("🚀 MÁY CHỦ JAVA SPRING BOOT ĐÃ CHẠY THÀNH CÔNG RỰC RỠ! 🚀");
-        System.out.println("🌐 Địa chỉ nội bộ Mac:  http://localhost:8080 / gõ ipconfig getifaddr en0");
-        System.out.println("🌐 Tên miền trên mạng lan: https://pbl5-omru.onrender.com");
+        System.out.println("🚀 JAVA SPRING BOOT SERVER STARTED SUCCESSFULLY! 🚀");
+        System.out.println("🌐 Local Address: http://localhost:8080");
+        System.out.println("🌐 Deployment Domain: https://pbl5-omru.onrender.com");
         System.out.println("==========================================================\n");
     }
 
     @Override
     public void run(String... args) throws Exception {
-        // Kiểm tra kết nối PostgreSQL
-        System.out.println("Đang kiểm tra kết nối tới PostgreSQL...");
+        // Checking PostgreSQL Connection
+        System.out.println("Checking connection to PostgreSQL...");
         try (Connection connection = dataSource.getConnection()) {
-            System.out.println("✅ Đã kết nối PostgreSQL thành công!");
+            System.out.println("✅ PostgreSQL connection successful!");
             System.out.println("✅ Database: " + connection.getMetaData().getDatabaseProductName()
                     + " " + connection.getMetaData().getDatabaseProductVersion());
         } catch (Exception e) {
-            System.out.println("❌ LỖI kết nối PostgreSQL: " + e.getMessage());
+            System.out.println("❌ PostgreSQL connection ERROR: " + e.getMessage());
         }
 
         // Tạo tài khoản admin mặc định nếu chưa tồn tại
@@ -79,13 +82,13 @@ public class Application implements CommandLineRunner {
             userRepository.save(admin);
 
             System.out.println("==========================================================");
-            System.out.println("✅ Tài khoản Admin đã được tạo:");
+            System.out.println("✅ Default Admin account created:");
             System.out.println("   Username : " + ADMIN_USERNAME);
             System.out.println("   Password : " + ADMIN_PASSWORD);
             System.out.println("   Email    : " + ADMIN_EMAIL);
             System.out.println("==========================================================");
         } else {
-            System.out.println("✅ Tài khoản Admin đã tồn tại, bỏ qua khởi tạo.");
+            System.out.println("✅ Admin account already exists, skipping initialization.");
         }
     }
 }

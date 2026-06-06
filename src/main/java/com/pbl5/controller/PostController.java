@@ -1,10 +1,13 @@
 package com.pbl5.controller;
 
+import com.pbl5.model.Bookmark;
+import com.pbl5.repository.BookmarkRepository;
 import com.pbl5.dto.CommentRequest;
 import com.pbl5.dto.CommentResponse;
 import com.pbl5.dto.CreatePostRequest;
 import com.pbl5.dto.PostRequest;
 import com.pbl5.dto.PostResponse;
+import com.pbl5.enums.PostStatus;
 import com.pbl5.enums.PostVisibility;
 import com.pbl5.model.Post;
 import com.pbl5.model.User;
@@ -19,15 +22,25 @@ import com.pbl5.repository.PostRepository;
 import com.pbl5.repository.UserRepository;
 import com.pbl5.security.JwtTokenProvider;
 import com.pbl5.service.PostService;
+import com.pbl5.service.CommentService;
+import com.pbl5.service.LikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.pbl5.repository.NotificationRepository;
+import com.pbl5.repository.HiddenPostRepository;
+import com.pbl5.repository.ReportRepository;
+import com.pbl5.model.HiddenPost;
+import com.pbl5.model.Report;
+import com.pbl5.model.CommentLike;
+import com.pbl5.repository.CommentLikeRepository;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,23 +82,53 @@ public class PostController {
     @Autowired
     private PostService postService;
 
+    @Autowired
+    private CommentService commentService;
+
+    @Autowired
+    private LikeService likeService;
+
+    @Autowired
+    private HiddenPostRepository hiddenPostRepository;
+
+    @Autowired
+    private ReportRepository reportRepository;
+
+    @Autowired
+    private BookmarkRepository bookmarkRepository;
+
     private boolean canViewPost(Post p, User currentUser) {
         if (p == null || p.getUser() == null || currentUser == null) {
             return false;
         }
-        
+
+        // Handle deleted/rejected posts with 3-day grace period
+        if (p.getStatus() == com.pbl5.enums.PostStatus.REJECTED
+                || p.getStatus() == com.pbl5.enums.PostStatus.AUTO_REJECTED) {
+            if (currentUser.getRole() == com.pbl5.enums.Role.ADMIN
+                    || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR) {
+                return true;
+            }
+            if (p.getUser().getId().equals(currentUser.getId())) {
+                LocalDateTime deleteTime = p.getReviewedAt();
+                if (deleteTime != null && deleteTime.plusDays(3).isAfter(LocalDateTime.now())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         // Author can always see their own posts
         if (p.getUser().getId().equals(currentUser.getId()))
             return true;
-            
+
         // Admins and moderators can see all posts
-        if ("ADMIN".equals(currentUser.getRole()) || "MODERATOR".equals(currentUser.getRole()))
+        if (currentUser.getRole() == com.pbl5.enums.Role.ADMIN
+                || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR)
             return true;
-            
-        // Other users cannot see rejected or pending review posts
-        if (p.getStatus() == com.pbl5.enums.PostStatus.AUTO_REJECTED || p.getStatus() == com.pbl5.enums.PostStatus.PENDING_REVIEW) {
-            return false;
-        }
+
+        // Other users can see pending review posts while they wait for review
+        // (the restriction for PENDING_REVIEW has been removed so they follow normal visibility rules)
 
         if (p.getVisibility() == PostVisibility.PUBLIC || p.getVisibility() == null)
             return true;
@@ -116,6 +159,16 @@ public class PostController {
         if (user == null)
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
+        // Kiểm tra cảnh cáo chặn đăng bài
+        if (user.getPostWarningExpiresAt() != null
+                && user.getPostWarningExpiresAt().isAfter(java.time.LocalDateTime.now())) {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter
+                    .ofPattern("HH:mm 'ngày' dd/MM/yyyy");
+            String expiryStr = user.getPostWarningExpiresAt().format(formatter);
+            return ResponseEntity.status(403)
+                    .body("Bạn đang bị cấm đăng bài do vi phạm. Vui lòng quay lại sau " + expiryStr);
+        }
+
         if ((request.getContent() == null || request.getContent().trim().isEmpty())
                 && (request.getImageUrl() == null || request.getImageUrl().trim().isEmpty())
                 && (request.getVideoUrl() == null || request.getVideoUrl().trim().isEmpty())) {
@@ -134,44 +187,81 @@ public class PostController {
 
     @GetMapping
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getAllPosts(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllPosts(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         User currentUser = getAuthenticatedUser(authHeader);
         if (currentUser == null)
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
-        List<PostResponse> responses = convertToResponses(posts, currentUser);
+        boolean isAdminOrMod = currentUser.getRole() == com.pbl5.enums.Role.ADMIN || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR;
+        PageRequest pageable = PageRequest.of(page, size);
+        List<Post> posts = postRepository.findHomeFeedPaged(currentUser.getId(), isAdminOrMod, pageable);
 
+        List<PostResponse> responses = convertToResponses(posts, currentUser);
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/me")
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getMyPosts(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getMyPosts(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         User currentUser = getAuthenticatedUser(authHeader);
         if (currentUser == null)
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
-        List<PostResponse> responses = convertToResponses(posts, currentUser);
+        PageRequest pageable = PageRequest.of(page, size);
+        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId(), pageable);
+        List<Post> filteredPosts = posts.stream()
+                .filter(p -> p.getStatus() != PostStatus.DELETED)
+                .collect(Collectors.toList());
+        List<PostResponse> responses = convertToResponses(filteredPosts, currentUser);
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/user/{userId}")
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getUserPosts(@RequestHeader("Authorization") String authHeader,
-            @PathVariable Long userId) {
+    public ResponseEntity<?> getUserPosts(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         User currentUser = getAuthenticatedUser(authHeader);
         if (currentUser == null)
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        // NOTE: Later we should filter posts based on visibility: PUBLIC for everyone,
-        // FRIENDS if they are friends, etc.
-        // For now, let's return all posts or just public/friends if we don't have
-        // friendship check easily available here.
-        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        List<PostResponse> responses = convertToResponses(posts, currentUser);
+        PageRequest pageable = PageRequest.of(page, size);
+        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+
+        List<Post> filteredPosts = posts.stream()
+                .filter(p -> p.getStatus() != PostStatus.DELETED)
+                .collect(Collectors.toList());
+
+        List<PostResponse> responses = convertToResponses(filteredPosts, currentUser);
         return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/{postId}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getPostById(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long postId) {
+        User currentUser = getAuthenticatedUser(authHeader);
+        if (currentUser == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Post post = postOpt.get();
+        if (!canViewPost(post, currentUser)) {
+            return ResponseEntity.status(403).body("Bạn không có quyền xem bài viết này.");
+        }
+
+        return ResponseEntity.ok(convertToResponse(post, currentUser));
     }
 
     // Like hoặc Unlike
@@ -181,45 +271,11 @@ public class PostController {
         if (user == null)
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        Optional<Post> postOpt = postRepository.findById(postId);
-        if (postOpt.isEmpty())
-            return ResponseEntity.notFound().build();
-
-        Post post = postOpt.get();
-        Optional<Like> existingLike = likeRepository.findByPostAndUser(post, user);
-
-        if (existingLike.isPresent()) {
-            likeRepository.delete(existingLike.get());
-            return ResponseEntity.ok("Đã huỷ like");
-        } else {
-            Like freshLike = new Like();
-            freshLike.setPost(post);
-            freshLike.setUser(user);
-            likeRepository.save(freshLike);
-
-            // Gửi thông báo cho chủ bài viết (nếu không phải tự like)
-            if (!post.getUser().getId().equals(user.getId())) {
-                com.pbl5.model.Notification notifEntity = new com.pbl5.model.Notification();
-                notifEntity.setUser(post.getUser());
-                notifEntity.setSender(user);
-                notifEntity.setType("LIKE_POST");
-                notifEntity.setMessage(user.getFullName() + " đã thích bài viết của bạn.");
-                notifEntity.setLink("/html/home.html#post-" + post.getId());
-                notifEntity = notificationRepository.save(notifEntity);
-
-                Map<String, Object> notification = new HashMap<>();
-                notification.put("id", notifEntity.getId());
-                notification.put("type", "LIKE_POST");
-                notification.put("message", notifEntity.getMessage());
-                notification.put("senderId", user.getId());
-                notification.put("senderName", user.getFullName());
-                notification.put("senderAvatar", user.getAvatar());
-                notification.put("link", notifEntity.getLink());
-
-                messagingTemplate.convertAndSend("/topic/notifications/" + post.getUser().getId(), notification);
-            }
-
-            return ResponseEntity.ok("Đã like");
+        try {
+            String message = likeService.toggleLike(postId, user);
+            return ResponseEntity.ok(message);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -239,8 +295,33 @@ public class PostController {
             return ResponseEntity.status(403).body("Không có quyền xóa bài này.");
         }
 
-        postRepository.delete(post);
+        // Soft delete: thay đổi trạng thái sang DELETED thay vì xóa khỏi CSDL
+        post.setStatus(PostStatus.DELETED);
+        postRepository.save(post);
         return ResponseEntity.ok("Đã xóa bài viết thành công!");
+    }
+
+    @PostMapping("/{postId}/restore")
+    public ResponseEntity<?> restorePost(@RequestHeader("Authorization") String authHeader, @PathVariable Long postId) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Post post = postOpt.get();
+        if (!post.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body("Không có quyền khôi phục bài này.");
+        }
+
+        if (post.getStatus() == PostStatus.DELETED) {
+            post.setStatus(PostStatus.ACTIVE);
+            postRepository.save(post);
+            return ResponseEntity.ok("Đã khôi phục bài viết thành công!");
+        }
+        return ResponseEntity.badRequest().body("Bài viết không ở trạng thái đã xóa.");
     }
 
     @PatchMapping("/{postId}/visibility")
@@ -268,30 +349,193 @@ public class PostController {
         }
     }
 
+    @PostMapping("/{postId}/hide")
+    public ResponseEntity<?> hidePost(@RequestHeader("Authorization") String authHeader, @PathVariable Long postId) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        if (hiddenPostRepository.findByUserAndPost(user, postOpt.get()).isEmpty()) {
+            HiddenPost hp = new HiddenPost();
+            hp.setUser(user);
+            hp.setPost(postOpt.get());
+            hiddenPostRepository.save(hp);
+        }
+        return ResponseEntity.ok("Đã ẩn bài viết.");
+    }
+
+    @PostMapping("/{postId}/report")
+    public ResponseEntity<?> reportPost(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long postId,
+            @RequestBody Map<String, String> body) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Post post = postOpt.get();
+
+        // Chống report trùng
+        if (reportRepository.existsByUserAndPost(user, post)) {
+            return ResponseEntity.status(409).body("Bạn đã báo cáo bài viết này rồi.");
+        }
+
+        String reason = body.get("reason");
+        if (reason == null || reason.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Lý do báo cáo không được để trống.");
+        }
+
+        // Parse category
+        com.pbl5.enums.ReportCategory category = com.pbl5.enums.ReportCategory.OTHER;
+        String categoryStr = body.get("category");
+        if (categoryStr != null) {
+            try {
+                category = com.pbl5.enums.ReportCategory.valueOf(categoryStr.toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        Report report = new Report();
+        report.setUser(user);
+        report.setPost(post);
+        report.setReason(reason.trim());
+        report.setCategory(category);
+        reportRepository.save(report);
+
+        // Ẩn bài cho người report (giống hide post)
+        if (hiddenPostRepository.findByUserAndPost(user, post).isEmpty()) {
+            HiddenPost hp = new HiddenPost();
+            hp.setUser(user);
+            hp.setPost(post);
+            hiddenPostRepository.save(hp);
+        }
+
+        // Auto-escalate: nếu >= 3 report PENDING → ẩn bài khỏi mọi người
+        long pendingCount = reportRepository.countByPostAndStatus(post, com.pbl5.enums.ReportStatus.PENDING);
+        if (pendingCount >= 3 && post.getStatus() != com.pbl5.enums.PostStatus.AUTO_REJECTED) {
+            post.setStatus(com.pbl5.enums.PostStatus.PENDING_REVIEW);
+            postRepository.save(post);
+        }
+
+        return ResponseEntity.ok("Đã gửi báo cáo thành công.");
+    }
+
+    @PostMapping("/{postId}/appeal")
+    public ResponseEntity<?> appealPost(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long postId,
+            @RequestBody Map<String, String> body) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Post post = postOpt.get();
+
+        // Chỉ tác giả bài viết mới được kháng nghị
+        if (!post.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body("Bạn không có quyền kháng nghị bài viết này.");
+        }
+
+        // Bài viết phải ở trạng thái bị gỡ/từ chối
+        if (post.getStatus() != PostStatus.REJECTED && post.getStatus() != PostStatus.AUTO_REJECTED) {
+            return ResponseEntity.badRequest().body("Bài viết này không ở trạng thái bị gỡ.");
+        }
+
+        // Chống kháng nghị trùng (đang chờ duyệt)
+        boolean existsPending = reportRepository.findByPost(post).stream()
+                .anyMatch(r -> r.getCategory() == com.pbl5.enums.ReportCategory.APPEAL 
+                        && r.getStatus() == com.pbl5.enums.ReportStatus.PENDING);
+        if (existsPending) {
+            return ResponseEntity.status(409).body("Kháng nghị của bạn đang chờ xử lý.");
+        }
+
+        String reason = body.get("reason");
+        if (reason == null || reason.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Lý do kháng nghị không được để trống.");
+        }
+
+        Report report = new Report();
+        report.setUser(user);
+        report.setPost(post);
+        report.setReason(reason.trim());
+        report.setCategory(com.pbl5.enums.ReportCategory.APPEAL);
+        
+        // Xác định người bị kháng cáo
+        if (post.getStatus() == PostStatus.AUTO_REJECTED) {
+            report.setAppealedModerator("AI");
+        } else {
+            User mod = post.getProcessingModerator();
+            if (mod != null) {
+                report.setAppealedModerator(mod.getFullName());
+            } else {
+                report.setAppealedModerator("Moderator");
+            }
+        }
+        
+        reportRepository.save(report);
+
+        return ResponseEntity.ok("Gửi kháng nghị thành công.");
+    }
+
+
+    @PostMapping("/comments/{commentId}/report")
+    public ResponseEntity<?> reportComment(@RequestHeader("Authorization") String authHeader,
+            @PathVariable Long commentId,
+            @RequestBody Map<String, String> body) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        Optional<Comment> commentOpt = commentRepository.findById(commentId);
+        if (commentOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        Comment comment = commentOpt.get();
+
+        // Chống report trùng
+        if (reportRepository.existsByUserAndComment(user, comment)) {
+            return ResponseEntity.status(409).body("Bạn đã báo cáo bình luận này rồi.");
+        }
+
+        String reason = body.get("reason");
+        if (reason == null || reason.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Lý do báo cáo không được để trống.");
+        }
+
+        com.pbl5.enums.ReportCategory category = com.pbl5.enums.ReportCategory.OTHER;
+        String categoryStr = body.get("category");
+        if (categoryStr != null) {
+            try {
+                category = com.pbl5.enums.ReportCategory.valueOf(categoryStr.toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        Report report = new Report();
+        report.setUser(user);
+        report.setComment(comment);
+        report.setReason(reason.trim());
+        report.setCategory(category);
+        reportRepository.save(report);
+
+        return ResponseEntity.ok("Đã gửi báo cáo bình luận thành công.");
+    }
+
     @GetMapping("/{postId}/comments")
     public ResponseEntity<?> getComments(@PathVariable Long postId,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         User currentUser = getAuthenticatedUser(authHeader);
-
-        List<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(postId);
-        List<CommentResponse> responses = new ArrayList<>();
-
-        for (Comment c : comments) {
-            String authorName = c.getUser().getFullName() != null ? c.getUser().getFullName() : "Người dùng";
-            String authorAvatar = c.getUser().getAvatar() != null ? c.getUser().getAvatar()
-                    : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+")
-                            + "&background=00d1b2&color=fff";
-            boolean isMine = currentUser != null && c.getUser().getId().equals(currentUser.getId());
-
-            responses.add(new CommentResponse(
-                    c.getId(),
-                    c.getContent(),
-                    c.getUser().getId(),
-                    authorName,
-                    authorAvatar,
-                    c.getCreatedAt(),
-                    isMine));
-        }
+        List<CommentResponse> responses = commentService.getComments(postId, currentUser);
         return ResponseEntity.ok(responses);
     }
 
@@ -302,60 +546,38 @@ public class PostController {
         if (user == null)
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        Optional<Post> postOpt = postRepository.findById(postId);
-        if (postOpt.isEmpty())
-            return ResponseEntity.notFound().build();
-
-        if (request.getContent() == null || request.getContent().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Nội dung không được để trống");
+        try {
+            CommentResponse response = commentService.addComment(postId, request, user);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            if (e.getMessage().contains("cấm bình luận")) {
+                return ResponseEntity.status(403).body(e.getMessage());
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
-        Comment comment = new Comment();
-        comment.setContent(request.getContent().trim());
-        comment.setPost(postOpt.get());
-        comment.setUser(user);
-
-        comment = commentRepository.save(comment);
-
-        // Gửi thông báo cho chủ bài viết (nếu không tự comment)
-        if (!postOpt.get().getUser().getId().equals(user.getId())) {
-            com.pbl5.model.Notification notifEntity = new com.pbl5.model.Notification();
-            notifEntity.setUser(postOpt.get().getUser());
-            notifEntity.setSender(user);
-            notifEntity.setType("COMMENT_POST");
-            notifEntity.setMessage(user.getFullName() + " đã bình luận về bài viết của bạn.");
-            notifEntity.setLink("/html/home.html#post-" + postOpt.get().getId());
-            notifEntity = notificationRepository.save(notifEntity);
-
-            Map<String, Object> notification = new HashMap<>();
-            notification.put("id", notifEntity.getId());
-            notification.put("type", "COMMENT_POST");
-            notification.put("message", notifEntity.getMessage());
-            notification.put("senderId", user.getId());
-            notification.put("senderName", user.getFullName());
-            notification.put("senderAvatar", user.getAvatar());
-            notification.put("link", notifEntity.getLink());
-
-            messagingTemplate.convertAndSend("/topic/notifications/" + postOpt.get().getUser().getId(), notification);
-        }
-
-        String authorName = user.getFullName() != null ? user.getFullName() : "Người dùng";
-        String authorAvatar = user.getAvatar() != null ? user.getAvatar()
-                : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
-
-        CommentResponse response = new CommentResponse(
-                comment.getId(),
-                comment.getContent(),
-                user.getId(),
-                authorName,
-                authorAvatar,
-                comment.getCreatedAt(),
-                true);
-
-        return ResponseEntity.ok(response);
     }
 
-    
+    private void sendNotification(User recipient, User sender, String type, String message, String link) {
+        com.pbl5.model.Notification notifEntity = new com.pbl5.model.Notification();
+        notifEntity.setUser(recipient);
+        notifEntity.setSender(sender);
+        notifEntity.setType(type);
+        notifEntity.setMessage(message);
+        notifEntity.setLink(link);
+        notifEntity = notificationRepository.save(notifEntity);
+
+        Map<String, Object> notification = new HashMap<>();
+        notification.put("id", notifEntity.getId());
+        notification.put("type", type);
+        notification.put("message", message);
+        notification.put("senderId", sender.getId());
+        notification.put("senderName", sender.getFullName());
+        notification.put("senderAvatar", sender.getAvatar());
+        notification.put("link", link);
+
+        messagingTemplate.convertAndSend("/topic/notifications/" + recipient.getId(), notification);
+    }
+
     private List<PostResponse> convertToResponses(List<Post> posts, User currentUser) {
         if (posts == null || posts.isEmpty()) {
             return new ArrayList<>();
@@ -365,12 +587,16 @@ public class PostController {
 
         Map<Long, Long> likeCountsMap = new HashMap<>();
         for (Object[] result : likeRepository.countLikesByPostIds(postIds)) {
-            likeCountsMap.put((Long) result[0], (Long) result[1]);
+            if (result[0] != null && result[1] != null) {
+                likeCountsMap.put(((Number) result[0]).longValue(), ((Number) result[1]).longValue());
+            }
         }
 
         Map<Long, Long> commentCountsMap = new HashMap<>();
         for (Object[] result : commentRepository.countCommentsByPostIds(postIds)) {
-            commentCountsMap.put((Long) result[0], (Long) result[1]);
+            if (result[0] != null && result[1] != null) {
+                commentCountsMap.put(((Number) result[0]).longValue(), ((Number) result[1]).longValue());
+            }
         }
 
         Set<Long> likedPostIdsSet = new HashSet<>();
@@ -387,11 +613,13 @@ public class PostController {
                     boolean isLiked = likedPostIdsSet.contains(post.getId());
                     boolean isMine = currentUser != null && post.getUser().getId().equals(currentUser.getId());
 
-                    String authorName = post.getUser().getFullName() != null ? post.getUser().getFullName() : "Người dùng";
+                    String authorName = post.getUser().getFullName() != null ? post.getUser().getFullName()
+                            : "Người dùng";
                     String authorAvatar = post.getUser().getAvatar() != null ? post.getUser().getAvatar()
-                            : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
+                            : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+")
+                                    + "&background=00d1b2&color=fff";
 
-                    responses.add(new PostResponse(
+                    PostResponse resp = new PostResponse(
                             post.getId(),
                             post.getContent(),
                             post.getImageUrl(),
@@ -404,8 +632,27 @@ public class PostController {
                             commentCount,
                             isLiked,
                             isMine,
-                            post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC"
-                    ));
+                            post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
+                            post.getStatus() != null ? post.getStatus().name() : "ACTIVE");
+
+                    if (post.getProcessingModerator() != null) {
+                        resp.setReviewerId(post.getProcessingModerator().getId());
+                        resp.setReviewerName(post.getProcessingModerator().getFullName());
+                        resp.setReviewerAvatar(post.getProcessingModerator().getAvatar());
+                    } else if (post.getStatus() == PostStatus.AUTO_REJECTED) {
+                        resp.setReviewerId(0L);
+                        resp.setReviewerName("Moderator AI");
+                        resp.setReviewerAvatar("https://ui-avatars.com/api/?name=AI&background=3b82f6&color=fff");
+                    }
+                    resp.setNsfwScore(post.getNsfwScore());
+                    resp.setViolenceScore(post.getViolenceScore());
+                    resp.setHateSpeechScore(post.getHateSpeechScore());
+                    resp.setOcrContent(post.getDetectedText());
+                    resp.setSpeechLabels(post.getSpeechLabels());
+                    resp.setHateSpeechContentScore(post.getHateSpeechContentScore());
+                    resp.setHateSpeechVideoScore(post.getHateSpeechVideoScore());
+                    resp.setHateSpeechWord(post.getHateSpeechWord());
+                    responses.add(resp);
                 }
             } catch (Exception e) {
                 // skip broken post
@@ -447,7 +694,7 @@ public class PostController {
         String authorAvatar = post.getUser().getAvatar() != null ? post.getUser().getAvatar()
                 : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
 
-        return new PostResponse(
+        PostResponse response = new PostResponse(
                 post.getId(),
                 post.getContent(),
                 post.getImageUrl(),
@@ -460,6 +707,157 @@ public class PostController {
                 commentCount,
                 isLiked,
                 isMine,
-                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC");
+                post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
+                post.getStatus() != null ? post.getStatus().name() : "ACTIVE");
+
+        if (post.getProcessingModerator() != null) {
+            response.setReviewerId(post.getProcessingModerator().getId());
+            response.setReviewerName(post.getProcessingModerator().getFullName());
+            response.setReviewerAvatar(post.getProcessingModerator().getAvatar());
+        } else if (post.getStatus() == PostStatus.AUTO_REJECTED) {
+            response.setReviewerId(0L);
+            response.setReviewerName("Moderator AI");
+            response.setReviewerAvatar("https://ui-avatars.com/api/?name=AI&background=3b82f6&color=fff");
+        }
+
+        response.setNsfwScore(post.getNsfwScore());
+        response.setViolenceScore(post.getViolenceScore());
+        response.setHateSpeechScore(post.getHateSpeechScore());
+        response.setOcrContent(post.getDetectedText());
+        response.setSpeechLabels(post.getSpeechLabels());
+        response.setHateSpeechContentScore(post.getHateSpeechContentScore());
+        response.setHateSpeechVideoScore(post.getHateSpeechVideoScore());
+        response.setHateSpeechWord(post.getHateSpeechWord());
+
+        // Set bookmark state
+        if (currentUser != null) {
+            try {
+                response.setBookmarkedByCurrentUser(bookmarkRepository.existsByUserAndPost(currentUser, post));
+            } catch (Exception e) {
+                response.setBookmarkedByCurrentUser(false);
+            }
+        }
+
+        return response;
     }
+
+    // ======================= BOOKMARK =======================
+
+    @PostMapping("/{postId}/bookmark")
+    @Transactional
+    public ResponseEntity<?> toggleBookmark(@PathVariable Long postId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Unauthorized");
+
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null)
+            return ResponseEntity.notFound().build();
+
+        boolean exists = bookmarkRepository.existsByUserAndPost(user, post);
+        Map<String, Object> result = new HashMap<>();
+        if (exists) {
+            bookmarkRepository.deleteByUserAndPost(user, post);
+            result.put("bookmarked", false);
+            result.put("message", "Đã bỏ lưu bài viết");
+        } else {
+            Bookmark bookmark = new Bookmark();
+            bookmark.setUser(user);
+            bookmark.setPost(post);
+            bookmarkRepository.save(bookmark);
+            result.put("bookmarked", true);
+            result.put("message", "Đã lưu bài viết");
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/bookmarks")
+    public ResponseEntity<?> getBookmarks(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Unauthorized");
+
+        List<Bookmark> bookmarks = bookmarkRepository.findByUserOrderByCreatedAtDesc(user);
+        List<Post> bookmarkedPosts = bookmarks.stream()
+                .map(Bookmark::getPost)
+                .filter(p -> p != null)
+                .collect(Collectors.toList());
+        List<PostResponse> responses = convertToResponses(bookmarkedPosts, user);
+        return ResponseEntity.ok(responses);
+    }
+
+    // ======================= SEARCH POSTS =======================
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchPosts(@RequestParam("q") String query,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Unauthorized");
+
+        if (query == null || query.trim().isEmpty()) {
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+
+        List<Post> searchResults = postRepository.searchPosts(query.trim());
+        List<PostResponse> results = convertToResponses(searchResults, user);
+        return ResponseEntity.ok(results);
+    }
+
+    // ======================= DELETE/EDIT COMMENT =======================
+
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable Long commentId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Unauthorized");
+
+        try {
+            commentService.deleteComment(commentId, user);
+            return ResponseEntity.ok(Map.of("message", "Đã xóa bình luận"));
+        } catch (Exception e) {
+            if (e.getMessage().contains("quyền")) {
+                return ResponseEntity.status(403).body(e.getMessage());
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/comments/{commentId}")
+    public ResponseEntity<?> updateComment(@PathVariable Long commentId,
+            @RequestBody CommentRequest request,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Unauthorized");
+
+        try {
+            commentService.updateComment(commentId, request, user);
+            return ResponseEntity.ok(Map.of("message", "Đã cập nhật bình luận"));
+        } catch (Exception e) {
+            if (e.getMessage().contains("quyền")) {
+                return ResponseEntity.status(403).body(e.getMessage());
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/comments/{commentId}/like")
+    public ResponseEntity<?> toggleLikeComment(@PathVariable Long commentId,
+            @RequestHeader("Authorization") String authHeader) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Unauthorized");
+
+        try {
+            Map<String, Object> response = commentService.toggleLikeComment(commentId, user);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }

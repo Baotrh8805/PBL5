@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
     
-    @Query("SELECT m FROM Message m WHERE (m.sender = :user1 AND m.receiver = :user2) OR (m.sender = :user2 AND m.receiver = :user1) ORDER BY m.timestamp ASC")
+    @Query("SELECT m FROM Message m JOIN FETCH m.sender JOIN FETCH m.receiver WHERE (m.sender = :user1 AND m.receiver = :user2) OR (m.sender = :user2 AND m.receiver = :user1) ORDER BY m.timestamp ASC")
     List<Message> findChatHistory(@Param("user1") User user1, @Param("user2") User user2);
 
     @Query(value = "SELECT partner_id, MAX(timestamp) AS last_time " +
@@ -24,4 +24,15 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             "GROUP BY partner_id " +
             "ORDER BY last_time DESC", nativeQuery = true)
     List<Object[]> findConversationPartnerIds(@Param("currentUserId") Long currentUserId);
+
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.sender = :partner AND m.receiver = :currentUser AND (m.readStatus = false OR m.readStatus IS NULL)")
+    long countUnreadMessages(@Param("partner") User partner, @Param("currentUser") User currentUser);
+
+    @Query("SELECT m.sender.id, COUNT(m) FROM Message m WHERE m.receiver = :currentUser AND m.sender IN :partners AND (m.readStatus = false OR m.readStatus IS NULL) GROUP BY m.sender.id")
+    List<Object[]> countUnreadMessagesByPartners(@Param("partners") List<User> partners, @Param("currentUser") User currentUser);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query("UPDATE Message m SET m.readStatus = true WHERE m.sender = :partner AND m.receiver = :currentUser AND (m.readStatus = false OR m.readStatus IS NULL)")
+    void markAsRead(@Param("partner") User partner, @Param("currentUser") User currentUser);
 }

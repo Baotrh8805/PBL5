@@ -16,10 +16,12 @@ public class PostResponse {
     private boolean isLikedByCurrentUser;
     private boolean isMine;
     private String visibility;
+    private boolean bookmarkedByCurrentUser;
+    private String status;
 
     public PostResponse(Long id, String content, String imageUrl, String videoUrl, LocalDateTime createdAt,
             Long authorId, String authorName, String authorAvatar, long likeCount, long commentCount,
-            boolean isLikedByCurrentUser, boolean isMine, String visibility) {
+            boolean isLikedByCurrentUser, boolean isMine, String visibility, String status) {
         this.id = id;
         this.content = content;
         this.imageUrl = imageUrl;
@@ -33,6 +35,8 @@ public class PostResponse {
         this.isLikedByCurrentUser = isLikedByCurrentUser;
         this.isMine = isMine;
         this.visibility = visibility;
+        this.status = status;
+        this.bookmarkedByCurrentUser = false;
     }
 
     public Long getId() {
@@ -85,5 +89,119 @@ public class PostResponse {
 
     public String getVisibility() {
         return visibility;
+    }
+
+    public boolean isBookmarkedByCurrentUser() {
+        return bookmarkedByCurrentUser;
+    }
+
+    public void setBookmarkedByCurrentUser(boolean bookmarkedByCurrentUser) {
+        this.bookmarkedByCurrentUser = bookmarkedByCurrentUser;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    private Long reviewerId;
+    private String reviewerName;
+    private String reviewerAvatar;
+
+    public Long getReviewerId() {
+        return reviewerId;
+    }
+
+    public void setReviewerId(Long reviewerId) {
+        this.reviewerId = reviewerId;
+    }
+
+    public String getReviewerName() {
+        return reviewerName;
+    }
+
+    public void setReviewerName(String reviewerName) {
+        this.reviewerName = reviewerName;
+    }
+
+    public String getReviewerAvatar() {
+        return reviewerAvatar;
+    }
+
+    public void setReviewerAvatar(String reviewerAvatar) {
+        this.reviewerAvatar = reviewerAvatar;
+    }
+
+    private Double nsfwScore;
+    private Double violenceScore;
+    private Double hateSpeechScore;
+    private String ocrContent;
+
+    public Double getNsfwScore() {
+        return nsfwScore;
+    }
+
+    public void setNsfwScore(Double nsfwScore) {
+        this.nsfwScore = nsfwScore;
+    }
+
+    public Double getViolenceScore() {
+        return violenceScore;
+    }
+
+    public void setViolenceScore(Double violenceScore) {
+        this.violenceScore = violenceScore;
+    }
+
+    public Double getHateSpeechScore() {
+        return hateSpeechScore;
+    }
+
+    public void setHateSpeechScore(Double hateSpeechScore) {
+        this.hateSpeechScore = hateSpeechScore;
+    }
+
+    public String getOcrContent() {
+        return ocrContent;
+    }
+
+    public void setOcrContent(String ocrContent) {
+        this.ocrContent = ocrContent;
+    }
+
+    private String speechLabels;
+    private Double hateSpeechContentScore;
+    private Double hateSpeechVideoScore;
+    private String hateSpeechWord;
+
+    public String getSpeechLabels() {
+        return speechLabels;
+    }
+
+    public void setSpeechLabels(String speechLabels) {
+        this.speechLabels = speechLabels;
+    }
+
+    public Double getHateSpeechContentScore() {
+        return hateSpeechContentScore;
+    }
+
+    public void setHateSpeechContentScore(Double hateSpeechContentScore) {
+        this.hateSpeechContentScore = hateSpeechContentScore;
+    }
+
+    public Double getHateSpeechVideoScore() {
+        return hateSpeechVideoScore;
+    }
+
+    public void setHateSpeechVideoScore(Double hateSpeechVideoScore) {
+        this.hateSpeechVideoScore = hateSpeechVideoScore;
+    }
+
+    public String getHateSpeechWord() {
+        return hateSpeechWord;
+    }
+
+    public void setHateSpeechWord(String hateSpeechWord) {
+        this.hateSpeechWord = hateSpeechWord;
     }
 }

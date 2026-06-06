@@ -264,9 +264,24 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             window.location.href = '/html/home.html';
         }
     } catch (err) {
-        showNotification(err.message, true);
+        if (err.message.includes("KHÓA TẠM THỜI") || err.message.includes("khóa VĨNH VIỄN")) {
+            showBanModal(err.message);
+        } else {
+            showNotification(err.message, true);
+        }
     }
 });
+
+function showBanModal(message) {
+    const modal = document.getElementById('login-ban-modal');
+    const msgEl = document.getElementById('ban-modal-message');
+    if (modal && msgEl) {
+        msgEl.innerText = message;
+        modal.style.display = 'flex';
+    } else {
+        alert(message);
+    }
+}
 
 document.getElementById('forgot-password-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -305,10 +320,54 @@ document.getElementById('reset-password-form')?.addEventListener('submit', async
     }
 });
 
+// Unified Confirmation Modal for User
+function showUnifiedLogoutConfirm(title, message, onConfirm) {
+    const oldPopup = document.getElementById('unified-confirm-popup');
+    if (oldPopup) oldPopup.remove();
+
+    const popupHtml = `
+        <div id="unified-confirm-popup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 999999;">
+            <div style="background: var(--card-bg, var(--surface-bg, #ffffff)); border-radius: 8px; padding: 25px; min-width: 350px; max-width: 450px; text-align: center; box-shadow: var(--card-shadow, 0 10px 25px rgba(0,0,0,0.15)); color: var(--text-color, var(--text-primary, #212121)); border: 1px solid var(--border-color, #dbdbdb); border-top: 4px solid #10b981;">
+                <i class="fa-solid fa-circle-question" style="font-size: 45px; color: #10b981; margin-bottom: 20px;"></i>
+                <h3 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 700;">${title}</h3>
+                <p style="margin: 0 0 25px 0; font-size: 15px; color: var(--text-muted, var(--text-secondary, #666)); line-height: 1.5;">${message}</p>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="unified-confirm-no" style="background: var(--bg-color, var(--bg-main, #f5f5f5)); color: var(--text-color, var(--text-primary, #212121)); border: 1px solid var(--border-color, #dbdbdb); padding: 10px 25px; border-radius: 6px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.2s;">Hủy bỏ</button>
+                    <button id="unified-confirm-yes" style="background: #10b981; color: #fff; border: none; padding: 10px 25px; border-radius: 6px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.2s;">Xác nhận</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', popupHtml);
+
+    const yesBtn = document.getElementById('unified-confirm-yes');
+    const noBtn = document.getElementById('unified-confirm-no');
+    
+    yesBtn.onmouseover = () => { yesBtn.style.opacity = '0.9'; };
+    yesBtn.onmouseout = () => { yesBtn.style.opacity = '1'; };
+    
+    noBtn.onmouseover = () => { noBtn.style.background = '#e8e8e8'; };
+    noBtn.onmouseout = () => { noBtn.style.background = 'var(--bg-color, var(--bg-main, #f5f5f5))'; };
+
+    document.getElementById('unified-confirm-yes').onclick = () => {
+        document.getElementById('unified-confirm-popup').remove();
+        if (onConfirm) onConfirm();
+    };
+    document.getElementById('unified-confirm-no').onclick = () => {
+        document.getElementById('unified-confirm-popup').remove();
+    };
+}
+
 window.logout = function() {
-    localStorage.removeItem('token');
-    showSection('login-section');
-    showNotification('Đã đăng xuất thành công.');
+    showUnifiedLogoutConfirm(
+        'Xác nhận đăng xuất',
+        'Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?',
+        () => {
+            localStorage.removeItem('token');
+            showSection('login-section');
+            showNotification('Đã đăng xuất thành công.');
+        }
+    );
 };
 
 window.onload = async () => {
@@ -332,6 +391,9 @@ window.onload = async () => {
         localStorage.setItem('token', t);
         window.history.replaceState({}, document.title, window.location.pathname);
         await redirectByRole(t);
+    } else if (urlParams.has('error') && urlParams.get('error') === 'banned') {
+        showNotification('Từ chối truy cập: Tài khoản đã bị khoá.', true);
+        window.history.replaceState({}, document.title, window.location.pathname);
     } else if (urlParams.has('token')) {
         document.getElementById('reset-token').value = urlParams.get('token');
         showSection('reset-password-section');

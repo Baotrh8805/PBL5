@@ -361,7 +361,7 @@ html[data-theme="dark"] .card:hover {
     top: 48px;
     right: 0;
     width: 340px;
-    background: var(--card-bg);
+    background: var(--card-bg-solid);
     border: 1px solid var(--border-color);
     border-radius: var(--rounded-lg);
     box-shadow: var(--card-shadow);
@@ -403,11 +403,15 @@ html[data-theme="dark"] .card:hover {
 }
 
 .notification-item:hover {
-    background: #f3f6f8;
+    background-color: var(--button-hover-solid);
 }
 
 .notification-item.unread {
-    background: #e8faf6;
+    background-color: var(--primary-light);
+}
+
+.notification-item.unread:hover {
+    background-color: var(--button-hover-solid);
 }
 
 .notification-item img {

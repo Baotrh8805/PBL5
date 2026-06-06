@@ -101,20 +101,21 @@
     right: 320px;
     width: 320px;
     height: 420px;
-    background-color: rgba(15, 16, 17, 0.85);
+    background-color: var(--card-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-radius: var(--rounded-lg) var(--rounded-lg) 0 0;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--card-shadow);
     display: none;
     flex-direction: column;
     z-index: 1001;
     border: 1px solid var(--border-color);
     border-bottom: none;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .chat-header {
-    background-color: rgba(20, 21, 22, 0.5);
+    background-color: var(--comment-bg);
     padding: 10px 14px;
     border-radius: var(--rounded-lg) var(--rounded-lg) 0 0;
     display: flex;
@@ -122,6 +123,7 @@
     justify-content: space-between;
     border-bottom: 1px solid var(--border-color);
     z-index: 2;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .chat-header .chat-target-info {
@@ -219,7 +221,7 @@
 
 .chat-message.sent {
     background-color: var(--primary-color);
-    color: var(--on-primary);
+    color: #ffffff;
     border-radius: 12px 12px 2px 12px;
 }
 
@@ -272,8 +274,9 @@
     display: flex;
     gap: 8px;
     align-items: center;
-    background-color: rgba(20, 21, 22, 0.6);
+    background-color: var(--comment-bg);
     border-top: 1px solid var(--border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .chat-input-area input {
@@ -323,9 +326,9 @@
     top: 48px;
     right: 0;
     width: 340px;
-    background-color: var(--card-bg);
+    background-color: var(--card-bg-solid);
     border-radius: var(--rounded-lg);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--card-shadow);
     z-index: 1200;
     overflow: hidden;
     display: flex;
@@ -429,13 +432,13 @@
 }
 
 .system-warning-modal-card {
-    background: var(--surface-1);
+    background: var(--card-bg-solid);
     color: var(--text-main);
     border-radius: var(--rounded-xl);
     padding: 30px;
     max-width: 440px;
     width: 90%;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    box-shadow: var(--card-shadow);
     text-align: center;
     transform: scale(0.9);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);

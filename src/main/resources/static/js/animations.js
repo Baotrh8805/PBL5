@@ -32,7 +32,8 @@
                 y: -60,
                 opacity: 0,
                 duration: 0.8,
-                ease: 'power3.out'
+                ease: 'power3.out',
+                clearProps: 'transform,opacity'
             });
 
             // Sidebars Slide In
@@ -42,7 +43,8 @@
                     opacity: 0,
                     duration: 0.8,
                     delay: 0.1,
-                    ease: 'power3.out'
+                    ease: 'power3.out',
+                    clearProps: 'transform,opacity'
                 });
             }
             if (document.querySelector('.right-sidebar')) {
@@ -51,7 +53,8 @@
                     opacity: 0,
                     duration: 0.8,
                     delay: 0.1,
-                    ease: 'power3.out'
+                    ease: 'power3.out',
+                    clearProps: 'transform,opacity'
                 });
             }
 
@@ -64,7 +67,8 @@
                     duration: 0.8,
                     delay: 0.2,
                     stagger: 0.1,
-                    ease: 'power2.out'
+                    ease: 'power2.out',
+                    clearProps: 'transform,opacity'
                 });
             }
         }

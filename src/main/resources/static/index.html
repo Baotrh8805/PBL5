@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/auth-interceptor.js"></script>
 </head>
 
 <body>
@@ -24,6 +25,9 @@
         <div class="nav-right" id="nav-right-actions">
             <span>Bạn là người mới?</span>
             <button class="btn btn-outline" onclick="showSection('register-section')">Đăng ký</button>
+            <button class="icon-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Chuyển chế độ tối/sáng">
+                <i class="fa-solid fa-moon"></i>
+            </button>
         </div>
     </div>
 

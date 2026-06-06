@@ -36,25 +36,17 @@ public class FriendshipService {
     private SimpMessagingTemplate messagingTemplate;
 
     public List<FriendResponse> getSuggestions(User currentUser) {
-        List<User> allUsers = userRepository.findAll();
-        List<FriendResponse> suggestions = new ArrayList<>();
-
-        for (User u : allUsers) {
-            if (u.getId().equals(currentUser.getId())) continue;
-            
-            // Do not suggest ADMIN or MODERATOR to normal users
-            if (currentUser.getRole() == com.pbl5.enums.Role.USER) {
-                if (u.getRole() == com.pbl5.enums.Role.ADMIN || u.getRole() == com.pbl5.enums.Role.MODERATOR) {
-                    continue;
-                }
-            }
-            
-            Optional<Friendship> opt = friendshipRepository.findByUsers(currentUser, u);
-            if (opt.isEmpty()) {
-                suggestions.add(new FriendResponse(u.getId(), u.getFullName(), u.getAvatar(), "NOT_FRIEND"));
-            }
-        }
-        return suggestions;
+        boolean isNormalUser = currentUser.getRole() == com.pbl5.enums.Role.USER;
+        org.springframework.data.domain.Pageable limitSuggestions = org.springframework.data.domain.PageRequest.of(0, 50);
+        
+        List<User> suggestedUsers = userRepository.findFriendSuggestions(currentUser.getId(), isNormalUser, limitSuggestions).getContent();
+        
+        return suggestedUsers.stream().map(u -> new FriendResponse(
+                u.getId(), 
+                u.getFullName(), 
+                u.getAvatar(), 
+                "NOT_FRIEND"
+        )).collect(Collectors.toList());
     }
 
     public List<FriendResponse> getRequests(User currentUser) {

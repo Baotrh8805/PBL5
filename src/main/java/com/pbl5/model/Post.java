@@ -73,11 +73,11 @@ public class Post extends BaseContent {
     private LocalDateTime reviewedAt;
 
     // Moderator hiện đang phụ trách duyệt vi phạm
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "processing_moderator_id")
     private User processingModerator;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

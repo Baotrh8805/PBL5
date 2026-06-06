@@ -16,7 +16,7 @@ public class Notification {
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // The user receiving the notification
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")
     private User sender; // The user who triggered the notification
 

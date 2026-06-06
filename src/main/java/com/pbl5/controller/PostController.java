@@ -40,6 +40,7 @@ import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -188,37 +189,34 @@ public class PostController {
 
     @GetMapping
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getAllPosts(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getAllPosts(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         User currentUser = getAuthenticatedUser(authHeader);
         if (currentUser == null)
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+        boolean isAdminOrMod = currentUser.getRole() == com.pbl5.enums.Role.ADMIN || currentUser.getRole() == com.pbl5.enums.Role.MODERATOR;
+        PageRequest pageable = PageRequest.of(page, size);
+        List<Post> posts = postRepository.findHomeFeedPaged(currentUser.getId(), isAdminOrMod, pageable);
 
-        // Lấy danh sách ID các bài viết mà user đã ẩn
-        Set<Long> hiddenPostIds = hiddenPostRepository.findByUserId(currentUser.getId())
-                .stream()
-                .filter(hp -> hp.getPost() != null)
-                .map(hp -> hp.getPost().getId())
-                .collect(Collectors.toSet());
-
-        List<Post> filteredPosts = posts.stream()
-                .filter(p -> !hiddenPostIds.contains(p.getId()))
-                .filter(p -> p.getStatus() != PostStatus.DELETED)
-                .collect(Collectors.toList());
-
-        List<PostResponse> responses = convertToResponses(filteredPosts, currentUser);
+        List<PostResponse> responses = convertToResponses(posts, currentUser);
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/me")
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getMyPosts(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getMyPosts(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         User currentUser = getAuthenticatedUser(authHeader);
         if (currentUser == null)
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
+        PageRequest pageable = PageRequest.of(page, size);
+        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId(), pageable);
         List<Post> filteredPosts = posts.stream()
                 .filter(p -> p.getStatus() != PostStatus.DELETED)
                 .collect(Collectors.toList());
@@ -228,17 +226,17 @@ public class PostController {
 
     @GetMapping("/user/{userId}")
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getUserPosts(@RequestHeader("Authorization") String authHeader,
-            @PathVariable Long userId) {
+    public ResponseEntity<?> getUserPosts(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         User currentUser = getAuthenticatedUser(authHeader);
         if (currentUser == null)
             return ResponseEntity.status(401).body("Chưa đăng nhập.");
 
-        // NOTE: Later we should filter posts based on visibility: PUBLIC for everyone,
-        // FRIENDS if they are friends, etc.
-        // For now, let's return all posts or just public/friends if we don't have
-        // friendship check easily available here.
-        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        PageRequest pageable = PageRequest.of(page, size);
+        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
 
         List<Post> filteredPosts = posts.stream()
                 .filter(p -> p.getStatus() != PostStatus.DELETED)

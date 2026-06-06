@@ -74,10 +74,41 @@ public class ChatService {
     public List<Map<String, Object>> getConversations(User currentUser) {
         List<Object[]> rows = messageRepository.findConversationPartnerIds(currentUser.getId());
         List<Map<String, Object>> result = new ArrayList<>();
+        if (rows == null || rows.isEmpty()) {
+            return result;
+        }
 
+        // 1. Thu thập tất cả partner ID
+        List<Long> partnerIds = rows.stream()
+                .map(row -> ((Number) row[0]).longValue())
+                .collect(Collectors.toList());
+
+        // 2. Tải toàn bộ thông tin User của đối tác trong 1 query
+        List<User> partners = userRepository.findAllById(partnerIds);
+        Map<Long, User> partnerMap = partners.stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        // 3. Tải toàn bộ mối quan hệ bạn bè trong 1 query
+        List<Friendship> friendships = friendshipRepository.findFriendshipsBetweenUserAndPartners(currentUser, partners);
+        Map<Long, Friendship> friendshipMap = new HashMap<>();
+        for (Friendship f : friendships) {
+            Long otherId = f.getRequester().getId().equals(currentUser.getId()) ? f.getReceiver().getId() : f.getRequester().getId();
+            friendshipMap.put(otherId, f);
+        }
+
+        // 4. Tải số lượng tin nhắn chưa đọc của tất cả partners trong 1 query
+        List<Object[]> unreadCounts = messageRepository.countUnreadMessagesByPartners(partners, currentUser);
+        Map<Long, Long> unreadMap = new HashMap<>();
+        for (Object[] row : unreadCounts) {
+            if (row[0] != null && row[1] != null) {
+                unreadMap.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+            }
+        }
+
+        // 5. Build kết quả theo thứ tự hội thoại gốc
         for (Object[] row : rows) {
             Long partnerId = ((Number) row[0]).longValue();
-            User partner = userRepository.findById(partnerId).orElse(null);
+            User partner = partnerMap.get(partnerId);
             if (partner == null) continue;
 
             Map<String, Object> item = new HashMap<>();
@@ -85,12 +116,11 @@ public class ChatService {
             item.put("fullName", partner.getFullName());
             item.put("avatar", partner.getAvatar());
             
-            // Kiểm tra trạng thái bạn bè
-            Optional<Friendship> friendship = friendshipRepository.findByUsers(currentUser, partner);
-            boolean isFriend = friendship.isPresent() && friendship.get().getStatus() == FriendshipStatus.ACCEPTED;
+            Friendship f = friendshipMap.get(partnerId);
+            boolean isFriend = f != null && f.getStatus() == FriendshipStatus.ACCEPTED;
             item.put("isFriend", isFriend);
             
-            long unreadCount = messageRepository.countUnreadMessages(partner, currentUser);
+            long unreadCount = unreadMap.getOrDefault(partnerId, 0L);
             item.put("unreadCount", unreadCount);
             
             result.add(item);

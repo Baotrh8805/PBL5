@@ -69,9 +69,30 @@ public class ModeratorController {
     /** Lấy tất cả bài viết (để xem xét nội dung) */
     @GetMapping("/posts")
     public ResponseEntity<?> getAllPosts() {
-        List<Map<String, Object>> result = postRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
-                .limit(200) // Tăng giới hạn lên 200 bài
+        org.springframework.data.domain.Page<Post> postPage = postRepository.findAllByOrderByCreatedAtDesc(org.springframework.data.domain.PageRequest.of(0, 200));
+        List<Post> posts = postPage.getContent();
+
+        // 1. Lấy tất cả post ID để batch query
+        List<Long> postIds = posts.stream().map(Post::getId).collect(Collectors.toList());
+        
+        Map<Long, Long> likeCounts = new HashMap<>();
+        Map<Long, Long> commentCounts = new HashMap<>();
+
+        if (!postIds.isEmpty()) {
+            likeRepository.countLikesByPostIds(postIds).forEach(row -> {
+                if (row[0] != null && row[1] != null) {
+                    likeCounts.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+                }
+            });
+            commentRepository.countCommentsByPostIds(postIds).forEach(row -> {
+                if (row[0] != null && row[1] != null) {
+                    commentCounts.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+                }
+            });
+        }
+
+        // 2. Map sang JSON response
+        List<Map<String, Object>> result = posts.stream()
                 .map(p -> {
                     Map<String, Object> map = new HashMap<>();
                     com.pbl5.model.User author = p.getUser();
@@ -107,8 +128,8 @@ public class ModeratorController {
                     map.put("authorName", author != null ? author.getFullName() : "Ẩn danh");
                     map.put("reviewedAt", p.getReviewedAt());
                     map.put("reviewerName", currentMod != null ? currentMod.getFullName() : null);
-                    map.put("likeCount", likeRepository.countByPostId(p.getId()));
-                    map.put("commentCount", commentRepository.countByPostId(p.getId()));
+                    map.put("likeCount", likeCounts.getOrDefault(p.getId(), 0L));
+                    map.put("commentCount", commentCounts.getOrDefault(p.getId(), 0L));
 
                     if (hasActiveLock) {
                         map.put("moderationStartedAt", modTime);

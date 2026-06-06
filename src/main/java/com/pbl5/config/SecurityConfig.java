@@ -68,7 +68,7 @@ public class SecurityConfig {
             // 2. Cấu hình phân quyền truy cập URL
             .authorizeHttpRequests(auth -> auth
                 // Public: không cần đăng nhập
-                .requestMatchers("/api/auth/**", "/auth/**", "/", "/index.html", "/css/**", "/js/**", "/error", "/login/oauth2/**", "/html/**", "/uploads/**", "/api/users/**", "/api/posts/**", "/api/upload/**", "/api/friends/**", "/api/messages/**", "/api/notifications/**", "/ws/**").permitAll()
+                .requestMatchers("/api/auth/**", "/auth/**", "/", "/index.html", "/css/**", "/js/**", "/images/**", "/error", "/login/oauth2/**", "/html/**", "/uploads/**", "/api/users/**", "/api/posts/**", "/api/upload/**", "/api/friends/**", "/api/messages/**", "/api/notifications/**", "/ws/**").permitAll()
 
                 // Chỉ ADMIN mới được truy cập /api/admin/**
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

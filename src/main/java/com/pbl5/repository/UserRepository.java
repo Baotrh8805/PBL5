@@ -76,4 +76,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     long countByStatus(com.pbl5.enums.UserStatus status);
 
+    @org.springframework.data.jpa.repository.Query("SELECT u FROM User u WHERE u.id <> :currentUserId " +
+           "AND u.status = 'ACTIVE' " +
+           "AND (:isNormalUser = false OR u.role = 'USER') " +
+           "AND NOT EXISTS (SELECT f FROM Friendship f WHERE " +
+           "  (f.requester.id = :currentUserId AND f.receiver.id = u.id) OR " +
+           "  (f.receiver.id = :currentUserId AND f.requester.id = u.id))")
+    org.springframework.data.domain.Page<User> findFriendSuggestions(
+            @org.springframework.data.repository.query.Param("currentUserId") Long currentUserId,
+            @org.springframework.data.repository.query.Param("isNormalUser") boolean isNormalUser,
+            org.springframework.data.domain.Pageable pageable);
+
 }

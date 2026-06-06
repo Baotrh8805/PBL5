@@ -15,4 +15,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // For deleting old notifications or duplicate ones
     @Transactional
     void deleteByUserIdAndSenderIdAndType(Long userId, Long senderId, String type);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("UPDATE Notification n SET n.isRead = true WHERE n.user.id = :userId AND n.isRead = false")
+    void markAllAsReadByUserId(@org.springframework.data.repository.query.Param("userId") Long userId);
 }

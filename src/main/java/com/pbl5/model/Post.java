@@ -9,11 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "posts")
-public class Post {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Post extends BaseContent {
 
     @Column(columnDefinition = "TEXT")
     private String content;
@@ -39,6 +35,11 @@ public class Post {
     private Double nsfwScore = 0.0;
     private Double violenceScore = 0.0;
     private Double hateSpeechScore = 0.0;
+    private Double hateSpeechContentScore = 0.0;
+    private Double hateSpeechVideoScore = 0.0;
+
+    @Column(name = "speech_labels", columnDefinition = "TEXT")
+    private String speechLabels;
 
     @Column(columnDefinition = "TEXT")
     private String nsfwBox;
@@ -49,6 +50,9 @@ public class Post {
     @Column(columnDefinition = "TEXT")
     private String hateSpeechWord;
 
+    @Column(name = "highest_score_frame_index")
+    private Integer highestScoreFrameIndex;
+
     @Column(name = "highest_score_frame_second")
     private Integer highestScoreFrameSecond;
 
@@ -57,16 +61,18 @@ public class Post {
 
     private Double violationRate = 0.0;
 
+    @Column(name = "video_fps")
+    private Double fps;
+
     // Thời điểm một moderator bắt đầu xử lý vi phạm của bài viết
     private LocalDateTime moderationStartedAt;
+
+    private LocalDateTime reviewedAt;
 
     // Moderator hiện đang phụ trách duyệt vi phạm
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "processing_moderator_id")
     private User processingModerator;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
@@ -77,19 +83,6 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getContent() {
         return content;
@@ -163,6 +156,14 @@ public class Post {
         this.hateSpeechScore = hateSpeechScore;
     }
 
+    public String getSpeechLabels() {
+        return speechLabels;
+    }
+
+    public void setSpeechLabels(String speechLabels) {
+        this.speechLabels = speechLabels;
+    }
+
     public String getNsfwBox() {
         return nsfwBox;
     }
@@ -185,6 +186,14 @@ public class Post {
 
     public void setHateSpeechWord(String hateSpeechWord) {
         this.hateSpeechWord = hateSpeechWord;
+    }
+
+    public Integer getHighestScoreFrameIndex() {
+        return highestScoreFrameIndex;
+    }
+
+    public void setHighestScoreFrameIndex(Integer highestScoreFrameIndex) {
+        this.highestScoreFrameIndex = highestScoreFrameIndex;
     }
 
     public Integer getHighestScoreFrameSecond() {
@@ -227,14 +236,6 @@ public class Post {
         this.processingModerator = processingModerator;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public User getUser() {
         return user;
     }
@@ -257,5 +258,37 @@ public class Post {
 
     public void setComments(List<Comment> comments) {
         this.comments = comments;
+    }
+
+    public LocalDateTime getReviewedAt() {
+        return reviewedAt;
+    }
+
+    public void setReviewedAt(LocalDateTime reviewedAt) {
+        this.reviewedAt = reviewedAt;
+    }
+
+    public Double getFps() {
+        return fps;
+    }
+
+    public void setFps(Double fps) {
+        this.fps = fps;
+    }
+
+    public Double getHateSpeechContentScore() {
+        return hateSpeechContentScore;
+    }
+
+    public void setHateSpeechContentScore(Double hateSpeechContentScore) {
+        this.hateSpeechContentScore = hateSpeechContentScore;
+    }
+
+    public Double getHateSpeechVideoScore() {
+        return hateSpeechVideoScore;
+    }
+
+    public void setHateSpeechVideoScore(Double hateSpeechVideoScore) {
+        this.hateSpeechVideoScore = hateSpeechVideoScore;
     }
 }

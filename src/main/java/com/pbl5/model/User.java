@@ -85,6 +85,20 @@ public class User {
     @Column(length = 500)
     private String cover;
 
+    /** Điểm vi phạm (Mỗi lần bị xoá bài thì +1) */
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Integer score = 0;
+
+    @Column(name = "post_warning_expires_at")
+    private java.time.LocalDateTime postWarningExpiresAt;
+
+    @Column(name = "comment_warning_expires_at")
+    private java.time.LocalDateTime commentWarningExpiresAt;
+
+    @Column(name = "lock_expires_at")
+    private java.time.LocalDateTime lockExpiresAt;
+
+
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
 
@@ -168,4 +182,17 @@ public class User {
 
     /** Gán token đặt lại mật khẩu */
     public void setResetPasswordToken(String resetPasswordToken) { this.resetPasswordToken = resetPasswordToken; }
+
+    public Integer getScore() { return score; }
+    public void setScore(Integer score) { this.score = score; }
+
+    public java.time.LocalDateTime getPostWarningExpiresAt() { return postWarningExpiresAt; }
+    public void setPostWarningExpiresAt(java.time.LocalDateTime postWarningExpiresAt) { this.postWarningExpiresAt = postWarningExpiresAt; }
+
+    public java.time.LocalDateTime getCommentWarningExpiresAt() { return commentWarningExpiresAt; }
+    public void setCommentWarningExpiresAt(java.time.LocalDateTime commentWarningExpiresAt) { this.commentWarningExpiresAt = commentWarningExpiresAt; }
+
+    public java.time.LocalDateTime getLockExpiresAt() { return lockExpiresAt; }
+    public void setLockExpiresAt(java.time.LocalDateTime lockExpiresAt) { this.lockExpiresAt = lockExpiresAt; }
 }
+

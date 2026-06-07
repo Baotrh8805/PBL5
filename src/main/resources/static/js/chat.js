@@ -81,6 +81,21 @@ function toggleInboxDropdown() {
     }
 }
 
+let currentMessengerFilter = 'all';
+let messengerSearchQuery = '';
+
+function handleMessengerSearch(val) {
+    messengerSearchQuery = val.toLowerCase().trim();
+    loadInboxDropdown();
+}
+
+function setMessengerFilter(filter, btn) {
+    currentMessengerFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
+    btn.classList.add('active');
+    loadInboxDropdown();
+}
+
 async function loadInboxDropdown() {
     const token = localStorage.getItem('token');
     const inboxList = document.getElementById('inbox-list');
@@ -104,11 +119,24 @@ async function loadInboxDropdown() {
                 mergedMap.set(u.id, { ...u, isFriend: true, lastMessage: 'Các bạn đã trở thành bạn bè', lastMessageTime: null });
             }
         });
-        const contacts = Array.from(mergedMap.values());
+        let contacts = Array.from(mergedMap.values());
+
+        // Apply filters
+        if (currentMessengerFilter === 'unread') {
+            contacts = contacts.filter(c => c.unreadCount > 0);
+        }
+        
+        if (messengerSearchQuery) {
+            contacts = contacts.filter(c => c.fullName.toLowerCase().includes(messengerSearchQuery));
+        }
 
         inboxList.innerHTML = '';
         if(contacts.length === 0) {
-            inboxList.innerHTML = '<div style="padding: 15px; color:#65676B; font-size:14px; text-align:center;">Chưa có đoạn chat nào.</div>';
+            let emptyMsg = 'Chưa có đoạn chat nào.';
+            if (currentMessengerFilter === 'unread') emptyMsg = 'Không có tin nhắn chưa đọc.';
+            if (messengerSearchQuery) emptyMsg = 'Không tìm thấy kết quả phù hợp.';
+            
+            inboxList.innerHTML = `<div style="padding: 15px; color:#65676B; font-size:14px; text-align:center;">${emptyMsg}</div>`;
             return;
         }
 
@@ -118,10 +146,12 @@ async function loadInboxDropdown() {
                  avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff`;
             }
             let msgStr = f.lastMessage || 'Bạn bè';
+            let isUnread = f.unreadCount > 0;
 
             const item = document.createElement('div');
-            item.className = 'notification-item';
+            item.className = 'notification-item' + (isUnread ? ' unread' : '');
             item.style.cursor = 'pointer';
+            item.style.position = 'relative';
             item.onclick = () => {
                 const dropdown = document.getElementById('inbox-dropdown');
                 if (dropdown) dropdown.style.display = 'none'; // hide dropdown
@@ -132,9 +162,10 @@ async function loadInboxDropdown() {
             item.innerHTML = `
                 <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff'">
                 <div class="notification-content">
-                    <div style="font-weight: 600; font-size: 15px; color: #050505;">${f.fullName}</div>
-                    <div class="notification-msg" style="color: #65676b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
+                    <div style="font-weight: ${isUnread ? '700' : '600'}; font-size: 15px; color: var(--text-main);">${f.fullName}</div>
+                    <div class="notification-msg" style="color: ${isUnread ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: ${isUnread ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
                 </div>
+                ${isUnread ? '<div class="notification-dot" style="background-color: #00d1b2; width: 10px; height: 10px; border-radius: 50%; margin-left: auto;"></div>' : ''}
             `;
             inboxList.appendChild(item);
         });
@@ -206,6 +237,11 @@ function renderNotifications(notifications) {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
+            }
+
+            if (n.type === 'WARNING' || n.type === 'REPORT_WARNING') {
+                e.preventDefault();
+                showWarningModal(n.message);
             }
         };
         
@@ -359,6 +395,7 @@ function openChatBox(userId, name, avatar) {
     .then(res => res.json())
     .then(messages => {
         messagesDiv.innerHTML = '';
+        lastMessageTimestamp = null; // Reset tracker
         messages.forEach(msg => {
             appendMessageToUI(msg);
         });
@@ -380,20 +417,103 @@ function handleIncomingMessage(msg) {
         (msg.senderId == myUserId && msg.receiverId == currentChatUserId)) {
         appendMessageToUI(msg);
         scrollToBottom();
+        
+        // Ensure the chat box is visible
+        const chatBox = document.getElementById('chat-box');
+        if (chatBox && (chatBox.style.display === 'none' || chatBox.style.display === '')) {
+            chatBox.style.display = 'flex';
+        }
     } else {
-        // Maybe show an indicator on the sidebar for unread msgs?
-        const unreadBadge = document.getElementById(`unread-badge-${msg.senderId}`);
-        if (unreadBadge) {
-            unreadBadge.style.display = 'block';
-        } else {
-            // Sender may not be in current friend list (e.g. unfriended old conversation).
-            loadChatSidebar();
+        if (msg.senderId != myUserId) {
+            const chatBox = document.getElementById('chat-box');
+            // If chat box is currently closed, auto-open it with the new message
+            if (!chatBox || chatBox.style.display === 'none' || chatBox.style.display === '') {
+                
+                // Fetch real avatar and name from API to ensure it's not broken
+                fetch(`/api/users/${msg.senderId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                })
+                .then(res => res.ok ? res.json() : null)
+                .then(userData => {
+                    let avatar = '';
+                    let name = msg.senderName || 'Người dùng';
+                    
+                    if (userData) {
+                        avatar = userData.avatar || '';
+                        name = userData.fullName || name;
+                    } else {
+                        // Fallback to DOM if API fails
+                        const contactDiv = document.getElementById(`chat-contact-${msg.senderId}`);
+                        if (contactDiv) {
+                            const img = contactDiv.querySelector('img');
+                            if (img && img.src && !img.src.includes('ui-avatars.com')) {
+                                avatar = img.src;
+                            }
+                            const nameDiv = contactDiv.querySelector('.chat-contact-name');
+                            if (nameDiv) {
+                                name = nameDiv.textContent;
+                            }
+                        }
+                    }
+                    
+                    openChatBox(msg.senderId, name, avatar);
+                })
+                .catch(err => {
+                    console.error('Error fetching user info for auto-open chat:', err);
+                    openChatBox(msg.senderId, msg.senderName || 'Người dùng', '');
+                });
+                
+            } else {
+                // If chat box is open for another user, just show an indicator
+                const unreadBadge = document.getElementById(`unread-badge-${msg.senderId}`);
+                if (unreadBadge) {
+                    unreadBadge.style.display = 'block';
+                }
+                loadChatSidebar();
+            }
         }
     }
 }
 
+// Track last message timestamp for date separator logic
+let lastMessageTimestamp = null;
+
+function formatDateSeparator(date) {
+    const hours = ('0' + date.getHours()).slice(-2);
+    const minutes = ('0' + date.getMinutes()).slice(-2);
+    const day = date.getDate();
+    const monthNames = [
+        'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${hours}:${minutes} ${day} ${month}, ${year}`;
+}
+
 function appendMessageToUI(msg) {
     const messagesDiv = document.getElementById('chat-messages-container');
+    
+    // Check if we need a date separator (different calendar day or first message)
+    const currentMsgDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
+    let needsSeparator = false;
+    
+    if (!lastMessageTimestamp) {
+        needsSeparator = true;
+    } else {
+        if (currentMsgDate.toDateString() !== lastMessageTimestamp.toDateString()) {
+            needsSeparator = true;
+        }
+    }
+    
+    if (needsSeparator) {
+        const separator = document.createElement('div');
+        separator.className = 'chat-date-separator';
+        separator.innerHTML = `<span>${formatDateSeparator(currentMsgDate)}</span>`;
+        messagesDiv.appendChild(separator);
+    }
+    lastMessageTimestamp = currentMsgDate;
+    
     const div = document.createElement('div');
     const isSent = (msg.senderId == myUserId);
     
@@ -408,16 +528,12 @@ function appendMessageToUI(msg) {
     }
     
     div.className = `chat-message-wrapper ${isSent ? 'sent' : 'received'}`;
-    const targetAvatarHtml = !isSent ? `<img src="${window.chatTargetAvatarUrl || '/uploads/default-avatar.png'}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; margin-right:8px;" onerror="this.style.display='none'">` : '';
-
-    div.style.display = 'flex';
-    div.style.flexDirection = isSent ? 'row-reverse' : 'row';
-    div.style.alignItems = 'flex-end';
+    const targetAvatarHtml = !isSent ? `<a href="/html/profile.html?userId=${msg.senderId}"><img src="${window.chatTargetAvatarUrl || '/uploads/default-avatar.png'}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'"></a>` : '';
 
     div.innerHTML = `
         ${targetAvatarHtml}
-        <div style="display:flex; flex-direction:column; align-items: ${isSent ? 'flex-end' : 'flex-start'};">
-            <div class="chat-message ${isSent ? 'sent' : 'received'}" style="margin: 0;">${msg.content}</div>
+        <div class="chat-msg-content">
+            <div class="chat-message ${isSent ? 'sent' : 'received'}">${msg.content}</div>
             <div class="chat-message-time">${timeStr}</div>
         </div>
     `;
@@ -467,3 +583,49 @@ function toggleChatSidebar() {
         sidebar.style.display = 'none';
     }
 }
+
+function showWarningModal(message) {
+    const existing = document.getElementById('system-warning-modal');
+    if (existing) {
+        existing.remove();
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'system-warning-modal';
+    modal.className = 'system-warning-modal-overlay';
+    
+    modal.innerHTML = `
+        <div class="system-warning-modal-card">
+            <div class="system-warning-modal-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="system-warning-modal-title">Thông Báo Cảnh Cáo</div>
+            <div class="system-warning-modal-message">${message}</div>
+            <div class="system-warning-modal-notice">
+                Vui lòng tuân thủ Tiêu chuẩn cộng đồng để xây dựng mạng xã hội lành mạnh, văn minh và an toàn.
+            </div>
+            <button class="system-warning-modal-btn" onclick="closeWarningModal()">Đã hiểu</button>
+        </div>
+    `;
+
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            closeWarningModal();
+        }
+    };
+
+    document.body.appendChild(modal);
+
+    modal.offsetHeight; // force reflow
+    modal.classList.add('show');
+}
+
+window.closeWarningModal = function() {
+    const modal = document.getElementById('system-warning-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+};

@@ -24,12 +24,12 @@ public class EmailService {
      * @param token Mã UUID ngẫu nhiên được dùng để xác thực (lưu trong DB)
      */
     public void sendVerificationEmail(String to, String token) {
-        String subject = "Mã xác thực tài khoản LC Network";
+        String subject = "Mã xác thực tài khoản BD Network";
 
-        String message = "Chào mừng bạn đến với LC Network!\n\n"
+        String message = "Chào mừng bạn đến với BD Network!\n\n"
                        + "Mã xác thực (PIN) của bạn là: " + token + "\n\n"
                        + "Vui lòng nhập mã này trên trang web để hoàn tất quá trình đăng ký.\n"
-                       + "Trân trọng,\nĐội ngũ LC Network.";
+                       + "Trân trọng,\nĐội ngũ BD Network.";
 
         // Tạo và cấu hình đối tượng email
         SimpleMailMessage email = new SimpleMailMessage();
@@ -72,15 +72,15 @@ public class EmailService {
      * @param expiry   Thời hạn mở khóa (null nếu vĩnh viễn)
      */
     public void sendLockEmail(String to, String reason, String expiry) {
-        String subject = "Thông báo: Tài khoản LC Network của bạn đã bị khóa";
+        String subject = "Thông báo: Tài khoản BD Network của bạn đã bị khóa";
         String expiryMsg = expiry != null ? "Thời hạn mở khóa dự kiến: " + expiry : "Hình thức: KHÓA VĨNH VIỄN";
 
         String message = "Chào bạn,\n\n"
-                       + "Chúng tôi rất tiếc phải thông báo rằng tài khoản LC Network của bạn đã bị khóa do vi phạm tiêu chuẩn cộng đồng.\n\n"
+                       + "Chúng tôi rất tiếc phải thông báo rằng tài khoản BD Network của bạn đã bị khóa do vi phạm tiêu chuẩn cộng đồng.\n\n"
                        + "Chi tiết vi phạm: " + reason + "\n"
                        + expiryMsg + "\n\n"
                        + "Nếu bạn tin rằng đây là một sự nhầm lẫn, vui lòng phản hồi email này để được hỗ trợ.\n"
-                       + "Trân trọng,\nĐội ngũ quản trị viên LC Network.";
+                       + "Trân trọng,\nĐội ngũ quản trị viên BD Network.";
 
         SimpleMailMessage email = new SimpleMailMessage();
         email.setTo(to);

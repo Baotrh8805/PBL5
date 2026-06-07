@@ -1,6 +1,6 @@
 console.log("MODERATOR CORE SCRIPT STARTING...");
 /**
- * MODERATOR CONTROL PANEL LOGIC - LC NETWORK
+ * MODERATOR CONTROL PANEL LOGIC - BD NETWORK
  * Quản lý điều phối, báo cáo và người dùng vi phạm
  */
 

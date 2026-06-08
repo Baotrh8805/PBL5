@@ -12,6 +12,10 @@ public class ChatMessage {
     private String type; // CHAT, JOIN, LEAVE
     private String senderName;
 
+    private Long groupId;
+    private String groupName;
+    private String senderAvatar;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -35,4 +39,13 @@ public class ChatMessage {
 
     public boolean isRead() { return isRead; }
     public void setRead(boolean read) { isRead = read; }
+
+    public Long getGroupId() { return groupId; }
+    public void setGroupId(Long groupId) { this.groupId = groupId; }
+
+    public String getGroupName() { return groupName; }
+    public void setGroupName(String groupName) { this.groupName = groupName; }
+
+    public String getSenderAvatar() { return senderAvatar; }
+    public void setSenderAvatar(String senderAvatar) { this.senderAvatar = senderAvatar; }
 }

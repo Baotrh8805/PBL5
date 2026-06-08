@@ -15,8 +15,12 @@ public class Message {
     private User sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id", nullable = false)
+    @JoinColumn(name = "receiver_id", nullable = true)
     private User receiver;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private ChatGroup chatGroup;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -52,4 +56,7 @@ public class Message {
 
     public Boolean getReadStatus() { return readStatus != null ? readStatus : false; }
     public void setReadStatus(Boolean readStatus) { this.readStatus = readStatus; }
+
+    public ChatGroup getChatGroup() { return chatGroup; }
+    public void setChatGroup(ChatGroup chatGroup) { this.chatGroup = chatGroup; }
 }

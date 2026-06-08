@@ -1,6 +1,7 @@
 let stompClient = null;
 let currentChatUserId = null;
 let myUserId = null;
+let isCurrentChatGroup = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
@@ -16,6 +17,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadChatSidebar();
     fetchUnreadNotificationCount();
+    
+    // Inject Group Creation Button
+    setTimeout(() => {
+        // 1. Inject to Sidebar Title if present
+        const sidebarTitle = document.querySelector('.chat-sidebar-title');
+        if (sidebarTitle) {
+            sidebarTitle.style.display = 'flex';
+            sidebarTitle.style.alignItems = 'center';
+            sidebarTitle.style.justifyContent = 'space-between';
+            
+            if (!document.getElementById('btn-create-group-chat')) {
+                const btn = document.createElement('button');
+                btn.id = 'btn-create-group-chat';
+                btn.title = 'Tạo nhóm chat mới';
+                btn.style.cssText = "background: none; border: none; color: #0084ff; cursor: pointer; font-size: 16px; padding: 4px; display: flex; align-items: center; justify-content: center; border-radius: 50%; width: 28px; height: 28px; transition: 0.2s;";
+                btn.onmouseover = () => btn.style.backgroundColor = '#f0f2f5';
+                btn.onmouseout = () => btn.style.backgroundColor = 'transparent';
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    showCreateGroupModal();
+                };
+                sidebarTitle.appendChild(btn);
+            }
+        }
+
+        // 2. Inject to Messenger Dropdown Header if present
+        const messengerActions = document.querySelector('.messenger-header-actions');
+        if (messengerActions) {
+            if (!document.getElementById('btn-messenger-create-group')) {
+                const btn = document.createElement('button');
+                btn.id = 'btn-messenger-create-group';
+                btn.className = 'icon-btn-small';
+                btn.title = 'Tạo nhóm chat mới';
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    // Close the dropdown so it doesn't overlap with the modal
+                    const dropdown = document.getElementById('inbox-dropdown');
+                    if (dropdown) dropdown.style.display = 'none';
+                    inboxDropdownOpen = false;
+                    showCreateGroupModal();
+                };
+                messengerActions.appendChild(btn);
+            }
+        }
+    }, 500);
 });
 
 function connectWebSocket(token) {
@@ -113,10 +161,14 @@ async function loadInboxDropdown() {
 
         // Merge logic
         const mergedMap = new Map();
-        conversations.forEach(u => mergedMap.set(u.id, u));
+        conversations.forEach(c => {
+            const key = c.isGroup ? `group_${c.id}` : `user_${c.id}`;
+            mergedMap.set(key, c);
+        });
         friends.forEach(u => {
-            if (!mergedMap.has(u.id)) {
-                mergedMap.set(u.id, { ...u, isFriend: true, lastMessage: 'Các bạn đã trở thành bạn bè', lastMessageTime: null });
+            const key = `user_${u.id}`;
+            if (!mergedMap.has(key)) {
+                mergedMap.set(key, { ...u, isGroup: false, isFriend: true, lastMessage: 'Các bạn đã trở thành bạn bè', lastMessageTime: null, unreadCount: 0 });
             }
         });
         let contacts = Array.from(mergedMap.values());
@@ -156,7 +208,7 @@ async function loadInboxDropdown() {
                 const dropdown = document.getElementById('inbox-dropdown');
                 if (dropdown) dropdown.style.display = 'none'; // hide dropdown
                 inboxDropdownOpen = false;
-                openChatBox(f.id, f.fullName, avatarUrl);
+                openChatBox(f.id, f.fullName, avatarUrl, !!f.isGroup);
             };
 
             item.innerHTML = `
@@ -283,8 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         if (inboxDropdown && inboxDropdownOpen) {
-            // Also note the inbox icon's container can just be the wrapper 
-            // but clicking outside .notification-container and .icon-btn should hide it
             if (!e.target.closest('.notification-container') && !e.target.closest('#nav-message-btn') && !e.target.closest('#inbox-dropdown')) {
                 inboxDropdown.style.display = 'none';
                 inboxDropdownOpen = false;
@@ -306,8 +356,16 @@ async function loadChatSidebar() {
     const conversations = convRes.ok ? await convRes.json() : [];
 
     const mergedMap = new Map();
-    conversations.forEach(u => mergedMap.set(u.id, u));
-    friends.forEach(u => mergedMap.set(u.id, { ...u, isFriend: true }));
+    conversations.forEach(c => {
+        const key = c.isGroup ? `group_${c.id}` : `user_${c.id}`;
+        mergedMap.set(key, c);
+    });
+    friends.forEach(u => {
+        const key = `user_${u.id}`;
+        if (!mergedMap.has(key)) {
+            mergedMap.set(key, { ...u, isGroup: false, isFriend: true, unreadCount: 0 });
+        }
+    });
     const contacts = Array.from(mergedMap.values());
 
     renderChatContacts(contacts, 'Chưa có bạn bè để trò chuyện');
@@ -350,19 +408,28 @@ function renderChatContacts(contacts, emptyMessage = 'Chưa có người liên h
 
         const div = document.createElement('div');
         div.className = 'chat-contact';
-        div.id = `chat-contact-${f.id}`;
-        div.onclick = () => openChatBox(f.id, f.fullName, avatarUrl);
+        const elementId = f.isGroup ? `group_${f.id}` : `user_${f.id}`;
+        div.id = `chat-contact-${elementId}`;
+        div.onclick = () => openChatBox(f.id, f.fullName, avatarUrl, !!f.isGroup);
         div.innerHTML = `
             <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff'">
             <div class="chat-contact-name">${f.fullName}</div>
-            <div id="unread-badge-${f.id}" class="chat-unread-badge" style="display:none;"></div>
+            <div id="unread-badge-${elementId}" class="chat-unread-badge" style="display:none;"></div>
         `;
         chatList.appendChild(div);
+
+        // Show unread badge
+        const unreadBadge = document.getElementById(`unread-badge-${elementId}`);
+        if (unreadBadge && f.unreadCount > 0) {
+            unreadBadge.style.display = 'block';
+        }
     });
 }
 
-function openChatBox(userId, name, avatar) {
+function openChatBox(userId, name, avatar, isGroup = false) {
     currentChatUserId = userId;
+    isCurrentChatGroup = isGroup;
+
     const chatBox = document.getElementById('chat-box');
     chatBox.style.display = 'flex';
     
@@ -371,25 +438,35 @@ function openChatBox(userId, name, avatar) {
         targetAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00d1b2&color=fff`;
     }
 
-    document.getElementById('chat-target-name').innerHTML = `<a href="/html/profile.html?userId=${userId}" style="text-decoration:none; color:inherit;">${name}</a>`;
-    document.getElementById('chat-target-avatar').src = targetAvatar;
-    document.getElementById('chat-target-avatar').onclick = () => { window.location.href = `/html/profile.html?userId=${userId}`; };
-    document.getElementById('chat-target-avatar').style.cursor = 'pointer';
+    if (isGroup) {
+        document.getElementById('chat-target-name').innerText = name;
+        document.getElementById('chat-target-avatar').src = targetAvatar;
+        document.getElementById('chat-target-avatar').onclick = null;
+        document.getElementById('chat-target-avatar').style.cursor = 'default';
+    } else {
+        document.getElementById('chat-target-name').innerHTML = `<a href="/html/profile.html?userId=${userId}" style="text-decoration:none; color:inherit;">${name}</a>`;
+        document.getElementById('chat-target-avatar').src = targetAvatar;
+        document.getElementById('chat-target-avatar').onclick = () => { window.location.href = `/html/profile.html?userId=${userId}`; };
+        document.getElementById('chat-target-avatar').style.cursor = 'pointer';
+    }
+    
     document.getElementById('chat-target-avatar').onerror = function() {
         this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00d1b2&color=fff`;
     };
     
-    // Lưu lại targetAvatar để dùng trong appendMessageToUI nếu cần
+    // Save target avatar url
     window.chatTargetAvatarUrl = targetAvatar;
 
     const messagesDiv = document.getElementById('chat-messages-container');
     messagesDiv.innerHTML = '<div style="text-align:center;color:#65676B;font-size:12px;margin-top:10px;">Đang tải...</div>';
 
-    const unreadBadge = document.getElementById(`unread-badge-${userId}`);
+    const elementId = isGroup ? `group_${userId}` : `user_${userId}`;
+    const unreadBadge = document.getElementById(`unread-badge-${elementId}`);
     if(unreadBadge) unreadBadge.style.display = 'none';
 
     // Load History
-    fetch(`/api/messages/${userId}`, {
+    const historyUrl = isGroup ? `/api/groups/${userId}/messages` : `/api/messages/${userId}`;
+    fetch(historyUrl, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     })
     .then(res => res.json())
@@ -409,12 +486,20 @@ function openChatBox(userId, name, avatar) {
 function closeChatBox() {
     document.getElementById('chat-box').style.display = 'none';
     currentChatUserId = null;
+    isCurrentChatGroup = false;
 }
 
 function handleIncomingMessage(msg) {
+    const isGroupMsg = !!msg.groupId;
+    const activeId = isGroupMsg ? msg.groupId : msg.senderId;
+    const targetElementId = isGroupMsg ? `group_${msg.groupId}` : `user_${msg.senderId}`;
+
     // If the message belongs to the current open chat window
-    if ((msg.senderId == currentChatUserId && msg.receiverId == myUserId) || 
-        (msg.senderId == myUserId && msg.receiverId == currentChatUserId)) {
+    if ((isGroupMsg && isCurrentChatGroup && msg.groupId == currentChatUserId) || 
+        (!isGroupMsg && !isCurrentChatGroup && 
+            ((msg.senderId == currentChatUserId && msg.receiverId == myUserId) || 
+             (msg.senderId == myUserId && msg.receiverId == currentChatUserId)))) {
+        
         appendMessageToUI(msg);
         scrollToBottom();
         
@@ -428,48 +513,37 @@ function handleIncomingMessage(msg) {
             const chatBox = document.getElementById('chat-box');
             // If chat box is currently closed, auto-open it with the new message
             if (!chatBox || chatBox.style.display === 'none' || chatBox.style.display === '') {
-                
-                // Fetch real avatar and name from API to ensure it's not broken
-                fetch(`/api/users/${msg.senderId}`, {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                })
-                .then(res => res.ok ? res.json() : null)
-                .then(userData => {
-                    let avatar = '';
-                    let name = msg.senderName || 'Người dùng';
-                    
-                    if (userData) {
-                        avatar = userData.avatar || '';
-                        name = userData.fullName || name;
-                    } else {
-                        // Fallback to DOM if API fails
-                        const contactDiv = document.getElementById(`chat-contact-${msg.senderId}`);
-                        if (contactDiv) {
-                            const img = contactDiv.querySelector('img');
-                            if (img && img.src && !img.src.includes('ui-avatars.com')) {
-                                avatar = img.src;
-                            }
-                            const nameDiv = contactDiv.querySelector('.chat-contact-name');
-                            if (nameDiv) {
-                                name = nameDiv.textContent;
-                            }
+                if (isGroupMsg) {
+                    openChatBox(msg.groupId, msg.groupName, '', true);
+                } else {
+                    // Fetch real avatar and name from API to ensure it's not broken
+                    fetch(`/api/users/${msg.senderId}`, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    })
+                    .then(res => res.ok ? res.json() : null)
+                    .then(userData => {
+                        let avatar = '';
+                        let name = msg.senderName || 'Người dùng';
+                        
+                        if (userData) {
+                            avatar = userData.avatar || '';
+                            name = userData.fullName || name;
                         }
-                    }
-                    
-                    openChatBox(msg.senderId, name, avatar);
-                })
-                .catch(err => {
-                    console.error('Error fetching user info for auto-open chat:', err);
-                    openChatBox(msg.senderId, msg.senderName || 'Người dùng', '');
-                });
-                
+                        openChatBox(msg.senderId, name, avatar, false);
+                    })
+                    .catch(err => {
+                        console.error('Error fetching user info for auto-open chat:', err);
+                        openChatBox(msg.senderId, msg.senderName || 'Người dùng', '', false);
+                    });
+                }
             } else {
                 // If chat box is open for another user, just show an indicator
-                const unreadBadge = document.getElementById(`unread-badge-${msg.senderId}`);
+                const unreadBadge = document.getElementById(`unread-badge-${targetElementId}`);
                 if (unreadBadge) {
                     unreadBadge.style.display = 'block';
                 }
                 loadChatSidebar();
+                loadInboxDropdown();
             }
         }
     }
@@ -528,11 +602,19 @@ function appendMessageToUI(msg) {
     }
     
     div.className = `chat-message-wrapper ${isSent ? 'sent' : 'received'}`;
-    const targetAvatarHtml = !isSent ? `<a href="/html/profile.html?userId=${msg.senderId}"><img src="${window.chatTargetAvatarUrl || '/uploads/default-avatar.png'}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'"></a>` : '';
+    
+    let avatarUrl = msg.senderAvatar;
+    if (!avatarUrl || avatarUrl.trim() === '') {
+        avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || 'User')}&background=00d1b2&color=fff`;
+    }
+
+    const targetAvatarHtml = !isSent ? `<a href="/html/profile.html?userId=${msg.senderId}"><img src="${avatarUrl}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || 'User')}&background=00d1b2&color=fff'"></a>` : '';
+    const nameHtml = (isCurrentChatGroup && !isSent) ? `<div style="font-size: 11px; color: #8a8d91; margin-bottom: 2px; margin-left: 2px; font-weight: 500;">${msg.senderName}</div>` : '';
 
     div.innerHTML = `
         ${targetAvatarHtml}
         <div class="chat-msg-content">
+            ${nameHtml}
             <div class="chat-message ${isSent ? 'sent' : 'received'}">${msg.content}</div>
             <div class="chat-message-time">${timeStr}</div>
         </div>
@@ -542,7 +624,9 @@ function appendMessageToUI(msg) {
 
 function scrollToBottom() {
     const messagesDiv = document.getElementById('chat-messages-container');
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    if (messagesDiv) {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 }
 
 function sendChatMessage() {
@@ -552,9 +636,13 @@ function sendChatMessage() {
     if (content && stompClient && stompClient.connected && currentChatUserId) {
         const chatMsg = {
             senderId: myUserId,
-            receiverId: currentChatUserId,
             content: content
         };
+        if (isCurrentChatGroup) {
+            chatMsg.groupId = currentChatUserId;
+        } else {
+            chatMsg.receiverId = currentChatUserId;
+        }
         // Send to controller
         stompClient.send("/app/chat", {}, JSON.stringify(chatMsg));
         input.value = '';
@@ -629,3 +717,101 @@ window.closeWarningModal = function() {
         }, 300);
     }
 };
+
+function showCreateGroupModal() {
+    const existing = document.getElementById('create-group-modal');
+    if (existing) existing.remove();
+
+    const token = localStorage.getItem('token');
+
+    const modal = document.createElement('div');
+    modal.id = 'create-group-modal';
+    modal.className = 'modal-overlay';
+    modal.style.cssText = "display: flex; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;";
+
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px; padding: 20px; background: var(--bg-card, #fff); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 90%; color: var(--text-main, #050505);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #ddd); padding-bottom: 10px; margin-bottom: 15px;">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: var(--text-main);">Tạo nhóm chat mới</h3>
+                <button type="button" class="close-modal" id="close-create-group-modal" style="background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: var(--text-main);">Tên nhóm <span style="color: red;">*</span></label>
+                    <input type="text" id="new-group-name" placeholder="Nhập tên nhóm..." style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color, #ced0d4); border-radius: 6px; outline: none; background: var(--bg-input, #fff); color: var(--text-main); box-sizing: border-box;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: var(--text-main);">Chọn thành viên</label>
+                    <div id="friends-checkbox-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color, #ced0d4); border-radius: 6px; padding: 10px; background: var(--bg-input, #fff);">
+                        <div style="text-align: center; color: var(--text-muted); font-size: 14px;">Đang tải danh sách bạn bè...</div>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-secondary" id="cancel-create-group-btn" style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border-color, #ddd); background: var(--bg-card, #fff); color: var(--text-main); cursor: pointer;">Hủy</button>
+                    <button class="btn btn-primary" id="confirm-create-group-btn" style="padding: 8px 16px; border-radius: 6px; border: none; background: #00d1b2; color: #fff; cursor: pointer; font-weight: 600;">Tạo nhóm</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    fetch('/api/friends', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(friends => {
+            const listDiv = document.getElementById('friends-checkbox-list');
+            if (friends.length === 0) {
+                listDiv.innerHTML = '<div style="text-align: center; color: var(--text-muted); font-size: 14px; padding: 10px;">Chưa có bạn bè để thêm vào nhóm</div>';
+                return;
+            }
+            listDiv.innerHTML = '';
+            friends.forEach(f => {
+                const item = document.createElement('div');
+                item.style.cssText = "display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border-color, #f0f2f5);";
+                item.innerHTML = `
+                    <input type="checkbox" value="${f.id}" class="group-member-checkbox" id="checkbox-friend-${f.id}">
+                    <img src="${f.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(f.fullName) + '&background=00d1b2&color=fff'}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                    <label for="checkbox-friend-${f.id}" style="color: var(--text-main); cursor: pointer; flex-grow: 1; font-size: 14px;">${f.fullName}</label>
+                `;
+                listDiv.appendChild(item);
+            });
+        });
+
+    const closeModal = () => modal.remove();
+    document.getElementById('close-create-group-modal').onclick = closeModal;
+    document.getElementById('cancel-create-group-btn').onclick = closeModal;
+
+    document.getElementById('confirm-create-group-btn').onclick = () => {
+        const nameInput = document.getElementById('new-group-name');
+        const groupName = nameInput.value.trim();
+        if (!groupName) {
+            alert('Vui lòng nhập tên nhóm!');
+            return;
+        }
+
+        const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
+        const memberIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        fetch('/api/groups', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name: groupName, memberIds: memberIds })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Không thể tạo nhóm');
+            return res.json();
+        })
+        .then(group => {
+            closeModal();
+            loadChatSidebar();
+            openChatBox(group.id, group.name, group.avatar, true);
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Lỗi khi tạo nhóm!');
+        });
+    };
+}

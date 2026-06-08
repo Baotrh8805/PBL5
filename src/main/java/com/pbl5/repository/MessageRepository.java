@@ -32,4 +32,16 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @org.springframework.transaction.annotation.Transactional
     @Query("UPDATE Message m SET m.readStatus = true WHERE m.sender = :partner AND m.receiver = :currentUser AND (m.readStatus = false OR m.readStatus IS NULL)")
     void markAsRead(@Param("partner") User partner, @Param("currentUser") User currentUser);
+
+    @Query("SELECT m FROM Message m WHERE m.chatGroup.id = :groupId ORDER BY m.timestamp ASC")
+    List<Message> findGroupChatHistory(@Param("groupId") Long groupId);
+
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.chatGroup.id = :groupId AND m.timestamp > :lastReadTime AND m.sender.id <> :userId")
+    long countUnreadGroupMessages(@Param("groupId") Long groupId, @Param("lastReadTime") java.time.LocalDateTime lastReadTime, @Param("userId") Long userId);
+
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.chatGroup.id = :groupId AND m.sender.id <> :userId")
+    long countTotalGroupMessagesNotBySender(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+    @Query(value = "SELECT * FROM messages WHERE group_id = :groupId ORDER BY timestamp DESC LIMIT 1", nativeQuery = true)
+    Message findLastMessageInGroup(@Param("groupId") Long groupId);
 }

@@ -19,7 +19,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             "FROM ( " +
             "  SELECT CASE WHEN sender_id = :currentUserId THEN receiver_id ELSE sender_id END AS partner_id, timestamp " +
             "  FROM messages " +
-            "  WHERE sender_id = :currentUserId OR receiver_id = :currentUserId " +
+            "  WHERE (sender_id = :currentUserId OR receiver_id = :currentUserId) AND group_id IS NULL " +
             ") sub " +
             "GROUP BY partner_id " +
             "ORDER BY last_time DESC", nativeQuery = true)

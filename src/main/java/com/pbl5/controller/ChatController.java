@@ -142,6 +142,10 @@ public class ChatController {
             return ResponseEntity.badRequest().body("Group name is required");
         }
 
+        if (memberIds.size() < 2) {
+            return ResponseEntity.badRequest().body("Group must have at least 2 other members");
+        }
+
         com.pbl5.model.ChatGroup group = chatService.createGroup(name, memberIds, currentUser);
 
         Map<String, Object> response = new HashMap<>();

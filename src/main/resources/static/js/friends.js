@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchUserProfile(token);
     loadData();
     fetchSidebarSuggestions(token);
+    
+    if (window.location.hash === '#requests') {
+        switchTab('requests');
+    } else if (window.location.hash === '#friends') {
+        switchTab('friends');
+    }
 });
 
 // Fetch User Profile and Populate Sidebar

@@ -74,6 +74,7 @@
                     <div class="messenger-filters">
                         <button class="filter-chip active" onclick="setMessengerFilter('all', this)">Tất cả</button>
                         <button class="filter-chip" onclick="setMessengerFilter('unread', this)">Chưa đọc</button>
+                        <button class="filter-chip" onclick="setMessengerFilter('group', this)">Nhóm</button>
                     </div>
 
                     <div class="messenger-body" id="inbox-list">
@@ -170,14 +171,7 @@
                 </div>
             </nav>
 
-            <div class="card ai-banner modern-ai-banner">
-                <div class="ai-banner-content">
-                    <div class="ai-badge">
-                        <i class="fa-solid fa-shield-halved"></i> AI Khang Trang
-                    </div>
-                    <p>Hệ thống giám sát bảo mật nội dung chủ động.</p>
-                </div>
-            </div>
+
         </aside>
 
         <!-- Center Content (Feed) -->
@@ -236,17 +230,7 @@
                 </div>
             </div>
 
-            <footer class="sidebar-footer">
-                <div class="footer-links">
-                    <a href="#">Chính sách bảo mật</a>
-                    <a href="#">Điều khoản dịch vụ</a>
-                    <a href="#">Cookies</a>
-                </div>
-                <div class="footer-links">
-                    <a href="#">Trung tâm hỗ trợ</a>
-                    <span>&copy; 2026 BD Network</span>
-                </div>
-            </footer>
+
         </aside>
 
         <!-- Create Post Modal (Hidden by default) -->
@@ -371,25 +355,8 @@
         </div>
     </div>
 
-    <!-- Chat Box -->
-    <div id="chat-box" class="chat-box">
-        <div class="chat-header">
-            <div class="chat-target-info">
-                <img id="chat-target-avatar" src="/uploads/default-avatar.png">
-                <span id="chat-target-name">Tên bạn bè</span>
-            </div>
-            <div class="chat-header-actions" onclick="closeChatBox()">
-                <i class="fa-solid fa-xmark"></i>
-            </div>
-        </div>
-        <div id="chat-messages-container" class="chat-messages">
-            <!-- Messages here -->
-        </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input-text" placeholder="Nhập tin nhắn...">
-            <button onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
-    </div>
+    <!-- Chat Boxes Container -->
+    <div id="chat-boxes-container" class="chat-boxes-container"></div>
 
     <!-- Toast notification -->
     <div id="toast" class="toast hidden"></div>

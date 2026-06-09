@@ -344,3 +344,126 @@ window.addEventListener('DOMContentLoaded', function() {
         modalImageInput.addEventListener('change', previewModalMedia);
     }
 });
+
+// ================= SHARE POST LOGIC =================
+
+let currentSharePostId = null;
+
+async function openShareModal(postId) {
+    currentSharePostId = postId;
+    document.getElementById('share-post-modal').style.display = 'flex';
+    document.getElementById('share-modal-content').value = '';
+    checkShareModalContent();
+
+    // Reset preview
+    const previewContainer = document.getElementById('share-modal-preview-container');
+    previewContainer.innerHTML = '<div style="padding: 20px; text-align: center;">Đang tải...</div>';
+
+    try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/posts/${postId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const post = await res.json();
+            
+            // Set current user details in modal header
+            const myAvatar = document.getElementById('header-avatar') ? document.getElementById('header-avatar').src : '/uploads/default-avatar.png';
+            document.getElementById('share-modal-avatar').src = myAvatar;
+            document.querySelectorAll('.user-name').forEach((el, index) => {
+                if(index === 0) {
+                    document.getElementById('share-modal-user-name').innerText = el.innerText || 'Người dùng';
+                }
+            });
+
+            // Build preview html
+            let previewHtml = `
+                <div style="padding: 12px; background: var(--comment-bg);">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <img src="${post.authorAvatar}" class="avatar-small" style="width: 24px; height: 24px; border-radius: 50%;" onerror="this.src='/uploads/default-avatar.png'">
+                        <span style="font-weight: 600; font-size: 13px; margin-left: 8px; color: var(--text-color);">${post.authorName}</span>
+                    </div>
+                    <p style="font-size: 13px; color: var(--text-color); margin-bottom: 8px;">${escapeHtml(post.content || '')}</p>
+            `;
+            if (post.imageUrl) {
+                previewHtml += `<img src="${post.imageUrl}" style="max-width: 100%; border-radius: 8px; display: block; margin: 0 auto;">`;
+            }
+            if (post.videoUrl) {
+                previewHtml += `<video src="${post.videoUrl}" style="max-width: 100%; border-radius: 8px; display: block; margin: 0 auto; background: #000; max-height: 200px;" controls></video>`;
+            }
+            previewHtml += `</div>`;
+            previewContainer.innerHTML = previewHtml;
+        } else {
+            previewContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Lỗi tải bài viết</div>';
+        }
+    } catch (err) {
+        previewContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Lỗi kết nối</div>';
+    }
+}
+
+function closeShareModal() {
+    document.getElementById('share-post-modal').style.display = 'none';
+    currentSharePostId = null;
+}
+
+function checkShareModalContent() {
+    const btn = document.getElementById('share-modal-submit-btn');
+    if (currentSharePostId) {
+        btn.disabled = false;
+        btn.classList.add('active');
+    } else {
+        btn.disabled = true;
+        btn.classList.remove('active');
+    }
+}
+
+async function submitSharePost() {
+    if (!currentSharePostId) return;
+
+    const token = localStorage.getItem('token');
+    const content = document.getElementById('share-modal-content').value.trim();
+    const visibilitySelect = document.getElementById('share-modal-visibility');
+    let visibility = 'PUBLIC';
+    if(visibilitySelect) visibility = visibilitySelect.value;
+    
+    const btn = document.getElementById('share-modal-submit-btn');
+    btn.innerText = 'Đang chia sẻ...';
+    btn.disabled = true;
+
+    const postData = {
+        content: content,
+        sharedPostId: currentSharePostId,
+        visibility: visibility
+    };
+
+    try {
+        const res = await fetch('/api/posts/create', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postData)
+        });
+
+        if (res.ok) {
+            const createdPost = await res.json();
+            closeShareModal();
+            
+            // Try to prepend to feed
+            const inserted = typeof prependCreatedPostToFeed === 'function' && prependCreatedPostToFeed(createdPost);
+            if (!inserted && typeof fetchPosts === 'function') {
+                fetchPosts(token);
+            }
+
+            showPostNotification('Đã chia sẻ bài viết thành công.');
+        } else {
+            showPostNotification('Lỗi chia sẻ bài viết, vui lòng thử lại.', true);
+        }
+    } catch (err) {
+        showPostNotification('Lỗi kết nối mạng.', true);
+    } finally {
+        btn.innerText = 'Chia sẻ ngay';
+        checkShareModalContent();
+    }
+}

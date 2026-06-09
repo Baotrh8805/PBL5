@@ -5,6 +5,7 @@ import com.pbl5.repository.BookmarkRepository;
 import com.pbl5.dto.CommentRequest;
 import com.pbl5.dto.CommentResponse;
 import com.pbl5.dto.CreatePostRequest;
+import com.pbl5.dto.SharedPostDTO;
 import com.pbl5.dto.PostRequest;
 import com.pbl5.dto.PostResponse;
 import com.pbl5.enums.PostStatus;
@@ -164,7 +165,8 @@ public class PostController {
 
         if ((request.getContent() == null || request.getContent().trim().isEmpty())
                 && (request.getImageUrl() == null || request.getImageUrl().trim().isEmpty())
-                && (request.getVideoUrl() == null || request.getVideoUrl().trim().isEmpty())) {
+                && (request.getVideoUrl() == null || request.getVideoUrl().trim().isEmpty())
+                && request.getSharedPostId() == null) {
             return ResponseEntity.badRequest().body("Nội dung bài đăng không được trống.");
         }
 
@@ -172,7 +174,8 @@ public class PostController {
                 request.getContent(),
                 request.getImageUrl(),
                 request.getVideoUrl(),
-                request.getVisibility());
+                request.getVisibility(),
+                request.getSharedPostId());
 
         PostResponse created = postService.createPost(user, createPostRequest);
         return ResponseEntity.ok(created);
@@ -294,6 +297,19 @@ public class PostController {
         // Soft delete: thay đổi trạng thái sang DELETED thay vì xóa khỏi CSDL
         post.setStatus(PostStatus.DELETED);
         postRepository.save(post);
+
+        // Cascade delete shared posts
+        List<Post> sharedPosts = postRepository.findBySharedPost_Id(post.getId());
+        for (Post p : sharedPosts) {
+            p.setStatus(PostStatus.DELETED);
+            postRepository.save(p);
+            if (!p.getUser().getId().equals(user.getId())) {
+                sendNotification(p.getUser(), user, "SYSTEM", 
+                    "Bài viết gốc mà bạn chia sẻ từ " + user.getFullName() + " đã bị xóa nên bài chia sẻ của bạn đã bị gỡ.", 
+                    null);
+            }
+        }
+
         return ResponseEntity.ok("Đã xóa bài viết thành công!");
     }
 
@@ -337,7 +353,21 @@ public class PostController {
         }
 
         try {
-            post.setVisibility(PostVisibility.valueOf(level.toUpperCase()));
+            PostVisibility newVisibility = PostVisibility.valueOf(level.toUpperCase());
+            if (post.getVisibility() == PostVisibility.PUBLIC && newVisibility != PostVisibility.PUBLIC) {
+                // Remove shared posts since they can only exist if original is public
+                List<Post> sharedPosts = postRepository.findBySharedPost_Id(post.getId());
+                for (Post p : sharedPosts) {
+                    p.setStatus(PostStatus.DELETED);
+                    postRepository.save(p);
+                    if (!p.getUser().getId().equals(user.getId())) {
+                        sendNotification(p.getUser(), user, "SYSTEM", 
+                            "Bài viết gốc mà bạn chia sẻ từ " + user.getFullName() + " không còn ở chế độ công khai nên bài chia sẻ của bạn đã bị gỡ.", 
+                            null);
+                    }
+                }
+            }
+            post.setVisibility(newVisibility);
             postRepository.save(post);
             return ResponseEntity.ok("Đã thay đổi chế độ hiển thị.");
         } catch (IllegalArgumentException e) {
@@ -554,6 +584,26 @@ public class PostController {
                             : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+")
                                     + "&background=00d1b2&color=fff";
 
+                    SharedPostDTO sharedPostDTO = null;
+                    if (post.getSharedPost() != null) {
+                        Post sp = post.getSharedPost();
+                        String spAuthorName = sp.getUser().getFullName() != null ? sp.getUser().getFullName() : "Người dùng";
+                        String spAuthorAvatar = sp.getUser().getAvatar() != null ? sp.getUser().getAvatar()
+                                : "https://ui-avatars.com/api/?name=" + spAuthorName.replace(" ", "+") + "&background=00d1b2&color=fff";
+                        sharedPostDTO = new SharedPostDTO(
+                            sp.getId(),
+                            sp.getContent(),
+                            sp.getImageUrl(),
+                            sp.getVideoUrl(),
+                            spAuthorName,
+                            spAuthorAvatar,
+                            sp.getCreatedAt(),
+                            sp.getVisibility() != null ? sp.getVisibility().name() : "PUBLIC",
+                            sp.getStatus() != null ? sp.getStatus().name() : "ACTIVE"
+                        );
+                    }
+                    long shareCount = postRepository.countBySharedPost_Id(post.getId());
+
                     responses.add(new PostResponse(
                             post.getId(),
                             post.getContent(),
@@ -568,7 +618,9 @@ public class PostController {
                             isLiked,
                             isMine,
                             post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
-                            post.getStatus() != null ? post.getStatus().name() : "ACTIVE"));
+                            post.getStatus() != null ? post.getStatus().name() : "ACTIVE",
+                            sharedPostDTO,
+                            shareCount));
                 }
             } catch (Exception e) {
                 // skip broken post
@@ -610,6 +662,26 @@ public class PostController {
         String authorAvatar = post.getUser().getAvatar() != null ? post.getUser().getAvatar()
                 : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
 
+        SharedPostDTO sharedPostDTO = null;
+        if (post.getSharedPost() != null) {
+            Post sp = post.getSharedPost();
+            String spAuthorName = sp.getUser().getFullName() != null ? sp.getUser().getFullName() : "Người dùng";
+            String spAuthorAvatar = sp.getUser().getAvatar() != null ? sp.getUser().getAvatar()
+                    : "https://ui-avatars.com/api/?name=" + spAuthorName.replace(" ", "+") + "&background=00d1b2&color=fff";
+            sharedPostDTO = new SharedPostDTO(
+                sp.getId(),
+                sp.getContent(),
+                sp.getImageUrl(),
+                sp.getVideoUrl(),
+                spAuthorName,
+                spAuthorAvatar,
+                sp.getCreatedAt(),
+                sp.getVisibility() != null ? sp.getVisibility().name() : "PUBLIC",
+                sp.getStatus() != null ? sp.getStatus().name() : "ACTIVE"
+            );
+        }
+        long shareCount = postRepository.countBySharedPost_Id(post.getId());
+
         PostResponse response = new PostResponse(
                 post.getId(),
                 post.getContent(),
@@ -624,7 +696,9 @@ public class PostController {
                 isLiked,
                 isMine,
                 post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
-                post.getStatus() != null ? post.getStatus().name() : "ACTIVE");
+                post.getStatus() != null ? post.getStatus().name() : "ACTIVE",
+                sharedPostDTO,
+                shareCount);
 
         // Set bookmark state
         if (currentUser != null) {

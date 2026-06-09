@@ -57,6 +57,7 @@ public class ChatService {
                 message.setSender(sender);
                 message.setChatGroup(group);
                 message.setContent(chatMessage.getContent());
+                message.setImageUrl(chatMessage.getImageUrl());
                 Message savedMsg = messageRepository.save(message);
 
                 chatMessage.setId(savedMsg.getId());
@@ -73,6 +74,7 @@ public class ChatService {
                 message.setSender(sender);
                 message.setReceiver(receiver);
                 message.setContent(chatMessage.getContent());
+                message.setImageUrl(chatMessage.getImageUrl());
                 Message savedMsg = messageRepository.save(message);
 
                 chatMessage.setId(savedMsg.getId());
@@ -100,6 +102,7 @@ public class ChatService {
                 dto.setReceiverId(m.getReceiver().getId());
             }
             dto.setContent(m.getContent());
+            dto.setImageUrl(m.getImageUrl());
             dto.setTimestamp(m.getTimestamp());
             dto.setSenderName(m.getSender().getFullName());
             dto.setSenderAvatar(m.getSender().getAvatar());
@@ -131,6 +134,7 @@ public class ChatService {
             dto.setSenderId(m.getSender().getId());
             dto.setGroupId(groupId);
             dto.setContent(m.getContent());
+            dto.setImageUrl(m.getImageUrl());
             dto.setTimestamp(m.getTimestamp());
             dto.setSenderName(m.getSender().getFullName());
             dto.setSenderAvatar(m.getSender().getAvatar());
@@ -208,7 +212,11 @@ public class ChatService {
             }
             if (!history.isEmpty()) {
                 Message lastMsgObj = history.get(history.size() - 1);
-                lastMessage = lastMsgObj.getContent();
+                if (lastMsgObj.getContent() == null || lastMsgObj.getContent().trim().isEmpty()) {
+                    lastMessage = lastMsgObj.getImageUrl() != null ? "[Hình ảnh]" : "";
+                } else {
+                    lastMessage = lastMsgObj.getContent();
+                }
                 lastMessageTime = lastMsgObj.getTimestamp();
             }
             item.put("lastMessage", lastMessage);
@@ -232,7 +240,11 @@ public class ChatService {
             String lastMessage = "Nhóm mới được tạo";
             LocalDateTime lastMessageTime = group.getCreatedAt();
             if (lastMsgObj != null) {
-                lastMessage = lastMsgObj.getSender().getFullName() + ": " + lastMsgObj.getContent();
+                String msgContent = lastMsgObj.getContent();
+                if ((msgContent == null || msgContent.trim().isEmpty()) && lastMsgObj.getImageUrl() != null) {
+                    msgContent = "[Hình ảnh]";
+                }
+                lastMessage = lastMsgObj.getSender().getFullName() + ": " + msgContent;
                 lastMessageTime = lastMsgObj.getTimestamp();
             }
             item.put("lastMessage", lastMessage);

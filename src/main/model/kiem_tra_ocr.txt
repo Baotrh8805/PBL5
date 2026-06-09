@@ -345,3 +345,35 @@
 [INIT] Successfully loaded PhoBERT Hate Speech model
 [INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
 [MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=2 text='kk'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='kk'
+[EVAL] label=CLEAN score=0.810981
+[FINAL TEXT] len=2 text='kk'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)kk[O] detailed_tags=(Video:) (Content:)kk[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=4 text='helo'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='helo'
+[EVAL] label=CLEAN score=0.813730
+[FINAL TEXT] len=4 text='helo'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)helo[O] detailed_tags=(Video:) (Content:)helo[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=4 text='helo'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='helo'
+[EVAL] label=CLEAN score=0.813730
+[FINAL TEXT] len=4 text='helo'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)helo[O] detailed_tags=(Video:) (Content:)helo[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=5 text='helom'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='helom'
+[EVAL] label=CLEAN score=0.003349
+[FINAL TEXT] len=5 text='helom'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)helom[O] detailed_tags=(Video:) (Content:)helom[O]

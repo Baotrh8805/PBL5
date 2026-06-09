@@ -5,15 +5,17 @@ public class CreatePostRequest {
     private String imageUrl;
     private String videoUrl;
     private String visibility;
+    private Long sharedPostId;
 
     public CreatePostRequest() {
     }
 
-    public CreatePostRequest(String content, String imageUrl, String videoUrl, String visibility) {
+    public CreatePostRequest(String content, String imageUrl, String videoUrl, String visibility, Long sharedPostId) {
         this.content = content;
         this.imageUrl = imageUrl;
         this.videoUrl = videoUrl;
         this.visibility = visibility;
+        this.sharedPostId = sharedPostId;
     }
 
     public String getContent() {
@@ -46,5 +48,13 @@ public class CreatePostRequest {
 
     public void setVisibility(String visibility) {
         this.visibility = visibility;
+    }
+
+    public Long getSharedPostId() {
+        return sharedPostId;
+    }
+
+    public void setSharedPostId(Long sharedPostId) {
+        this.sharedPostId = sharedPostId;
     }
 }

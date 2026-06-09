@@ -285,6 +285,48 @@
             </div>
         </div>
 
+        <!-- Share Post Modal -->
+        <div id="share-post-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content light-mode">
+                <div class="modal-header">
+                    <h2>Chia sẻ bài viết</h2>
+                    <button class="close-modal" onclick="closeShareModal()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="modal-user-info">
+                        <img src="/uploads/default-avatar.png" id="share-modal-avatar" alt="Avatar" class="avatar-small">
+                        <div class="modal-user-details">
+                            <span class="modal-user-name" id="share-modal-user-name">Đang tải...</span>
+                            <div style="position: relative; display: inline-block;">
+                                <button type="button" class="modal-visibility-btn">
+                                    <i class="fa-solid fa-earth-americas"></i>Công khai<i class="fa-solid fa-caret-down" style="font-size: 12px; margin-left: 4px;"></i>
+                                </button>
+                                <select id="share-modal-visibility" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                                    <option value="PUBLIC" selected>Công khai</option>
+                                    <option value="FRIENDS">Bạn bè</option>
+                                    <option value="PRIVATE">Mình tôi</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-textarea-container">
+                        <textarea id="share-modal-content" placeholder="Hãy nói gì đó về nội dung này..." oninput="checkShareModalContent()"></textarea>
+                    </div>
+
+                    <!-- Nơi hiển thị bài viết được chia sẻ -->
+                    <div id="share-modal-preview-container" style="border: 1px solid var(--border-color); border-radius: 8px; margin: 10px 0; overflow: hidden; pointer-events: none;">
+                        <!-- JS sẽ nạp card bài viết gốc vào đây -->
+                    </div>
+
+                    <button id="share-modal-submit-btn" class="modal-submit-btn" onclick="submitSharePost()">Chia sẻ ngay</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Onboarding Modal (Hidden by default, can't be closed normally) -->
         <div id="onboarding-modal" class="modal-overlay" style="display: none;">
             <div class="modal-content light-mode" style="text-align: center; max-width: 400px;">

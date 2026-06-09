@@ -176,6 +176,7 @@ public class ChatService {
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Object[] row : rows) {
+            if (row[0] == null) continue;
             Long partnerId = ((Number) row[0]).longValue();
             User partner = userRepository.findById(partnerId).orElse(null);
             if (partner == null) continue;

@@ -305,3 +305,43 @@
 [INIT] Successfully loaded PhoBERT Hate Speech model
 [INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
 [MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup

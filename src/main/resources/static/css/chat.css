@@ -50,21 +50,31 @@
     color: #050505;
 }
 
-/* Chat Box */
-.chat-box {
+/* Container for multiple chat boxes */
+.chat-boxes-container {
     position: fixed;
     bottom: 0;
-    right: 320px;
+    right: 20px; /* Sát mép phải màn hình */
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-end;
+    gap: 15px;
+    z-index: 1001;
+    pointer-events: none; /* Cho phép click xuyên qua vùng trống */
+}
+
+/* Chat Box */
+.chat-box {
     width: 338px;
     height: 455px;
     background-color: #ffffff;
     border-radius: 12px 12px 0 0;
     box-shadow: 0 4px 24px rgba(0,0,0,0.15);
-    display: none;
+    display: flex;
     flex-direction: column;
-    z-index: 1001;
     border: 1px solid rgba(0,0,0,0.1);
     border-bottom: none;
+    pointer-events: auto; /* Box chat vẫn nhận event click bình thường */
 }
 
 .chat-header {

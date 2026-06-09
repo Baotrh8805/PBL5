@@ -39,6 +39,12 @@ public class FriendshipService {
         List<User> allUsers = userRepository.findAll();
         List<FriendResponse> suggestions = new ArrayList<>();
 
+        // Tối ưu N+1 Queries: Lấy tất cả mối quan hệ của User hiện tại 1 lần duy nhất
+        List<Friendship> allUserFriendships = friendshipRepository.findAllByUser(currentUser);
+        java.util.Set<Long> connectedUserIds = allUserFriendships.stream()
+                .map(f -> f.getRequester().getId().equals(currentUser.getId()) ? f.getReceiver().getId() : f.getRequester().getId())
+                .collect(Collectors.toSet());
+
         for (User u : allUsers) {
             if (u.getId().equals(currentUser.getId())) continue;
             
@@ -49,8 +55,8 @@ public class FriendshipService {
                 }
             }
             
-            Optional<Friendship> opt = friendshipRepository.findByUsers(currentUser, u);
-            if (opt.isEmpty()) {
+            // Nếu u.getId() không nằm trong danh sách đã kết nối, thì mới là gợi ý kết bạn
+            if (!connectedUserIds.contains(u.getId())) {
                 suggestions.add(new FriendResponse(u.getId(), u.getFullName(), u.getAvatar(), "NOT_FRIEND"));
             }
         }
@@ -90,7 +96,7 @@ public class FriendshipService {
         notifEntity.setSender(currentUser);
         notifEntity.setType("NEW_FRIEND_REQUEST");
         notifEntity.setMessage(currentUser.getFullName() + " đã gửi cho bạn một lời mời kết bạn.");
-        notifEntity.setLink("/html/friends.html");
+        notifEntity.setLink("/html/friends.html#requests");
         notifEntity = notificationRepository.save(notifEntity);
 
         Map<String, Object> notification = new HashMap<>();
@@ -119,7 +125,7 @@ public class FriendshipService {
                 notifEntity.setSender(currentUser);
                 notifEntity.setType("FRIEND_REQUEST_ACCEPTED");
                 notifEntity.setMessage(currentUser.getFullName() + " đã chấp nhận lời mời kết bạn của bạn.");
-                notifEntity.setLink("/html/friends.html");
+                notifEntity.setLink("/html/friends.html#friends");
                 notifEntity = notificationRepository.save(notifEntity);
 
                 Map<String, Object> notification = new HashMap<>();

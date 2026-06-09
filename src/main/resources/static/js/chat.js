@@ -1,7 +1,6 @@
 let stompClient = null;
-let currentChatUserId = null;
+let activeChats = []; // Mảng chứa các phiên chat đang mở (tối đa 2)
 let myUserId = null;
-let isCurrentChatGroup = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
@@ -176,6 +175,8 @@ async function loadInboxDropdown() {
         // Apply filters
         if (currentMessengerFilter === 'unread') {
             contacts = contacts.filter(c => c.unreadCount > 0);
+        } else if (currentMessengerFilter === 'group') {
+            contacts = contacts.filter(c => c.isGroup === true);
         }
         
         if (messengerSearchQuery) {
@@ -214,7 +215,7 @@ async function loadInboxDropdown() {
             item.innerHTML = `
                 <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff'">
                 <div class="notification-content">
-                    <div style="font-weight: ${isUnread ? '700' : '600'}; font-size: 15px; color: var(--text-main);">${f.fullName}</div>
+                    <div style="font-weight: ${isUnread ? '700' : '600'}; font-size: 15px; color: var(--text-main);">${f.fullName} ${f.isGroup ? '<span style="font-size: 11px; background: #e4e6eb; padding: 2px 6px; border-radius: 10px; color: #65676b; margin-left: 5px;"><i class="fa-solid fa-users"></i> Nhóm</span>' : ''}</div>
                     <div class="notification-msg" style="color: ${isUnread ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: ${isUnread ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
                 </div>
                 ${isUnread ? '<div class="notification-dot" style="background-color: #00d1b2; width: 10px; height: 10px; border-radius: 50%; margin-left: auto;"></div>' : ''}
@@ -427,44 +428,76 @@ function renderChatContacts(contacts, emptyMessage = 'Chưa có người liên h
 }
 
 function openChatBox(userId, name, avatar, isGroup = false) {
-    currentChatUserId = userId;
-    isCurrentChatGroup = isGroup;
-
-    const chatBox = document.getElementById('chat-box');
-    chatBox.style.display = 'flex';
+    const chatId = isGroup ? `group_${userId}` : `user_${userId}`;
     
+    // Nếu chat box đã mở, không làm gì cả
+    if (activeChats.find(chat => chat.chatId === chatId)) {
+        return;
+    }
+
+    // Nếu đã mở 2 khung chat, đóng khung cũ nhất
+    if (activeChats.length >= 2) {
+        const oldestChat = activeChats.shift();
+        const oldChatBox = document.getElementById(`chat-box-${oldestChat.chatId}`);
+        if (oldChatBox) oldChatBox.remove();
+    }
+
     let targetAvatar = avatar;
     if (!targetAvatar || targetAvatar.trim() === '') {
         targetAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00d1b2&color=fff`;
     }
 
-    if (isGroup) {
-        document.getElementById('chat-target-name').innerText = name;
-        document.getElementById('chat-target-avatar').src = targetAvatar;
-        document.getElementById('chat-target-avatar').onclick = null;
-        document.getElementById('chat-target-avatar').style.cursor = 'default';
-    } else {
-        document.getElementById('chat-target-name').innerHTML = `<a href="/html/profile.html?userId=${userId}" style="text-decoration:none; color:inherit;">${name}</a>`;
-        document.getElementById('chat-target-avatar').src = targetAvatar;
-        document.getElementById('chat-target-avatar').onclick = () => { window.location.href = `/html/profile.html?userId=${userId}`; };
-        document.getElementById('chat-target-avatar').style.cursor = 'pointer';
+    // Thêm vào mảng activeChats
+    activeChats.push({
+        chatId: chatId,
+        userId: userId,
+        isGroup: isGroup,
+        name: name,
+        avatar: targetAvatar
+    });
+
+    const container = document.getElementById('chat-boxes-container');
+    if (!container) return;
+
+    const chatBox = document.createElement('div');
+    chatBox.id = `chat-box-${chatId}`;
+    chatBox.className = 'chat-box';
+    
+    const targetNameHtml = isGroup ? 
+        `<span>${name}</span>` : 
+        `<a href="/html/profile.html?userId=${userId}" style="text-decoration:none; color:inherit;">${name}</a>`;
+
+    chatBox.innerHTML = `
+        <div class="chat-header">
+            <div class="chat-target-info">
+                <img id="chat-target-avatar-${chatId}" src="${targetAvatar}" style="cursor: ${isGroup ? 'default' : 'pointer'}">
+                <span id="chat-target-name-${chatId}">${targetNameHtml}</span>
+            </div>
+            <div class="chat-header-actions" onclick="closeChatBox('${chatId}')">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+        </div>
+        <div id="chat-messages-container-${chatId}" class="chat-messages">
+            <div style="text-align:center;color:#65676B;font-size:12px;margin-top:10px;">Đang tải...</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input-text-${chatId}" placeholder="Nhập tin nhắn..." onkeypress="handleKeyPress(event, '${chatId}')">
+            <button onclick="sendChatMessage('${chatId}')"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    `;
+
+    container.appendChild(chatBox);
+    
+    // Assign click for profile redirect if not group
+    if (!isGroup) {
+        document.getElementById(`chat-target-avatar-${chatId}`).onclick = () => { window.location.href = `/html/profile.html?userId=${userId}`; };
     }
-    
-    document.getElementById('chat-target-avatar').onerror = function() {
-        this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00d1b2&color=fff`;
-    };
-    
-    // Save target avatar url
-    window.chatTargetAvatarUrl = targetAvatar;
 
-    const messagesDiv = document.getElementById('chat-messages-container');
-    messagesDiv.innerHTML = '<div style="text-align:center;color:#65676B;font-size:12px;margin-top:10px;">Đang tải...</div>';
-
-    const elementId = isGroup ? `group_${userId}` : `user_${userId}`;
-    const unreadBadge = document.getElementById(`unread-badge-${elementId}`);
+    const unreadBadge = document.getElementById(`unread-badge-${chatId}`);
     if(unreadBadge) unreadBadge.style.display = 'none';
 
     // Load History
+    const messagesDiv = document.getElementById(`chat-messages-container-${chatId}`);
     const historyUrl = isGroup ? `/api/groups/${userId}/messages` : `/api/messages/${userId}`;
     fetch(historyUrl, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -472,85 +505,62 @@ function openChatBox(userId, name, avatar, isGroup = false) {
     .then(res => res.json())
     .then(messages => {
         messagesDiv.innerHTML = '';
-        lastMessageTimestamp = null; // Reset tracker
+        chatBox.lastMessageTimestamp = null; // Reset tracker specific to chat box
         messages.forEach(msg => {
-            appendMessageToUI(msg);
+            appendMessageToUI(msg, chatId);
         });
-        scrollToBottom();
+        scrollToBottom(chatId);
     })
     .catch(err => {
         messagesDiv.innerHTML = '<div style="text-align:center;color:red;font-size:12px;margin-top:10px;">Lỗi tải tin nhắn.</div>';
     });
 }
 
-function closeChatBox() {
-    document.getElementById('chat-box').style.display = 'none';
-    currentChatUserId = null;
-    isCurrentChatGroup = false;
+function closeChatBox(chatId) {
+    const chatBox = document.getElementById(`chat-box-${chatId}`);
+    if (chatBox) chatBox.remove();
+    activeChats = activeChats.filter(chat => chat.chatId !== chatId);
 }
 
 function handleIncomingMessage(msg) {
     const isGroupMsg = !!msg.groupId;
-    const activeId = isGroupMsg ? msg.groupId : msg.senderId;
-    const targetElementId = isGroupMsg ? `group_${msg.groupId}` : `user_${msg.senderId}`;
+    const targetId = isGroupMsg ? msg.groupId : (msg.senderId == myUserId ? msg.receiverId : msg.senderId);
+    const targetElementId = isGroupMsg ? `group_${targetId}` : `user_${targetId}`;
+    
+    const activeChat = activeChats.find(chat => chat.chatId === targetElementId);
 
-    // If the message belongs to the current open chat window
-    if ((isGroupMsg && isCurrentChatGroup && msg.groupId == currentChatUserId) || 
-        (!isGroupMsg && !isCurrentChatGroup && 
-            ((msg.senderId == currentChatUserId && msg.receiverId == myUserId) || 
-             (msg.senderId == myUserId && msg.receiverId == currentChatUserId)))) {
-        
-        appendMessageToUI(msg);
-        scrollToBottom();
-        
-        // Ensure the chat box is visible
-        const chatBox = document.getElementById('chat-box');
-        if (chatBox && (chatBox.style.display === 'none' || chatBox.style.display === '')) {
-            chatBox.style.display = 'flex';
-        }
+    // If the message belongs to an open chat window
+    if (activeChat) {
+        appendMessageToUI(msg, targetElementId);
+        scrollToBottom(targetElementId);
     } else {
         if (msg.senderId != myUserId) {
-            const chatBox = document.getElementById('chat-box');
-            // If chat box is currently closed, auto-open it with the new message
-            if (!chatBox || chatBox.style.display === 'none' || chatBox.style.display === '') {
-                if (isGroupMsg) {
-                    openChatBox(msg.groupId, msg.groupName, '', true);
-                } else {
-                    // Fetch real avatar and name from API to ensure it's not broken
-                    fetch(`/api/users/${msg.senderId}`, {
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                    })
-                    .then(res => res.ok ? res.json() : null)
-                    .then(userData => {
-                        let avatar = '';
-                        let name = msg.senderName || 'Người dùng';
-                        
-                        if (userData) {
-                            avatar = userData.avatar || '';
-                            name = userData.fullName || name;
-                        }
-                        openChatBox(msg.senderId, name, avatar, false);
-                    })
-                    .catch(err => {
-                        console.error('Error fetching user info for auto-open chat:', err);
-                        openChatBox(msg.senderId, msg.senderName || 'Người dùng', '', false);
-                    });
-                }
+            // Auto open chat box if less than 2 are open, or replace oldest
+            if (isGroupMsg) {
+                openChatBox(msg.groupId, msg.groupName, '', true);
             } else {
-                // If chat box is open for another user, just show an indicator
-                const unreadBadge = document.getElementById(`unread-badge-${targetElementId}`);
-                if (unreadBadge) {
-                    unreadBadge.style.display = 'block';
-                }
-                loadChatSidebar();
-                loadInboxDropdown();
+                // Fetch real avatar and name from API
+                fetch(`/api/users/${msg.senderId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                })
+                .then(res => res.ok ? res.json() : null)
+                .then(userData => {
+                    let avatar = '';
+                    let name = msg.senderName || 'Người dùng';
+                    
+                    if (userData) {
+                        avatar = userData.avatar || '';
+                        name = userData.fullName || name;
+                    }
+                    openChatBox(msg.senderId, name, avatar, false);
+                })
+                .catch(err => {
+                    openChatBox(msg.senderId, msg.senderName || 'Người dùng', '', false);
+                });
             }
         }
     }
 }
-
-// Track last message timestamp for date separator logic
-let lastMessageTimestamp = null;
 
 function formatDateSeparator(date) {
     const hours = ('0' + date.getHours()).slice(-2);
@@ -565,17 +575,20 @@ function formatDateSeparator(date) {
     return `${hours}:${minutes} ${day} ${month}, ${year}`;
 }
 
-function appendMessageToUI(msg) {
-    const messagesDiv = document.getElementById('chat-messages-container');
+function appendMessageToUI(msg, chatId) {
+    const messagesDiv = document.getElementById(`chat-messages-container-${chatId}`);
+    if (!messagesDiv) return;
+    
+    const chatBox = document.getElementById(`chat-box-${chatId}`);
     
     // Check if we need a date separator (different calendar day or first message)
     const currentMsgDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
     let needsSeparator = false;
     
-    if (!lastMessageTimestamp) {
+    if (!chatBox.lastMessageTimestamp) {
         needsSeparator = true;
     } else {
-        if (currentMsgDate.toDateString() !== lastMessageTimestamp.toDateString()) {
+        if (currentMsgDate.toDateString() !== chatBox.lastMessageTimestamp.toDateString()) {
             needsSeparator = true;
         }
     }
@@ -586,7 +599,7 @@ function appendMessageToUI(msg) {
         separator.innerHTML = `<span>${formatDateSeparator(currentMsgDate)}</span>`;
         messagesDiv.appendChild(separator);
     }
-    lastMessageTimestamp = currentMsgDate;
+    chatBox.lastMessageTimestamp = currentMsgDate;
     
     const div = document.createElement('div');
     const isSent = (msg.senderId == myUserId);
@@ -609,7 +622,10 @@ function appendMessageToUI(msg) {
     }
 
     const targetAvatarHtml = !isSent ? `<a href="/html/profile.html?userId=${msg.senderId}"><img src="${avatarUrl}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || 'User')}&background=00d1b2&color=fff'"></a>` : '';
-    const nameHtml = (isCurrentChatGroup && !isSent) ? `<div style="font-size: 11px; color: #8a8d91; margin-bottom: 2px; margin-left: 2px; font-weight: 500;">${msg.senderName}</div>` : '';
+    
+    const chatInfo = activeChats.find(c => c.chatId === chatId);
+    const isGroup = chatInfo ? chatInfo.isGroup : false;
+    const nameHtml = (isGroup && !isSent) ? `<div style="font-size: 11px; color: #8a8d91; margin-bottom: 2px; margin-left: 2px; font-weight: 500;">${msg.senderName}</div>` : '';
 
     div.innerHTML = `
         ${targetAvatarHtml}
@@ -622,26 +638,29 @@ function appendMessageToUI(msg) {
     messagesDiv.appendChild(div);
 }
 
-function scrollToBottom() {
-    const messagesDiv = document.getElementById('chat-messages-container');
+function scrollToBottom(chatId) {
+    const messagesDiv = document.getElementById(`chat-messages-container-${chatId}`);
     if (messagesDiv) {
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 }
 
-function sendChatMessage() {
-    const input = document.getElementById('chat-input-text');
+function sendChatMessage(chatId) {
+    const input = document.getElementById(`chat-input-text-${chatId}`);
+    if (!input) return;
     const content = input.value.trim();
     
-    if (content && stompClient && stompClient.connected && currentChatUserId) {
+    const chatInfo = activeChats.find(c => c.chatId === chatId);
+    
+    if (content && stompClient && stompClient.connected && chatInfo) {
         const chatMsg = {
             senderId: myUserId,
             content: content
         };
-        if (isCurrentChatGroup) {
-            chatMsg.groupId = currentChatUserId;
+        if (chatInfo.isGroup) {
+            chatMsg.groupId = chatInfo.userId;
         } else {
-            chatMsg.receiverId = currentChatUserId;
+            chatMsg.receiverId = chatInfo.userId;
         }
         // Send to controller
         stompClient.send("/app/chat", {}, JSON.stringify(chatMsg));
@@ -649,17 +668,11 @@ function sendChatMessage() {
     }
 }
 
-// Enter key to send
-document.addEventListener('DOMContentLoaded', () => {
-    const chatInput = document.getElementById('chat-input-text');
-    if (chatInput) {
-        chatInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                sendChatMessage();
-            }
-        });
+function handleKeyPress(e, chatId) {
+    if (e.key === 'Enter') {
+        sendChatMessage(chatId);
     }
-});
+}
 
 function toggleChatSidebar() {
     const sidebar = document.getElementById('chat-sidebar');
@@ -791,6 +804,11 @@ function showCreateGroupModal() {
 
         const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
         const memberIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        if (memberIds.length < 2) {
+            alert('Vui lòng chọn ít nhất 2 người bạn để tạo nhóm!');
+            return;
+        }
 
         fetch('/api/groups', {
             method: 'POST',

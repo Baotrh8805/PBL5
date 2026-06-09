@@ -148,15 +148,7 @@
                     Bạn có thể nhấn biểu tượng <i class="fa-solid fa-bookmark" style="color: var(--primary-color);"></i> trên bất kỳ bài viết nào để lưu lại. Bài viết đã lưu sẽ xuất hiện tại đây.
                 </p>
             </div>
-            <footer class="sidebar-footer">
-                <div class="footer-links">
-                    <a href="#">Chính sách bảo mật</a>
-                    <a href="#">Điều khoản dịch vụ</a>
-                </div>
-                <div class="footer-links">
-                    <span>&copy; 2026 BD Network</span>
-                </div>
-            </footer>
+
         </aside>
     </main>
 
@@ -181,23 +173,8 @@
         </div>
     </div>
 
-    <!-- Chat Box -->
-    <div id="chat-box" class="chat-box">
-        <div class="chat-header">
-            <div class="chat-target-info">
-                <img id="chat-target-avatar" src="/uploads/default-avatar.png">
-                <span id="chat-target-name">Tên bạn bè</span>
-            </div>
-            <div class="chat-header-actions" onclick="closeChatBox()">
-                <i class="fa-solid fa-xmark"></i>
-            </div>
-        </div>
-        <div id="chat-messages-container" class="chat-messages"></div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input-text" placeholder="Nhập tin nhắn...">
-            <button onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
-    </div>
+    <!-- Chat Boxes Container -->
+    <div id="chat-boxes-container" class="chat-boxes-container"></div>
 
     <div id="toast" class="toast hidden"></div>
 

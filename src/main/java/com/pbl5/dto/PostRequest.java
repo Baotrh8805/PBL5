@@ -5,6 +5,7 @@ public class PostRequest {
     private String imageUrl;
     private String videoUrl;
     private String visibility;
+    private Long sharedPostId;
 
     public String getContent() {
         return content;
@@ -36,5 +37,13 @@ public class PostRequest {
 
     public void setVisibility(String visibility) {
         this.visibility = visibility;
+    }
+
+    public Long getSharedPostId() {
+        return sharedPostId;
+    }
+
+    public void setSharedPostId(Long sharedPostId) {
+        this.sharedPostId = sharedPostId;
     }
 }

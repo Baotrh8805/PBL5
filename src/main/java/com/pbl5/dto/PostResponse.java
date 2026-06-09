@@ -18,10 +18,13 @@ public class PostResponse {
     private String visibility;
     private boolean bookmarkedByCurrentUser;
     private String status;
+    private SharedPostDTO sharedPost;
+    private long shareCount;
 
     public PostResponse(Long id, String content, String imageUrl, String videoUrl, LocalDateTime createdAt,
             Long authorId, String authorName, String authorAvatar, long likeCount, long commentCount,
-            boolean isLikedByCurrentUser, boolean isMine, String visibility, String status) {
+            boolean isLikedByCurrentUser, boolean isMine, String visibility, String status, 
+            SharedPostDTO sharedPost, long shareCount) {
         this.id = id;
         this.content = content;
         this.imageUrl = imageUrl;
@@ -37,6 +40,8 @@ public class PostResponse {
         this.visibility = visibility;
         this.status = status;
         this.bookmarkedByCurrentUser = false;
+        this.sharedPost = sharedPost;
+        this.shareCount = shareCount;
     }
 
     public Long getId() {
@@ -101,5 +106,25 @@ public class PostResponse {
 
     public String getStatus() {
         return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public SharedPostDTO getSharedPost() {
+        return sharedPost;
+    }
+
+    public void setSharedPost(SharedPostDTO sharedPost) {
+        this.sharedPost = sharedPost;
+    }
+
+    public long getShareCount() {
+        return shareCount;
+    }
+
+    public void setShareCount(long shareCount) {
+        this.shareCount = shareCount;
     }
 }

@@ -84,6 +84,10 @@ public class Post extends BaseContent {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shared_post_id")
+    private Post sharedPost;
+
     public String getContent() {
         return content;
     }
@@ -258,6 +262,14 @@ public class Post extends BaseContent {
 
     public void setComments(List<Comment> comments) {
         this.comments = comments;
+    }
+
+    public Post getSharedPost() {
+        return sharedPost;
+    }
+
+    public void setSharedPost(Post sharedPost) {
+        this.sharedPost = sharedPost;
     }
 
     public LocalDateTime getReviewedAt() {

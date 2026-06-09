@@ -43,5 +43,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
        @Query("SELECT p FROM Post p WHERE (p.status = 'REJECTED' OR p.status = 'AUTO_REJECTED') AND p.reviewedAt < :boundary")
        List<Post> findPostsForCleanup(@Param("boundary") java.time.LocalDateTime boundary);
+
+       long countBySharedPost_Id(Long sharedPostId);
+
+       List<Post> findBySharedPost_Id(Long sharedPostId);
 }
 

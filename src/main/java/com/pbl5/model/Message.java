@@ -22,8 +22,11 @@ public class Message {
     @JoinColumn(name = "group_id")
     private ChatGroup chatGroup;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = true, columnDefinition = "TEXT")
     private String content;
+
+    @Column(nullable = true)
+    private String imageUrl;
 
     @Column(nullable = false)
     private LocalDateTime timestamp;
@@ -50,6 +53,9 @@ public class Message {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }

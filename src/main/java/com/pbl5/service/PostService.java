@@ -2,6 +2,7 @@ package com.pbl5.service;
 
 import com.pbl5.dto.CreatePostRequest;
 import com.pbl5.dto.PostResponse;
+import com.pbl5.dto.SharedPostDTO;
 import com.pbl5.enums.PostStatus;
 import com.pbl5.enums.PostVisibility;
 import com.pbl5.model.Post;
@@ -44,7 +45,7 @@ public class PostService {
         boolean hasContent = request.getContent() != null && !request.getContent().trim().isEmpty();
         boolean hasMedia = (request.getImageUrl() != null && !request.getImageUrl().trim().isEmpty())
                 || (request.getVideoUrl() != null && !request.getVideoUrl().trim().isEmpty());
-        if (!hasContent && !hasMedia) {
+        if (!hasContent && !hasMedia && request.getSharedPostId() == null) {
             throw new IllegalArgumentException("Nội dung bài đăng không được trống.");
         }
 
@@ -54,6 +55,15 @@ public class PostService {
         post.setImageUrl(request.getImageUrl());
         post.setVideoUrl(request.getVideoUrl());
         post.setUser(user);
+
+        if (request.getSharedPostId() != null) {
+            Post sharedPost = postRepository.findById(request.getSharedPostId())
+                .orElseThrow(() -> new IllegalArgumentException("Bài viết chia sẻ không tồn tại."));
+            if (sharedPost.getVisibility() != PostVisibility.PUBLIC) {
+                throw new IllegalArgumentException("Chỉ có thể chia sẻ bài viết đang ở chế độ Công khai.");
+            }
+            post.setSharedPost(sharedPost);
+        }
 
         // Đặt visibility
         if (request.getVisibility() != null) {
@@ -105,6 +115,27 @@ public class PostService {
         String authorAvatar = post.getUser().getAvatar() != null ? post.getUser().getAvatar()
                 : "https://ui-avatars.com/api/?name=" + authorName.replace(" ", "+") + "&background=00d1b2&color=fff";
 
+        SharedPostDTO sharedPostDTO = null;
+        if (post.getSharedPost() != null) {
+            Post sp = post.getSharedPost();
+            String spAuthorName = sp.getUser().getFullName() != null ? sp.getUser().getFullName() : "Người dùng";
+            String spAuthorAvatar = sp.getUser().getAvatar() != null ? sp.getUser().getAvatar()
+                    : "https://ui-avatars.com/api/?name=" + spAuthorName.replace(" ", "+") + "&background=00d1b2&color=fff";
+            sharedPostDTO = new SharedPostDTO(
+                sp.getId(),
+                sp.getContent(),
+                sp.getImageUrl(),
+                sp.getVideoUrl(),
+                spAuthorName,
+                spAuthorAvatar,
+                sp.getCreatedAt(),
+                sp.getVisibility() != null ? sp.getVisibility().name() : "PUBLIC",
+                sp.getStatus() != null ? sp.getStatus().name() : "ACTIVE"
+            );
+        }
+
+        long shareCount = postRepository.countBySharedPost_Id(post.getId());
+
         return new PostResponse(
                 post.getId(),
                 post.getContent(),
@@ -119,6 +150,8 @@ public class PostService {
                 false,
                 true,
                 post.getVisibility() != null ? post.getVisibility().name() : "PUBLIC",
-                post.getStatus() != null ? post.getStatus().name() : "ACTIVE");
+                post.getStatus() != null ? post.getStatus().name() : "ACTIVE",
+                sharedPostDTO,
+                shareCount);
     }
 }

@@ -480,9 +480,19 @@ function openChatBox(userId, name, avatar, isGroup = false) {
         <div id="chat-messages-container-${chatId}" class="chat-messages">
             <div style="text-align:center;color:#65676B;font-size:12px;margin-top:10px;">Đang tải...</div>
         </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input-text-${chatId}" placeholder="Nhập tin nhắn..." onkeypress="handleKeyPress(event, '${chatId}')">
-            <button onclick="sendChatMessage('${chatId}')"><i class="fa-solid fa-paper-plane"></i></button>
+        <div class="chat-input-area" style="flex-wrap: wrap; padding: 10px;">
+            <div id="chat-image-preview-container-${chatId}" style="display: none; width: 100%; margin-bottom: 5px; position: relative;">
+                <img id="chat-image-preview-${chatId}" src="" style="max-height: 80px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <button onclick="removeChatImage('${chatId}')" class="chat-remove-img-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="chat-input-row">
+                <label for="chat-image-input-${chatId}" class="chat-attach-btn" title="Đính kèm ảnh">
+                    <i class="fa-solid fa-image"></i>
+                </label>
+                <input type="file" id="chat-image-input-${chatId}" accept="image/*" style="display: none;" onchange="previewChatImage(event, '${chatId}')">
+                <input type="text" id="chat-input-text-${chatId}" class="chat-input-field" placeholder="Nhập tin nhắn..." onkeypress="handleKeyPress(event, '${chatId}')">
+                <button onclick="sendChatMessage('${chatId}')" class="chat-send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
         </div>
     `;
 
@@ -631,7 +641,10 @@ function appendMessageToUI(msg, chatId) {
         ${targetAvatarHtml}
         <div class="chat-msg-content">
             ${nameHtml}
-            <div class="chat-message ${isSent ? 'sent' : 'received'}">${msg.content}</div>
+            <div class="chat-message ${isSent ? 'sent' : 'received'}" style="display: flex; flex-direction: column;">
+                ${msg.imageUrl ? `<img src="${msg.imageUrl}" style="max-width: 200px; border-radius: 8px; margin-bottom: ${msg.content ? '8px' : '0'}; display: block; cursor: pointer;" onclick="window.open(this.src)">` : ''}
+                ${msg.content ? `<span>${msg.content}</span>` : ''}
+            </div>
             <div class="chat-message-time">${timeStr}</div>
         </div>
     `;
@@ -645,27 +658,83 @@ function scrollToBottom(chatId) {
     }
 }
 
-function sendChatMessage(chatId) {
+async function sendChatMessage(chatId) {
     const input = document.getElementById(`chat-input-text-${chatId}`);
+    const imageInput = document.getElementById(`chat-image-input-${chatId}`);
     if (!input) return;
+    
     const content = input.value.trim();
-    
     const chatInfo = activeChats.find(c => c.chatId === chatId);
-    
-    if (content && stompClient && stompClient.connected && chatInfo) {
-        const chatMsg = {
-            senderId: myUserId,
-            content: content
-        };
-        if (chatInfo.isGroup) {
-            chatMsg.groupId = chatInfo.userId;
-        } else {
-            chatMsg.receiverId = chatInfo.userId;
+    const file = imageInput && imageInput.files && imageInput.files[0] ? imageInput.files[0] : null;
+
+    if (!chatInfo || !stompClient || !stompClient.connected) return;
+    if (!content && !file) return;
+
+    let imageUrl = null;
+
+    // Upload image if present
+    if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const uploadRes = await fetch('/api/upload/image', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: formData
+            });
+            if (uploadRes.ok) {
+                const url = await uploadRes.text();
+                imageUrl = url;
+            } else {
+                showWarningModal('Không thể tải ảnh lên. Vui lòng thử lại.');
+                return;
+            }
+        } catch (e) {
+            console.error('Lỗi upload ảnh:', e);
+            showWarningModal('Lỗi tải ảnh lên.');
+            return;
         }
-        // Send to controller
-        stompClient.send("/app/chat", {}, JSON.stringify(chatMsg));
-        input.value = '';
     }
+
+    const chatMsg = {
+        senderId: myUserId,
+        content: content,
+        imageUrl: imageUrl
+    };
+
+    if (chatInfo.isGroup) {
+        chatMsg.groupId = chatInfo.userId;
+    } else {
+        chatMsg.receiverId = chatInfo.userId;
+    }
+
+    // Send to controller
+    stompClient.send("/app/chat", {}, JSON.stringify(chatMsg));
+    
+    // Clear inputs
+    input.value = '';
+    removeChatImage(chatId);
+}
+
+function previewChatImage(event, chatId) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById(`chat-image-preview-${chatId}`).src = e.target.result;
+        document.getElementById(`chat-image-preview-container-${chatId}`).style.display = 'block';
+    }
+    reader.readAsDataURL(file);
+}
+
+function removeChatImage(chatId) {
+    const input = document.getElementById(`chat-image-input-${chatId}`);
+    if (input) input.value = '';
+    const container = document.getElementById(`chat-image-preview-container-${chatId}`);
+    if (container) container.style.display = 'none';
+    const preview = document.getElementById(`chat-image-preview-${chatId}`);
+    if (preview) preview.src = '';
 }
 
 function handleKeyPress(e, chatId) {

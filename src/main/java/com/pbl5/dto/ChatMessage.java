@@ -11,6 +11,7 @@ public class ChatMessage {
     private boolean isRead;
     private String type; // CHAT, JOIN, LEAVE
     private String senderName;
+    private String imageUrl;
 
     private Long groupId;
     private String groupName;
@@ -30,6 +31,9 @@ public class ChatMessage {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }

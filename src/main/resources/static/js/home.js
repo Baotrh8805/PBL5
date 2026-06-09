@@ -259,6 +259,17 @@ function prependCreatedPostToFeed(post) {
 
             <div class="post-content">
                 <p>${escapeHtml(post.content || '')}</p>
+                ${post.sharedPost ? `
+                <div class="shared-post-preview" onclick="window.location.href='/html/post.html?id=${post.sharedPost.id}'" style="border: 1px solid var(--border-color); border-radius: 8px; margin-top: 10px; padding: 10px; background: var(--comment-bg); cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--button-hover)'" onmouseout="this.style.backgroundColor='var(--comment-bg)'">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <img src="${post.sharedPost.authorAvatar}" class="avatar-small" style="width: 24px; height: 24px;" onerror="this.src='/uploads/default-avatar.png'">
+                        <span style="font-weight: 600; font-size: 13px; margin-left: 8px;">${post.sharedPost.authorName}</span>
+                    </div>
+                    <p style="font-size: 13px; color: var(--text-color); margin-bottom: 8px;">${escapeHtml(post.sharedPost.content || '')}</p>
+                    ${post.sharedPost.imageUrl ? `<img src="${post.sharedPost.imageUrl}" style="max-width: 100%; border-radius: 8px;">` : ''}
+                    ${post.sharedPost.videoUrl ? `<video src="${post.sharedPost.videoUrl}" style="max-width: 100%; border-radius: 8px; background: #000; max-height: 200px;" controls></video>` : ''}
+                </div>
+                ` : ''}
             </div>
     `;
 
@@ -293,7 +304,7 @@ function prependCreatedPostToFeed(post) {
                 <button class="interaction-btn" onclick="toggleComments(${post.id})">
                     <i class="fa-regular fa-comment"></i> <span id="comment-count-${post.id}">Bình luận (${post.commentCount || 0})</span>
                 </button>
-                <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
+                ${post.visibility === 'PUBLIC' ? `<button class="interaction-btn" onclick="openShareModal(${post.id})"><i class="fa-solid fa-share" style="color: #65676B;"></i> Chia sẻ${post.shareCount > 0 ? ` (${post.shareCount})` : ''}</button>` : ''}
                 <button id="bookmark-btn-${post.id}" class="interaction-btn" onclick="toggleBookmark(${post.id})" style="margin-left: auto;"><i class="fa-regular fa-bookmark"></i></button>
             </div>
 
@@ -422,6 +433,17 @@ function renderPosts(posts, token) {
 
             <div class="post-content">
                 <p>${escapeHtml(post.content || '')}</p>
+                ${post.sharedPost ? `
+                <div class="shared-post-preview" onclick="window.location.href='/html/post.html?id=${post.sharedPost.id}'" style="border: 1px solid var(--border-color); border-radius: 8px; margin-top: 10px; padding: 10px; background: var(--comment-bg); cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--button-hover)'" onmouseout="this.style.backgroundColor='var(--comment-bg)'">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <img src="${post.sharedPost.authorAvatar}" class="avatar-small" style="width: 24px; height: 24px;" onerror="this.src='/uploads/default-avatar.png'">
+                        <span style="font-weight: 600; font-size: 13px; margin-left: 8px;">${post.sharedPost.authorName}</span>
+                    </div>
+                    <p style="font-size: 13px; color: var(--text-color); margin-bottom: 8px;">${escapeHtml(post.sharedPost.content || '')}</p>
+                    ${post.sharedPost.imageUrl ? `<img src="${post.sharedPost.imageUrl}" style="max-width: 100%; border-radius: 8px;">` : ''}
+                    ${post.sharedPost.videoUrl ? `<video src="${post.sharedPost.videoUrl}" style="max-width: 100%; border-radius: 8px; background: #000; max-height: 200px;" controls></video>` : ''}
+                </div>
+                ` : ''}
             </div>
         `;
 
@@ -457,7 +479,7 @@ function renderPosts(posts, token) {
                 <button class="interaction-btn" onclick="toggleComments(${post.id})">
                     <i class="fa-regular fa-comment"></i> <span id="comment-count-${post.id}">Bình luận (${post.commentCount})</span>
                 </button>
-                <button class="interaction-btn"><i class="fa-regular fa-share-from-square"></i> Chia sẻ</button>
+                ${post.visibility === 'PUBLIC' ? `<button class="interaction-btn" onclick="openShareModal(${post.id})"><i class="fa-solid fa-share" style="color: #65676B;"></i> Chia sẻ${post.shareCount > 0 ? ` (${post.shareCount})` : ''}</button>` : ''}
                 <button id="bookmark-btn-${post.id}" class="interaction-btn" onclick="toggleBookmark(${post.id})" style="margin-left: auto; ${post.bookmarkedByCurrentUser ? 'color: var(--primary-color);' : ''}"><i class="${post.bookmarkedByCurrentUser ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i></button>
             </div>
 

@@ -168,7 +168,21 @@ function renderPostDetail(post) {
     document.getElementById('post-time').innerText = timeSince(post.createdAt);
 
     // Content
-    document.getElementById('post-text').innerText = post.content || '';
+    const postTextContainer = document.getElementById('post-text');
+    postTextContainer.innerText = post.content || '';
+    if (post.sharedPost) {
+        postTextContainer.insertAdjacentHTML('beforeend', `
+            <div class="shared-post-preview" onclick="window.location.href='/html/post.html?id=${post.sharedPost.id}'" style="border: 1px solid var(--border-color); border-radius: 8px; margin-top: 15px; padding: 12px; background: var(--comment-bg); cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--button-hover)'" onmouseout="this.style.backgroundColor='var(--comment-bg)'">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <img src="${post.sharedPost.authorAvatar || '/uploads/default-avatar.png'}" class="avatar-small" style="width: 24px; height: 24px; border-radius: 50%;" onerror="this.src='/uploads/default-avatar.png'">
+                    <span style="font-weight: 600; font-size: 13px; margin-left: 8px;">${post.sharedPost.authorName}</span>
+                </div>
+                <p style="font-size: 13px; color: var(--text-color); margin-bottom: 8px;">${(post.sharedPost.content || '').replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+                ${post.sharedPost.imageUrl ? `<img src="${post.sharedPost.imageUrl}" style="max-width: 100%; border-radius: 8px;">` : ''}
+                ${post.sharedPost.videoUrl ? `<video src="${post.sharedPost.videoUrl}" style="max-width: 100%; border-radius: 8px; background: #000; max-height: 200px;" controls></video>` : ''}
+            </div>
+        `);
+    }
 
     // Stats
     document.getElementById('like-count').innerText = post.likeCount || 0;
@@ -182,6 +196,17 @@ function renderPostDetail(post) {
     } else {
         likeBtn.classList.remove('active');
         likeBtn.innerHTML = '<i class="fa-regular fa-heart"></i> Thích';
+    }
+
+    // Share Button State
+    const shareBtn = document.getElementById('share-button');
+    if (shareBtn) {
+        if (post.visibility !== 'PUBLIC') {
+            shareBtn.style.display = 'none';
+        } else {
+            shareBtn.style.display = 'inline-flex';
+            // Share is only fully functional in feeds for now unless post-creation.js is included
+        }
     }
 
     // Post Options Menu

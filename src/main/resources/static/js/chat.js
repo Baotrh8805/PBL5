@@ -533,6 +533,15 @@ function closeChatBox(chatId) {
 }
 
 function handleIncomingMessage(msg) {
+    if (msg.type === 'REVOKE') {
+        const targetElementId = `chat-msg-${msg.id}`;
+        const msgDiv = document.getElementById(targetElementId);
+        if (msgDiv) {
+            msgDiv.remove();
+        }
+        return; // Dừng lại ở đây vì đây là tin nhắn thu hồi
+    }
+
     const isGroupMsg = !!msg.groupId;
     const targetId = isGroupMsg ? msg.groupId : (msg.senderId == myUserId ? msg.receiverId : msg.senderId);
     const targetElementId = isGroupMsg ? `group_${targetId}` : `user_${targetId}`;
@@ -570,6 +579,28 @@ function handleIncomingMessage(msg) {
             }
         }
     }
+}
+
+async function revokeMessage(messageId, chatId) {
+    if (!confirm('Bạn có chắc chắn muốn thu hồi tin nhắn này?')) return;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/messages/${messageId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            // Phản hồi ok thì xoá DOM luôn
+            const targetElementId = `chat-msg-${messageId}`;
+            const msgDiv = document.getElementById(targetElementId);
+            if (msgDiv) {
+                msgDiv.remove();
+            }
+        } else {
+            showWarningModal('Không thể thu hồi tin nhắn. Vui lòng thử lại.');
+        }
+    } catch(e) { console.error(e); }
 }
 
 function formatDateSeparator(date) {
@@ -625,6 +656,9 @@ function appendMessageToUI(msg, chatId) {
     }
     
     div.className = `chat-message-wrapper ${isSent ? 'sent' : 'received'}`;
+    if (msg.id) {
+        div.id = `chat-msg-${msg.id}`;
+    }
     
     let avatarUrl = msg.senderAvatar;
     if (!avatarUrl || avatarUrl.trim() === '') {
@@ -639,15 +673,22 @@ function appendMessageToUI(msg, chatId) {
 
     div.innerHTML = `
         ${targetAvatarHtml}
-        <div class="chat-msg-content">
+        <div class="chat-msg-content" style="position: relative; width: 100%;">
             ${nameHtml}
-            <div class="chat-message ${isSent ? 'sent' : 'received'}" style="display: flex; flex-direction: column;">
-                ${msg.imageUrl ? `<img src="${msg.imageUrl}" style="max-width: 200px; border-radius: 8px; margin-bottom: ${msg.content ? '8px' : '0'}; display: block; cursor: pointer;" onclick="window.open(this.src)">` : ''}
-                ${msg.content ? `<span>${msg.content}</span>` : ''}
+            <div class="chat-message-row" style="display: flex; align-items: center; justify-content: ${isSent ? 'flex-end' : 'flex-start'}; gap: 8px;">
+                ${isSent && msg.id ? `<button onclick="revokeMessage(${msg.id}, '${chatId}')" class="revoke-msg-btn" title="Thu hồi tin nhắn" style="background: none; border: none; color: #ff4d4f; cursor: pointer; padding: 5px; border-radius: 50%;"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                
+                <div class="chat-message ${isSent ? 'sent' : 'received'}" style="display: flex; flex-direction: column;">
+                    ${msg.imageUrl ? `<img src="${msg.imageUrl}" style="max-width: 200px; border-radius: 8px; margin-bottom: ${msg.content ? '8px' : '0'}; display: block; cursor: pointer;" onclick="window.open(this.src)">` : ''}
+                    ${msg.content ? `<span>${msg.content}</span>` : ''}
+                </div>
+                
+                ${!isSent && msg.id ? `<!-- placeholders for receiver actions if needed -->` : ''}
             </div>
             <div class="chat-message-time">${timeStr}</div>
         </div>
     `;
+    
     messagesDiv.appendChild(div);
 }
 
@@ -683,8 +724,8 @@ async function sendChatMessage(chatId) {
                 body: formData
             });
             if (uploadRes.ok) {
-                const url = await uploadRes.text();
-                imageUrl = url;
+                const data = await uploadRes.json();
+                imageUrl = data.url || data.imageUrl;
             } else {
                 showWarningModal('Không thể tải ảnh lên. Vui lòng thử lại.');
                 return;

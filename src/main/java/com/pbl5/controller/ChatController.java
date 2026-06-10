@@ -178,4 +178,47 @@ public class ChatController {
         List<ChatMessage> dtos = chatService.getGroupChatHistory(currentUser, groupId);
         return ResponseEntity.ok(dtos);
     }
+
+    @DeleteMapping("/api/messages/{id}")
+    public ResponseEntity<?> revokeMessage(
+            @PathVariable("id") Long id,
+            @RequestHeader(value="Authorization", required=false) String authHeader) {
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        String token = authHeader.substring(7);
+        if (!tokenProvider.validateToken(token)) {
+            return ResponseEntity.status(401).body("Invalid token");
+        }
+
+        String email = tokenProvider.getEmailFromJWT(token);
+        User currentUser = userRepository.findByEmail(email).orElse(null);
+        if (currentUser == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+
+        ChatMessage revokeMsg = chatService.deleteMessage(id, currentUser);
+        if (revokeMsg == null) {
+            return ResponseEntity.badRequest().body("Không thể thu hồi tin nhắn hoặc bạn không có quyền.");
+        }
+
+        // Broadcast to clients
+        if (revokeMsg.getGroupId() != null) {
+            List<Long> memberIds = chatService.getGroupMemberIds(revokeMsg.getGroupId());
+            for (Long memberId : memberIds) {
+                messagingTemplate.convertAndSend("/topic/messages/" + memberId, revokeMsg);
+            }
+        } else {
+            if (revokeMsg.getReceiverId() != null) {
+                messagingTemplate.convertAndSend("/topic/messages/" + revokeMsg.getReceiverId(), revokeMsg);
+            }
+            if (revokeMsg.getSenderId() != null) {
+                messagingTemplate.convertAndSend("/topic/messages/" + revokeMsg.getSenderId(), revokeMsg);
+            }
+        }
+
+        return ResponseEntity.ok("Đã thu hồi tin nhắn.");
+    }
 }

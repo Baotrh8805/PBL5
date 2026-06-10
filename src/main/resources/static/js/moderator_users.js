@@ -316,20 +316,22 @@ window.viewUserDetails = async function(userId) {
                             if (post.videoUrl) mediaHtml += `<div class="post-media-container" style="margin-bottom: 12px; text-align: center; background: #000; border-radius: 8px; overflow: hidden;"><video src="${escapeHtml(post.videoUrl)}" controls style="max-height: 400px; width: 100%; object-fit: contain; display: block; margin: 0 auto;"></video></div>`;
 
                             const status = String(post.status || '').toUpperCase();
-                            const isRejected = status === 'REJECTED' || status === 'AUTO_REJECTED' || status === 'DELETED';
+                            const isRejected = status === 'REJECTED' || status === 'AUTO_REJECTED';
+                            const isDeleted = status === 'DELETED';
                             const isPending = status === 'PENDING_REVIEW';
                             
                             let statusLabel = '';
                             let auditHtml = '';
 
-                            if (isRejected) {
+                            if (isDeleted) {
+                                statusLabel = `<span style="font-size: 11px; color: #8c8c8c; font-weight: 800; background: rgba(140, 140, 140, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #8c8c8c;">NGƯỜI DÙNG XÓA</span>`;
+                                auditHtml = `<div style="margin-bottom: 15px; font-size: 13px; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-user-xmark"></i> Đã gỡ bởi Người dùng</div>`;
+                            } else if (isRejected) {
                                 statusLabel = `<span style="font-size: 11px; color: #ff4d4f; font-weight: 800; background: rgba(255, 77, 79, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #ff4d4f;">ĐÃ GỠ</span>`;
                                 if (status === 'AUTO_REJECTED') {
                                     auditHtml = `<div style="margin-bottom: 15px; font-size: 13px; color: #ff4d4f; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-robot"></i> Bị gỡ bởi AI (Vi phạm tiêu chuẩn)</div>`;
                                 } else if (post.reviewerName) {
                                     auditHtml = `<div style="margin-bottom: 15px; font-size: 13px; color: #ff4d4f; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-user-shield"></i> Bị gỡ bởi Moderator ${escapeHtml(post.reviewerName)}</div>`;
-                                } else if (status === 'DELETED') {
-                                    auditHtml = `<div style="margin-bottom: 15px; font-size: 13px; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-user-xmark"></i> Đã gỡ bởi Người dùng</div>`;
                                 }
                             } else if (isPending) {
                                 statusLabel = `<span style="font-size: 11px; color: #faad14; font-weight: 800; background: rgba(250, 173, 20, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #faad14;">CHỜ DUYỆT</span>`;
@@ -343,7 +345,9 @@ window.viewUserDetails = async function(userId) {
                             }
 
                             let actionButtons = '';
-                            if (isRejected) {
+                            if (isDeleted) {
+                                actionButtons = '';
+                            } else if (isRejected) {
                                 actionButtons = `<button class="btn-action success" onclick="restorePost('${post.id}')"><i class="fa-solid fa-rotate-left"></i> Khôi phục</button>`;
                             } else {
                                 actionButtons = `

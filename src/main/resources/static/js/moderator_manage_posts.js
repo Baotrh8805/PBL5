@@ -58,10 +58,12 @@ function renderManagePostsFeed(posts) {
 
         const postStatus = String(post.status || '').toUpperCase();
         const isRejected = postStatus === 'REJECTED' || postStatus === 'AUTO_REJECTED';
+        const isDeleted = postStatus === 'DELETED';
         const isPending = postStatus === 'PENDING_REVIEW';
         
         let statusLabel = '';
-        if (isRejected) statusLabel = `<span style="font-size: 11px; color: #ff4d4f; font-weight: 800; background: rgba(255, 77, 79, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #ff4d4f;">ĐÃ GỠ</span>`;
+        if (isDeleted) statusLabel = `<span style="font-size: 11px; color: #8c8c8c; font-weight: 800; background: rgba(140, 140, 140, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #8c8c8c;">NGƯỜI DÙNG XÓA</span>`;
+        else if (isRejected) statusLabel = `<span style="font-size: 11px; color: #ff4d4f; font-weight: 800; background: rgba(255, 77, 79, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #ff4d4f;">ĐÃ GỠ</span>`;
         else if (!isPending) statusLabel = `<span style="font-size: 11px; color: #00d1b2; font-weight: 800; background: rgba(0, 209, 178, 0.1); padding: 2px 8px; border-radius: 4px; margin-left: 10px; border: 1px solid #00d1b2;">ĐÃ DUYỆT</span>`;
 
         let auditHtml = '';
@@ -70,7 +72,9 @@ function renderManagePostsFeed(posts) {
         }
 
         let actionButtons = '';
-        if (isRejected) {
+        if (isDeleted) {
+            actionButtons = '';
+        } else if (isRejected) {
             actionButtons = `<button class="btn-action success" onclick="restorePost('${post.id}')" style="padding: 8px 16px; font-size: 14px; font-weight: 600;"><i class="fa-solid fa-rotate-left"></i> Khôi phục</button>`;
         } else {
             actionButtons = `

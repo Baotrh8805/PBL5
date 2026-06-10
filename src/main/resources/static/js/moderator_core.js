@@ -749,10 +749,18 @@ window.renderPostDetailContent = function (post) {
 
     if (isReviewed && statusDiv) {
         const isRejected = postStatus === 'REJECTED' || postStatus === 'AUTO_REJECTED';
-        const statusColor = isRejected ? '#ff4d4f' : '#00d1b2';
-        const statusBg = isRejected ? 'rgba(255, 77, 79, 0.1)' : 'rgba(0, 209, 178, 0.1)';
-        const statusIcon = isRejected ? 'fa-circle-xmark' : 'fa-circle-check';
-        const statusText = postStatus === 'REJECTED' ? 'Xử lý: Xóa bài' : (postStatus === 'AUTO_REJECTED' ? 'Xử lý: Hệ thống tự động xóa' : 'Xử lý: Duyệt bài');
+        const isDeleted = postStatus === 'DELETED';
+        let statusColor = isRejected ? '#ff4d4f' : '#00d1b2';
+        let statusBg = isRejected ? 'rgba(255, 77, 79, 0.1)' : 'rgba(0, 209, 178, 0.1)';
+        let statusIcon = isRejected ? 'fa-circle-xmark' : 'fa-circle-check';
+        let statusText = postStatus === 'REJECTED' ? 'Xử lý: Xóa bài' : (postStatus === 'AUTO_REJECTED' ? 'Xử lý: Hệ thống tự động xóa' : 'Xử lý: Duyệt bài');
+
+        if (isDeleted) {
+            statusColor = '#8c8c8c';
+            statusBg = 'rgba(140, 140, 140, 0.1)';
+            statusIcon = 'fa-trash-can';
+            statusText = 'Trạng thái: NGƯỜI DÙNG TỰ XÓA';
+        }
 
         statusDiv.innerHTML = `
             <div style="margin-bottom: 20px; padding: 15px; background: #18191a; border-radius: 10px; border: 2px solid ${statusColor}; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">

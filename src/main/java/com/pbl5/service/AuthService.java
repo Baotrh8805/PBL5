@@ -67,6 +67,13 @@ public class AuthService {
      * @throws RuntimeException nếu email đã được sử dụng
      */
     public void register(RegisterRequest request) {
+        if (request.getPassword() == null || request.getPassword().length() < 8 
+                || !request.getPassword().matches(".*[a-zA-Z]+.*") 
+                || !request.getPassword().matches(".*\\d+.*") 
+                || !request.getPassword().matches(".*[^a-zA-Z0-9]+.*")) {
+            throw new RuntimeException("Mật khẩu phải dài ít nhất 8 kí tự, bao gồm chữ cái, số và kí tự đặc biệt");
+        }
+        
         // Kiểm tra email đã tồn tại trong hệ thống chưa
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email đã được sử dụng");
@@ -246,6 +253,13 @@ public class AuthService {
      * @throws RuntimeException nếu token không hợp lệ hoặc không tìm thấy user
      */
     public void resetPassword(String token, String newPassword) {
+        if (newPassword == null || newPassword.length() < 8 
+                || !newPassword.matches(".*[a-zA-Z]+.*") 
+                || !newPassword.matches(".*\\d+.*") 
+                || !newPassword.matches(".*[^a-zA-Z0-9]+.*")) {
+            throw new RuntimeException("Mật khẩu phải dài ít nhất 8 kí tự, bao gồm chữ cái, số và kí tự đặc biệt");
+        }
+
         // Tìm user theo reset token
         User user = userRepository.findByResetPasswordToken(token)
                 .orElseThrow(() -> new RuntimeException("Mã đổi mật khẩu không hợp lệ"));

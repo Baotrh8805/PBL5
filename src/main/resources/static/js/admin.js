@@ -904,11 +904,6 @@ function violationScoreBadge(score) {
 }
 
 // ===== UTILS =====
-function logout() {
-    localStorage.removeItem('token');
-    window.location.href = '/index.html';
-}
-
 function showToast(msg, type = '') {
     const toast = document.getElementById('toast');
     toast.textContent = msg;

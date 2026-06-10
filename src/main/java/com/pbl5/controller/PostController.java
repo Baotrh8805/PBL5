@@ -515,7 +515,7 @@ public class PostController {
             CommentResponse response = commentService.addComment(postId, request, user);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            if (e.getMessage().contains("cấm bình luận")) {
+            if (e.getMessage().contains("hạn chế bình luận")) {
                 return ResponseEntity.status(403).body(e.getMessage());
             }
             return ResponseEntity.badRequest().body(e.getMessage());

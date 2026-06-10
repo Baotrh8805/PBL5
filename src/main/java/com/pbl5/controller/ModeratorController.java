@@ -1,6 +1,7 @@
 package com.pbl5.controller;
 
 import com.pbl5.enums.PostStatus;
+import com.pbl5.enums.Role;
 import com.pbl5.enums.UserStatus;
 import com.pbl5.model.Post;
 import com.pbl5.model.User;
@@ -8,16 +9,20 @@ import com.pbl5.repository.LikeRepository;
 import com.pbl5.repository.CommentRepository;
 import com.pbl5.repository.PostRepository;
 import com.pbl5.repository.UserRepository;
+import com.pbl5.repository.LoginHistoryRepository;
 import com.pbl5.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.pbl5.repository.NotificationRepository;
 import com.pbl5.repository.CommentLikeRepository;
 import com.pbl5.model.Notification;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +62,30 @@ public class ModeratorController {
 
     @Autowired
     private CommentLikeRepository commentLikeRepository;
+
+    @Autowired
+    private LoginHistoryRepository loginHistoryRepository;
+
+    @Autowired
+    private com.pbl5.repository.BookmarkRepository bookmarkRepository;
+
+    @Autowired
+    private com.pbl5.repository.HiddenPostRepository hiddenPostRepository;
+
+    @Autowired
+    private com.pbl5.repository.FriendshipRepository friendshipRepository;
+
+    @Autowired
+    private com.pbl5.repository.MessageRepository messageRepository;
+
+    @Autowired
+    private com.pbl5.repository.ChatGroupRepository chatGroupRepository;
+
+    @Autowired
+    private com.pbl5.repository.GroupReadStatusRepository groupReadStatusRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -824,6 +853,82 @@ public class ModeratorController {
         sendNotification(user, moderator, "USER_WARNED", message, "/html/home.html");
         
         return ResponseEntity.ok(Map.of("message", "Đã gửi cảnh cáo thành công cho người dùng " + user.getFullName()));
+    }
+
+    /** Xoá vĩnh viễn tài khoản người dùng (chỉ USER, không phải ADMIN/MODERATOR) */
+    @DeleteMapping("/users/{id}")
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<?> deleteUser(@PathVariable Long id,
+                                        @RequestHeader("Authorization") String authHeader) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty())
+            return ResponseEntity.status(404).body(Map.of("message", "Không tìm thấy người dùng"));
+
+        User user = userOpt.get();
+        if (user.getRole() == Role.ADMIN || user.getRole() == Role.MODERATOR)
+            return ResponseEntity.status(403).body(Map.of("message", "Moderator không thể xoá tài khoản Admin hoặc Moderator khác"));
+
+        try {
+            reportRepository.clearResolvedBy(id);
+            postRepository.clearProcessingModerator(id);
+            entityManager.flush();
+            entityManager.clear();
+
+            user = userRepository.findById(id).orElseThrow();
+
+            notificationRepository.deleteByUserId(id);
+            notificationRepository.deleteBySenderId(id);
+            loginHistoryRepository.deleteByUserId(id);
+            messageRepository.deleteByUserId(id);
+
+            groupReadStatusRepository.deleteByUserId(id);
+            for (com.pbl5.model.ChatGroup group : chatGroupRepository.findByUserMemberId(id)) {
+                group.getMembers().remove(user);
+                chatGroupRepository.save(group);
+            }
+            for (com.pbl5.model.ChatGroup ownedGroup : chatGroupRepository.findByCreatedById(id)) {
+                groupReadStatusRepository.deleteByGroupId(ownedGroup.getId());
+                messageRepository.deleteByGroupId(ownedGroup.getId());
+                chatGroupRepository.delete(ownedGroup);
+            }
+
+            friendshipRepository.deleteAll(friendshipRepository.findAllByUser(user));
+            commentLikeRepository.deleteByUserId(id);
+            hiddenPostRepository.deleteAll(hiddenPostRepository.findByUserId(id));
+            bookmarkRepository.deleteAll(bookmarkRepository.findByUserId(id));
+
+            for (com.pbl5.model.Post post : postRepository.findByUserIdOrderByCreatedAtDesc(id)) {
+                postRepository.clearSharedPostReference(post.getId());
+                entityManager.flush();
+                entityManager.clear();
+                post = postRepository.findById(post.getId()).orElse(null);
+                if (post == null) continue;
+                reportRepository.deleteAll(reportRepository.findByPost(post));
+                bookmarkRepository.deleteAll(bookmarkRepository.findByPostId(post.getId()));
+                hiddenPostRepository.deleteAll(hiddenPostRepository.findByPostId(post.getId()));
+                for (com.pbl5.model.Comment comment : commentRepository.findByPostIdOrderByCreatedAtDesc(post.getId())) {
+                    commentLikeRepository.deleteByCommentId(comment.getId());
+                    reportRepository.deleteAll(reportRepository.findByComment(comment));
+                }
+                commentRepository.deleteAll(commentRepository.findByPostIdOrderByCreatedAtDesc(post.getId()));
+                likeRepository.deleteAll(likeRepository.findByPost(post));
+                postRepository.delete(post);
+            }
+
+            for (com.pbl5.model.Comment comment : commentRepository.findByUserId(id)) {
+                commentLikeRepository.deleteByCommentId(comment.getId());
+                reportRepository.deleteAll(reportRepository.findByComment(comment));
+                commentRepository.delete(comment);
+            }
+
+            likeRepository.deleteAll(likeRepository.findByUserId(id));
+            reportRepository.deleteAll(reportRepository.findByUser(id));
+            userRepository.delete(user);
+
+            return ResponseEntity.ok(Map.of("message", "Đã xoá tài khoản người dùng ID " + id));
+        } catch (Exception e) {
+            throw new RuntimeException("Xoá user ID " + id + " thất bại: " + e.getMessage(), e);
+        }
     }
 
     private void sendNotification(User recipient, User sender, String type, String message, String link) {

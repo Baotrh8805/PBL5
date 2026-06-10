@@ -49,7 +49,7 @@ function renderManagePostsFeed(posts) {
     });
 
     const cards = filteredPosts.slice(0, 100).map(post => {
-        const authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName || 'User')}&background=00d1b2&color=fff`;
+        const authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName || 'User')}&background=F6DE50&color=1a1a1a`;
         const postTime = typeof timeSince === 'function' ? timeSince(post.createdAt) : 'Vừa xong';
         
         let mediaHtml = '';
@@ -110,7 +110,7 @@ function renderManagePostsFeed(posts) {
                 <div class="post-footer" style="padding-top: 15px; border-top: 1px solid #e4e6eb; display: flex; gap: 30px; color: #65676b; font-size: 14px; align-items: center;">
                     <span title="Lượt thích"><i class="fa-solid fa-thumbs-up" style="color: #3498db;"></i> <strong>${post.likeCount || 0}</strong></span>
                     <span title="Bình luận"><i class="fa-solid fa-comment" style="color: #00d1b2;"></i> <strong>${post.commentCount || 0}</strong></span>
-                    <button class="btn-action" style="margin-left: auto; background: #3498db; border: none; color: #fff; cursor: pointer; font-weight: 600; padding: 7px 18px; border-radius: 8px; display: flex; align-items: center; gap: 6px; position: relative; z-index: 999;" onclick="viewPostDetail('${post.id}')">
+                    <button class="btn-action detail" style="margin-left: auto; position: relative; z-index: 999;" onclick="viewPostDetail('${post.id}')">
                         <i class="fa-solid fa-circle-info"></i> Xem chi tiết
                     </button>
                 </div>

@@ -39,4 +39,15 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     List<Report> findByPost(Post post);
 
     List<Report> findByComment(Comment comment);
+
+    @Query("SELECT r FROM Report r WHERE r.user.id = :userId")
+    List<Report> findByUser(@Param("userId") Long userId);
+
+    @Query("SELECT r FROM Report r WHERE r.resolvedBy.id = :userId")
+    List<Report> findByResolvedById(@Param("userId") Long userId);
+
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Report r SET r.resolvedBy = null WHERE r.resolvedBy.id = :userId")
+    void clearResolvedBy(@Param("userId") Long userId);
 }

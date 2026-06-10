@@ -36,6 +36,8 @@ import com.pbl5.model.Comment;
 import com.pbl5.model.Report;
 import com.pbl5.security.JwtTokenProvider;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 /**
  * Controller dành riêng cho Admin.
@@ -74,10 +76,31 @@ public class AdminController {
     private CommentLikeRepository commentLikeRepository;
 
     @Autowired
+    private com.pbl5.repository.BookmarkRepository bookmarkRepository;
+
+    @Autowired
+    private com.pbl5.repository.HiddenPostRepository hiddenPostRepository;
+
+    @Autowired
+    private com.pbl5.repository.FriendshipRepository friendshipRepository;
+
+    @Autowired
+    private com.pbl5.repository.MessageRepository messageRepository;
+
+    @Autowired
+    private com.pbl5.repository.ChatGroupRepository chatGroupRepository;
+
+    @Autowired
+    private com.pbl5.repository.GroupReadStatusRepository groupReadStatusRepository;
+
+    @Autowired
     private JwtTokenProvider tokenProvider;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     // ==================== QUẢN LÝ NGƯỜI DÙNG ====================
 
@@ -256,21 +279,102 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Đã cập nhật role thành " + newRole + " cho người dùng ID " + id));
     }
 
-    /** Xoá tài khoản người dùng (chuyển thành khóa logic vĩnh viễn) */
+    /** Xoá vĩnh viễn tài khoản người dùng cùng toàn bộ dữ liệu liên quan */
     @DeleteMapping("/users/{id}")
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty())
-            return ResponseEntity.status(404).body("Không tìm thấy người dùng");
+            return ResponseEntity.status(404).body(Map.of("message", "Không tìm thấy người dùng"));
 
         User user = userOpt.get();
         if (user.getRole() == Role.ADMIN) {
-            return ResponseEntity.status(403).body("Không thể xoá tài khoản Admin");
+            return ResponseEntity.status(403).body(Map.of("message", "Không thể xoá tài khoản Admin"));
         }
-        user.setStatus(UserStatus.BANNED);
-        user.setLockExpiresAt(LocalDateTime.of(1970, 1, 1, 0, 0));
-        userRepository.save(user);
-        return ResponseEntity.ok(Map.of("message", "Đã khóa tài khoản người dùng vĩnh viễn ID " + id));
+
+        try {
+            // ── 1. NULL hoá FK nullable trỏ về user ──────────────────────────────
+            reportRepository.clearResolvedBy(id);
+            postRepository.clearProcessingModerator(id);
+            entityManager.flush();
+            entityManager.clear();
+
+            // Re-load user sau khi clear cache
+            user = userRepository.findById(id).orElseThrow();
+
+            // ── 2. Notifications ─────────────────────────────────────────────────
+            notificationRepository.deleteByUserId(id);
+            notificationRepository.deleteBySenderId(id);
+
+            // ── 3. Lịch sử đăng nhập (bulk DELETE) ──────────────────────────────
+            loginHistoryRepository.deleteByUserId(id);
+
+            // ── 4. Tin nhắn của user (bulk delete) ───────────────────────────────
+            messageRepository.deleteByUserId(id);
+
+            // ── 5. GroupReadStatus + rời ChatGroup member list ────────────────────
+            groupReadStatusRepository.deleteByUserId(id);
+            for (com.pbl5.model.ChatGroup group : chatGroupRepository.findByUserMemberId(id)) {
+                group.getMembers().remove(user);
+                chatGroupRepository.save(group);
+            }
+            // Xóa nhóm do user tạo (createdBy NOT NULL)
+            for (com.pbl5.model.ChatGroup ownedGroup : chatGroupRepository.findByCreatedById(id)) {
+                groupReadStatusRepository.deleteByGroupId(ownedGroup.getId());
+                messageRepository.deleteByGroupId(ownedGroup.getId());
+                chatGroupRepository.delete(ownedGroup);
+            }
+
+            // ── 6. Friendships ────────────────────────────────────────────────────
+            friendshipRepository.deleteAll(friendshipRepository.findAllByUser(user));
+
+            // ── 7. CommentLike của user ───────────────────────────────────────────
+            commentLikeRepository.deleteByUserId(id);
+
+            // ── 8. HiddenPost và Bookmark của user ───────────────────────────────
+            hiddenPostRepository.deleteAll(hiddenPostRepository.findByUserId(id));
+            bookmarkRepository.deleteAll(bookmarkRepository.findByUserId(id));
+
+            // ── 9. Bài viết của user ──────────────────────────────────────────────
+            for (com.pbl5.model.Post post : postRepository.findByUserIdOrderByCreatedAtDesc(id)) {
+                postRepository.clearSharedPostReference(post.getId());
+                entityManager.flush();
+                entityManager.clear();
+                post = postRepository.findById(post.getId()).orElse(null);
+                if (post == null) continue;
+                reportRepository.deleteAll(reportRepository.findByPost(post));
+                bookmarkRepository.deleteAll(bookmarkRepository.findByPostId(post.getId()));
+                hiddenPostRepository.deleteAll(hiddenPostRepository.findByPostId(post.getId()));
+                for (com.pbl5.model.Comment comment : commentRepository.findByPostIdOrderByCreatedAtDesc(post.getId())) {
+                    commentLikeRepository.deleteByCommentId(comment.getId());
+                    reportRepository.deleteAll(reportRepository.findByComment(comment));
+                }
+                commentRepository.deleteAll(commentRepository.findByPostIdOrderByCreatedAtDesc(post.getId()));
+                likeRepository.deleteAll(likeRepository.findByPost(post));
+                postRepository.delete(post);
+            }
+
+            // ── 10. Comment của user trên bài người khác ─────────────────────────
+            for (com.pbl5.model.Comment comment : commentRepository.findByUserId(id)) {
+                commentLikeRepository.deleteByCommentId(comment.getId());
+                reportRepository.deleteAll(reportRepository.findByComment(comment));
+                commentRepository.delete(comment);
+            }
+
+            // ── 11. Like của user trên bài người khác ────────────────────────────
+            likeRepository.deleteAll(likeRepository.findByUserId(id));
+
+            // ── 12. Report do user tạo ────────────────────────────────────────────
+            reportRepository.deleteAll(reportRepository.findByUser(id));
+
+            // ── 13. Xóa user ─────────────────────────────────────────────────────
+            userRepository.delete(user);
+
+            return ResponseEntity.ok(Map.of("message", "Đã xoá tài khoản và toàn bộ dữ liệu của người dùng ID " + id));
+
+        } catch (Exception e) {
+            throw new RuntimeException("Xoá user ID " + id + " thất bại: " + e.getMessage(), e);
+        }
     }
 
     // ==================== QUẢN LÝ BÀI VIẾT ====================
@@ -643,17 +747,98 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("message", "Đã kích hoạt lại tài khoản kiểm duyệt viên ID " + id));
     }
 
-    /** Xoá tài khoản kiểm duyệt viên */
+    /** Xoá vĩnh viễn tài khoản kiểm duyệt viên cùng toàn bộ dữ liệu liên quan */
     @DeleteMapping("/moderators/{id}")
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public ResponseEntity<?> deleteModerator(@PathVariable Long id) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty())
-            return ResponseEntity.status(404).body("Không tìm thấy kiểm duyệt viên");
+            return ResponseEntity.status(404).body(Map.of("message", "Không tìm thấy kiểm duyệt viên"));
         User user = userOpt.get();
         if (user.getRole() != Role.MODERATOR)
-            return ResponseEntity.status(400).body("Người dùng này không phải kiểm duyệt viên");
-        userRepository.deleteById(id);
-        return ResponseEntity.ok(Map.of("message", "Đã xoá tài khoản kiểm duyệt viên ID " + id));
+            return ResponseEntity.status(400).body(Map.of("message", "Người dùng này không phải kiểm duyệt viên"));
+
+        try {
+            // ── 1. NULL hoá FK nullable trỏ về moderator ─────────────────────
+            postRepository.clearProcessingModerator(id);
+            reportRepository.clearResolvedBy(id);
+            entityManager.flush();
+            entityManager.clear();
+
+            user = userRepository.findById(id).orElseThrow();
+
+            // ── 2. Notifications ──────────────────────────────────────────────
+            notificationRepository.deleteByUserId(id);
+            notificationRepository.deleteBySenderId(id);
+
+            // ── 3. Lịch sử đăng nhập ─────────────────────────────────────────
+            loginHistoryRepository.deleteByUserId(id);
+
+            // ── 4. Tin nhắn ───────────────────────────────────────────────────
+            messageRepository.deleteByUserId(id);
+
+            // ── 5. GroupReadStatus + rời/xóa ChatGroup ───────────────────────
+            groupReadStatusRepository.deleteByUserId(id);
+            for (com.pbl5.model.ChatGroup group : chatGroupRepository.findByUserMemberId(id)) {
+                group.getMembers().remove(user);
+                chatGroupRepository.save(group);
+            }
+            for (com.pbl5.model.ChatGroup ownedGroup : chatGroupRepository.findByCreatedById(id)) {
+                groupReadStatusRepository.deleteByGroupId(ownedGroup.getId());
+                messageRepository.deleteByGroupId(ownedGroup.getId());
+                chatGroupRepository.delete(ownedGroup);
+            }
+
+            // ── 6. Friendships ────────────────────────────────────────────────
+            friendshipRepository.deleteAll(friendshipRepository.findAllByUser(user));
+
+            // ── 7. CommentLike ────────────────────────────────────────────────
+            commentLikeRepository.deleteByUserId(id);
+
+            // ── 8. HiddenPost và Bookmark ─────────────────────────────────────
+            hiddenPostRepository.deleteAll(hiddenPostRepository.findByUserId(id));
+            bookmarkRepository.deleteAll(bookmarkRepository.findByUserId(id));
+
+            // ── 9. Bài viết ───────────────────────────────────────────────────
+            for (com.pbl5.model.Post post : postRepository.findByUserIdOrderByCreatedAtDesc(id)) {
+                postRepository.clearSharedPostReference(post.getId());
+                entityManager.flush();
+                entityManager.clear();
+                post = postRepository.findById(post.getId()).orElse(null);
+                if (post == null) continue;
+                reportRepository.deleteAll(reportRepository.findByPost(post));
+                bookmarkRepository.deleteAll(bookmarkRepository.findByPostId(post.getId()));
+                hiddenPostRepository.deleteAll(hiddenPostRepository.findByPostId(post.getId()));
+                for (com.pbl5.model.Comment comment : commentRepository.findByPostIdOrderByCreatedAtDesc(post.getId())) {
+                    commentLikeRepository.deleteByCommentId(comment.getId());
+                    reportRepository.deleteAll(reportRepository.findByComment(comment));
+                }
+                commentRepository.deleteAll(commentRepository.findByPostIdOrderByCreatedAtDesc(post.getId()));
+                likeRepository.deleteAll(likeRepository.findByPost(post));
+                postRepository.delete(post);
+            }
+
+            // ── 10. Comment trên bài người khác ──────────────────────────────
+            for (com.pbl5.model.Comment comment : commentRepository.findByUserId(id)) {
+                commentLikeRepository.deleteByCommentId(comment.getId());
+                reportRepository.deleteAll(reportRepository.findByComment(comment));
+                commentRepository.delete(comment);
+            }
+
+            // ── 11. Like trên bài người khác ─────────────────────────────────
+            likeRepository.deleteAll(likeRepository.findByUserId(id));
+
+            // ── 12. Report do moderator tạo ───────────────────────────────────
+            reportRepository.deleteAll(reportRepository.findByUser(id));
+
+            // ── 13. Xóa user ──────────────────────────────────────────────────
+            userRepository.delete(user);
+
+            return ResponseEntity.ok(Map.of("message", "Đã xoá tài khoản kiểm duyệt viên ID " + id));
+
+        } catch (Exception e) {
+            throw new RuntimeException("Xoá moderator ID " + id + " thất bại: " + e.getMessage(), e);
+        }
     }
 
     // ==================== QUẢN LÝ BÁO CÁO (REPORTS) ====================
@@ -854,5 +1039,10 @@ public class AdminController {
         stats.put("moderators", moderators);
         stats.put("pendingReports", pendingReports);
         return ResponseEntity.ok(stats);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
+        return ResponseEntity.status(500).body(Map.of("message", e.getMessage() != null ? e.getMessage() : "Lỗi server nội bộ"));
     }
 }

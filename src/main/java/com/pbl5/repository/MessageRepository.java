@@ -44,4 +44,17 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     @Query(value = "SELECT * FROM messages WHERE group_id = :groupId ORDER BY timestamp DESC LIMIT 1", nativeQuery = true)
     Message findLastMessageInGroup(@Param("groupId") Long groupId);
+
+    @Query("SELECT m FROM Message m WHERE m.sender.id = :userId OR m.receiver.id = :userId")
+    List<Message> findBySenderIdOrReceiverId(@Param("userId") Long userId);
+
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM Message m WHERE m.sender.id = :userId OR m.receiver.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
+
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM Message m WHERE m.chatGroup.id = :groupId")
+    void deleteByGroupId(@Param("groupId") Long groupId);
 }

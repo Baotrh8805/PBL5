@@ -152,7 +152,7 @@ function openAdminProfile() {
         { label: 'Giới tính',       value: formatGender(u.gender) },
         { label: 'Ngày sinh',       value: u.dateOfBirth ? new Date(u.dateOfBirth).toLocaleDateString('vi-VN') : null },
         { label: 'Số điện thoại',   value: u.phoneNumber },
-        { label: 'Đăng nhập qua',   value: u.provider === 'GOOGLE' ? '🔵 Google' : '📧 Email/Mật khẩu' },
+        { label: 'Đăng nhập qua',   value: u.provider === 'GOOGLE' ? 'Google' : 'Local' },
         { label: 'ID',              value: '#' + u.id },
     ];
 
@@ -402,24 +402,14 @@ function renderUsers(users) {
             <td style="font-size:13px;color:var(--text-muted);">${escapeHtml(u.email)}</td>
             <td>${statusBadge(u.status)}</td>
             <td>
-                <div class="action-btns">
+                <div class="admin-action-group">
                     ${u.status !== 'BANNED'
-                        ? `<button class="action-btn danger" title="Khoá tài khoản" onclick="banUser(${u.id}, '${escapeHtml(u.fullName)}')">
-                               <i class="fa-solid fa-ban"></i>
-                           </button>`
-                        : `<button class="action-btn success" title="Mở khoá" onclick="unbanUser(${u.id}, '${escapeHtml(u.fullName)}')">
-                               <i class="fa-solid fa-lock-open"></i>
-                           </button>`
+                        ? `<button class="btn-action danger" title="Khoá tài khoản" onclick="banUser(${u.id}, '${escapeHtml(u.fullName)}')"><i class="fa-solid fa-ban"></i> Khoá</button>`
+                        : `<button class="btn-action success" title="Mở khoá" onclick="unbanUser(${u.id}, '${escapeHtml(u.fullName)}')"><i class="fa-solid fa-lock-open"></i> Mở khoá</button>`
                     }
-                    <button class="action-btn warning-btn" title="Cảnh báo" onclick="warnUser(${u.id}, '${escapeHtml(u.fullName)}')">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </button>
-                    <button class="action-btn" title="Lịch sử đăng nhập" onclick="openLoginHistory(${u.id}, '${escapeHtml(u.fullName)}')">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                    </button>
-                    <button class="action-btn danger" title="Xoá tài khoản" onclick="deleteUser(${u.id}, '${escapeHtml(u.fullName)}')">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <button class="btn-action warning" title="Cảnh báo" onclick="warnUser(${u.id}, '${escapeHtml(u.fullName)}')"><i class="fa-solid fa-triangle-exclamation"></i> Cảnh báo</button>
+                    <button class="btn-action info" title="Lịch sử đăng nhập" onclick="openLoginHistory(${u.id}, '${escapeHtml(u.fullName)}')"><i class="fa-solid fa-clock-rotate-left"></i> Lịch sử</button>
+                    <button class="btn-action danger-outline" title="Xoá tài khoản" onclick="deleteUser(${u.id}, '${escapeHtml(u.fullName)}')"><i class="fa-solid fa-trash"></i> Xoá</button>
                 </div>
             </td>
         </tr>
@@ -450,7 +440,7 @@ function statusBadge(status) {
 function providerIcon(provider) {
     if (provider === 'GOOGLE')
         return `<span class="provider-google"><i class="fa-brands fa-google"></i> Google</span>`;
-    return `<span class="provider-local"><i class="fa-solid fa-envelope"></i> Email</span>`;
+    return `<span class="provider-local"><i class="fa-solid fa-key"></i> Local</span>`;
 }
 
 // ===== LỌC =====
@@ -571,7 +561,25 @@ function deleteUser(id, name) {
         '<i class="fa-solid fa-trash" style="color:var(--red);"></i> Xóa vĩnh viễn người dùng',
         `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản của <strong>"${escapeHtml(name)}"</strong>? <br><span style="color:var(--red); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Hành động này không thể hoàn tác!</span>`,
         async () => {
-            await adminAction(`/api/admin/users/${id}`, 'DELETE', `Đã xóa tài khoản ${name}`);
+            try {
+                const res = await fetch(`/api/admin/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    // Xoá ngay khỏi mảng in-memory
+                    allUsers = allUsers.filter(u => u.id !== id);
+                    updateStatCards(allUsers);
+                    // Tái áp dụng filter đang chọn thay vì reset về toàn bộ danh sách
+                    filterUsers();
+                    showToast(`Đã xóa tài khoản ${escapeHtml(name)}`, 'success');
+                } else {
+                    showToast(data.message || 'Có lỗi xảy ra khi xóa tài khoản.', 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối.', 'error');
+            }
         },
         'danger'
     );
@@ -670,13 +678,9 @@ function renderPosts(posts) {
             </td>
             <td style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${formatDate(p.createdAt)}</td>
             <td>
-                <div class="action-btns">
-                    <button class="action-btn" title="Xem chi tiết" onclick="openPostDetail(${p.id})">
-                        <i class="fa-solid fa-eye"></i>
-                    </button>
-                    <button class="action-btn danger" title="Xoá bài viết" onclick="deletePost(${p.id})">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                <div class="admin-action-group">
+                    <button class="btn-action info" title="Xem chi tiết" onclick="openPostDetail(${p.id})"><i class="fa-solid fa-eye"></i> Chi tiết</button>
+                    <button class="btn-action danger-outline" title="Xoá bài viết" onclick="deletePost(${p.id})"><i class="fa-solid fa-trash"></i> Xoá</button>
                 </div>
             </td>
         </tr>
@@ -832,14 +836,6 @@ async function openPostDetail(id, highlightCommentId = null) {
 
         document.getElementById('post-detail-delete-btn').onclick = () => deletePost(p.id);
 
-        let scoresHtml = `
-            <div class="ai-scores-container">
-                <div class="ai-score-item"><span class="score-label">NSFW:</span> <span class="score-value">${((p.nsfwScore || 0) * 100).toFixed(1)}%</span></div>
-                <div class="ai-score-item"><span class="score-label">Bạo lực:</span> <span class="score-value">${((p.violenceScore || 0) * 100).toFixed(1)}%</span></div>
-                <div class="ai-score-item"><span class="score-label">Hate Speech:</span> <span class="score-value">${((p.hateSpeechScore || 0) * 100).toFixed(1)}%</span></div>
-            </div>
-        `;
-        document.getElementById('post-detail-meta').innerHTML += '<br>' + scoresHtml;
     } catch (e) {
         showToast('Lỗi kết nối.', 'error');
     }
@@ -973,7 +969,7 @@ async function openUserDetail(id) {
             { label: 'Ngày sinh',    value: u.dateOfBirth ? new Date(u.dateOfBirth).toLocaleDateString('vi-VN') : null },
             { label: 'Số điện thoại', value: u.phoneNumber },
             { label: 'Tình trạng',   value: u.relationshipStatus },
-            { label: 'Đăng nhập qua', value: u.provider === 'GOOGLE' ? '🔵 Google' : '📧 Email/Mật khẩu' },
+            { label: 'Đăng nhập qua', value: u.provider === 'GOOGLE' ? 'Google' : 'Local' },
             { label: 'ID',           value: '#' + u.id },
         ];
 
@@ -1016,7 +1012,7 @@ async function openLoginHistory(id, name) {
                 <td style="font-size:13px;font-family:monospace;">${h.ipAddress || '--'}</td>
                 <td>${h.provider === 'GOOGLE'
                     ? '<span class="provider-google"><i class="fa-brands fa-google"></i> Google</span>'
-                    : '<span class="provider-local"><i class="fa-solid fa-envelope"></i> Email</span>'
+                    : '<span class="provider-local"><i class="fa-solid fa-key"></i> Local</span>'
                 }</td>
             </tr>
         `).join('');
@@ -1084,24 +1080,14 @@ function renderModerators(mods) {
             <td>${statusBadge(m.status)}</td>
             <td>${providerIcon(m.provider)}</td>
             <td>
-                <div class="action-btns">
-                    <button class="action-btn" title="Xem chi tiết" onclick="openModeratorDetail(${m.id})">
-                        <i class="fa-solid fa-eye"></i>
-                    </button>
-                    <button class="action-btn" title="Cập nhật thông tin" onclick="openEditModerator(${m.id})">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
+                <div class="admin-action-group">
+                    <button class="btn-action info" title="Xem chi tiết" onclick="openModeratorDetail(${m.id})"><i class="fa-solid fa-eye"></i> Chi tiết</button>
+                    <button class="btn-action warning" title="Cập nhật thông tin" onclick="openEditModerator(${m.id})"><i class="fa-solid fa-pen"></i> Sửa</button>
                     ${m.status !== 'BANNED'
-                        ? `<button class="action-btn danger" title="Khoá tài khoản" onclick="lockModerator(${m.id}, '${escapeHtml(m.fullName)}')">
-                               <i class="fa-solid fa-ban"></i>
-                           </button>`
-                        : `<button class="action-btn success" title="Kích hoạt lại" onclick="activateModerator(${m.id}, '${escapeHtml(m.fullName)}')">
-                               <i class="fa-solid fa-lock-open"></i>
-                           </button>`
+                        ? `<button class="btn-action danger" title="Khoá tài khoản" onclick="lockModerator(${m.id}, '${escapeHtml(m.fullName)}')"><i class="fa-solid fa-ban"></i> Khoá</button>`
+                        : `<button class="btn-action success" title="Kích hoạt lại" onclick="activateModerator(${m.id}, '${escapeHtml(m.fullName)}')"><i class="fa-solid fa-lock-open"></i> Mở khoá</button>`
                     }
-                    <button class="action-btn danger" title="Xoá tài khoản" onclick="deleteModerator(${m.id}, '${escapeHtml(m.fullName)}')">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <button class="btn-action danger-outline" title="Xoá tài khoản" onclick="deleteModerator(${m.id}, '${escapeHtml(m.fullName)}')"><i class="fa-solid fa-trash"></i> Xoá</button>
                 </div>
             </td>
         </tr>
@@ -1155,7 +1141,7 @@ async function openModeratorDetail(id) {
             { label: 'Giới tính',       value: formatGender(u.gender) },
             { label: 'Ngày sinh',       value: u.dateOfBirth ? new Date(u.dateOfBirth).toLocaleDateString('vi-VN') : null },
             { label: 'Số điện thoại',   value: u.phoneNumber },
-            { label: 'Đăng nhập qua',   value: u.provider === 'GOOGLE' ? '🔵 Google' : '📧 Email/Mật khẩu' },
+            { label: 'Đăng nhập qua',   value: u.provider === 'GOOGLE' ? 'Google' : 'Local' },
             { label: 'ID',              value: '#' + u.id },
         ];
 
@@ -1251,13 +1237,18 @@ function renderReports(reports) {
     const postReports = reports.filter(r => r.targetType === 'POST' || r.post != null);
     const commentReports = reports.filter(r => r.targetType === 'COMMENT' || r.comment != null);
 
-    // Render Post Reports
-    if (postReports.length === 0) {
-        postTbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Không có báo cáo bài viết nào.</td></tr>';
-    } else {
-        postTbody.innerHTML = postReports.map(r => `
+    const renderReportRow = (r) => {
+        const isPost = r.targetType === 'POST' || r.post != null;
+        const targetCell = isPost
+            ? `<div class="post-id-tag">#${r.post?.id || '--'}</div>
+               <div class="post-preview-text">${escapeHtml(r.post?.content || '(Không có nội dung)')}</div>
+               <div class="post-author-name">Tác giả: ${escapeHtml(r.post?.authorName || '--')}</div>`
+            : `<div class="post-id-tag">Bình luận #${r.comment?.id || '--'}</div>
+               <div class="post-preview-text">${escapeHtml(r.comment?.content || '(Không có nội dung)')}</div>
+               <div class="post-author-name">Tác giả: ${escapeHtml(r.comment?.authorName || '--')}</div>`;
+        return `
             <tr>
-                <td style="color:var(--text-muted);font-size:13px;">#${r.id}</td>
+                <td style="color:var(--text-muted);font-size:13px;"><strong>#T-${r.id}</strong><div style="font-size:11px;color:var(--text-muted);">${escapeHtml(r.category || 'Nội dung')}</div></td>
                 <td>
                     <div class="user-cell">
                         <div class="user-avatar-sm">
@@ -1266,85 +1257,32 @@ function renderReports(reports) {
                         <div class="user-fullname">${escapeHtml(r.reporter?.fullName || 'Ẩn danh')}</div>
                     </div>
                 </td>
-                <td>
-                    <div class="post-preview-cell" onclick="openReportedPostDetail(${r.post?.id})" style="cursor:pointer;" title="Nhấn để xem chi tiết bài viết">
-                        <div class="post-id-tag">#${r.post?.id || '--'}</div>
-                        <div class="post-preview-text">${escapeHtml(r.post?.content || '(Không có nội dung)')}</div>
-                        <div class="post-author-name">Tác giả: ${escapeHtml(r.post?.authorName || '--')}</div>
-                    </div>
-                </td>
-                <td class="report-reason-cell">${escapeHtml(r.reason)} <br> <small style="color:var(--text-muted);">${escapeHtml(r.category || '')}</small></td>
+                <td><div class="post-preview-cell">${targetCell}</div></td>
+                <td class="report-reason-cell">${escapeHtml(r.reason || '')} <br> <small style="color:var(--text-muted);">${escapeHtml(r.category || '')}</small></td>
                 <td style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${formatDate(r.createdAt)}</td>
                 <td>${reportStatusBadge(r.status)}</td>
                 <td>
-                    <div class="action-btns">
-                        <button class="action-btn" style="background:var(--bg-hover);color:var(--primary);" title="Xem chi tiết" onclick="openReportedPostDetail(${r.post?.id})">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                        ${r.status === 'PENDING' ? `
-                            <button class="action-btn success" title="Giải quyết" onclick="updateReportStatus(${r.id}, 'RESOLVED')">
-                                <i class="fa-solid fa-check"></i>
-                            </button>
-                            <button class="action-btn warning" title="Bỏ qua" onclick="updateReportStatus(${r.id}, 'DISMISSED')">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        ` : ''}
-                        <button class="action-btn danger" title="Xoá báo cáo" onclick="deleteReport(${r.id})">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
+                    <div class="admin-action-group">
+                        <button class="btn-action detail" title="Xem chi tiết" onclick="openAdminReportDetailModal(${r.id})"><i class="fa-solid fa-circle-info"></i> Chi tiết</button>
+                        <button class="btn-action danger-outline" title="Xoá báo cáo" onclick="deleteReport(${r.id})"><i class="fa-solid fa-trash"></i> Xoá</button>
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `;
+    };
+
+    // Render Post Reports
+    if (postReports.length === 0) {
+        postTbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Không có báo cáo bài viết nào.</td></tr>';
+    } else {
+        postTbody.innerHTML = postReports.map(renderReportRow).join('');
     }
 
     // Render Comment Reports
     if (commentReports.length === 0) {
         if (commentTbody) commentTbody.innerHTML = '<tr><td colspan="7" class="loading-cell">Không có báo cáo bình luận nào.</td></tr>';
     } else {
-        if (commentTbody) {
-            commentTbody.innerHTML = commentReports.map(r => `
-                <tr>
-                    <td style="color:var(--text-muted);font-size:13px;">#${r.id}</td>
-                    <td>
-                        <div class="user-cell">
-                            <div class="user-avatar-sm">
-                                ${r.reporter?.avatar ? `<img src="${r.reporter.avatar}" alt="">` : (r.reporter?.fullName?.charAt(0).toUpperCase() || '?')}
-                            </div>
-                            <div class="user-fullname">${escapeHtml(r.reporter?.fullName || 'Ẩn danh')}</div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="post-preview-cell" onclick="openReportedPostDetail(${r.comment?.postId}, ${r.comment?.id})" style="cursor:pointer;" title="Nhấn để xem bài viết gốc">
-                            <div class="post-id-tag">Bình luận #${r.comment?.id || '--'}</div>
-                            <div class="post-preview-text">${escapeHtml(r.comment?.content || '(Không có nội dung)')}</div>
-                            <div class="post-author-name">Tác giả: ${escapeHtml(r.comment?.authorName || '--')}</div>
-                        </div>
-                    </td>
-                    <td class="report-reason-cell">${escapeHtml(r.reason)} <br> <small style="color:var(--text-muted);">${escapeHtml(r.category || '')}</small></td>
-                    <td style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${formatDate(r.createdAt)}</td>
-                    <td>${reportStatusBadge(r.status)}</td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="action-btn" style="background:var(--bg-hover);color:var(--primary);" title="Xem chi tiết gốc" onclick="openReportedPostDetail(${r.comment?.postId}, ${r.comment?.id})">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                            ${r.status === 'PENDING' ? `
-                                <button class="action-btn success" title="Giải quyết" onclick="updateReportStatus(${r.id}, 'RESOLVED')">
-                                    <i class="fa-solid fa-check"></i>
-                                </button>
-                                <button class="action-btn warning" title="Bỏ qua" onclick="updateReportStatus(${r.id}, 'DISMISSED')">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                            ` : ''}
-                            <button class="action-btn danger" title="Xoá báo cáo" onclick="deleteReport(${r.id})">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
+        if (commentTbody) commentTbody.innerHTML = commentReports.map(renderReportRow).join('');
     }
 }
 
@@ -1355,13 +1293,11 @@ document.addEventListener('DOMContentLoaded', () => {
         tab.addEventListener('click', () => {
             reportTabs.forEach(t => {
                 t.classList.remove('active');
-                t.style.borderBottomColor = 'transparent';
-                t.style.color = 'var(--text-muted)';
+                t.style.removeProperty('border-bottom-color');
+                t.style.removeProperty('color');
             });
             tab.classList.add('active');
-            tab.style.borderBottomColor = 'var(--primary)';
-            tab.style.color = 'var(--primary)';
-            
+
             const type = tab.getAttribute('data-report-type');
             if (type === 'POST') {
                 document.getElementById('admin-report-post-container').style.display = 'block';
@@ -1449,6 +1385,203 @@ function openReportedPostDetail(postId, highlightCommentId = null) {
 async function fetchPostAndOpenDetail(postId, highlightCommentId = null) {
     openPostDetail(postId, highlightCommentId);
 }
+
+// ===== MODAL CHI TIẾT BÁO CÁO (ADMIN) =====
+
+function openAdminReportDetailModal(reportId) {
+    const report = allReports.find(r => r.id === reportId);
+    if (!report) { showToast('Không tìm thấy dữ liệu báo cáo này.', 'error'); return; }
+
+    const modal = document.getElementById('admin-report-detail-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    // Reporter
+    const reporter = report.reporter || { fullName: 'Ẩn danh', id: '?', avatar: '' };
+    document.getElementById('ard-reporter-name').textContent = reporter.fullName;
+    document.getElementById('ard-reporter-id').textContent = `ID: ${reporter.id}`;
+    document.getElementById('ard-reporter-avatar').src = reporter.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reporter.fullName)}&background=F6DE50&color=1a1a1a`;
+
+    // Report info
+    document.getElementById('ard-category-badge').textContent = report.category || 'Nội dung';
+    document.getElementById('ard-reason').textContent = report.reason || '(Không có lý do)';
+    document.getElementById('ard-time').innerHTML = `<i class="fa-regular fa-clock"></i> Gửi lúc: ${report.createdAt ? new Date(report.createdAt).toLocaleString('vi-VN') : '---'}`;
+
+    // Target
+    const isPost = report.targetType === 'POST';
+    const targetObj = isPost ? report.post : report.comment;
+    const targetId = targetObj ? targetObj.id : '?';
+    const postId = isPost ? (targetObj ? targetObj.id : null) : (report.comment?.postId || null);
+    document.getElementById('ard-target-type').textContent = isPost ? 'Bài viết' : 'Bình luận';
+    document.getElementById('ard-target-id').textContent = `#${targetId}`;
+
+    // Reset AI scores
+    ['ard-ai-nsfw', 'ard-ai-violence', 'ard-ai-hate'].forEach(id => {
+        const el = document.getElementById(id);
+        el.textContent = '0%';
+        el.style.color = '#00d1b2';
+    });
+
+    // Load content
+    adminFetchReportedContent(isPost, targetObj, postId);
+
+    // Footer buttons
+    const footer = document.getElementById('ard-modal-footer');
+    if (footer) {
+        if (report.status === 'PENDING') {
+            footer.innerHTML = `
+                <button type="button" class="btn btn-secondary" style="border-radius:8px; font-weight:600; padding:10px 25px; cursor:pointer; border:1px solid var(--border-color); background:var(--surface-bg); color:var(--text-main);"
+                    onclick="adminResolveReport(${report.id}, 'DISMISSED')">
+                    Bỏ qua
+                </button>
+                <button type="button" style="background:var(--red); color:#fff; border:none; padding:10px 30px; border-radius:8px; font-weight:800; box-shadow:0 4px 10px rgba(241,70,104,0.3); cursor:pointer;"
+                    onclick="adminResolveReport(${report.id}, 'RESOLVED')">
+                    ${isPost ? 'Xử lý vi phạm (ẩn bài)' : 'Xử lý vi phạm (xóa bình luận)'}
+                </button>
+            `;
+        } else {
+            const statusText = report.status === 'RESOLVED' ? 'Đã giải quyết' : 'Đã bỏ qua';
+            const badgeClass = report.status === 'RESOLVED' ? 'badge-active' : 'badge-inactive';
+            footer.innerHTML = `
+                <div style="font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap:8px;">
+                    Trạng thái: <span class="badge ${badgeClass}">${statusText}</span>
+                </div>
+            `;
+        }
+    }
+}
+
+function closeAdminReportDetailModal() {
+    const modal = document.getElementById('admin-report-detail-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function adminFetchReportedContent(isPost, targetObj, postId) {
+    const bodyEl = document.getElementById('ard-content-body');
+    const mediaEl = document.getElementById('ard-content-media');
+    const ocrEl = document.getElementById('ard-ocr-content');
+
+    if (!targetObj || !postId) {
+        bodyEl.innerHTML = `<div style="color:#ef4444; font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Nội dung gốc đã bị xóa hoặc không tồn tại.</div>`;
+        mediaEl.style.display = 'none';
+        ocrEl.textContent = 'Không có bằng chứng do nội dung đã xóa.';
+        return;
+    }
+
+    bodyEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tải nội dung...`;
+    mediaEl.style.display = 'none';
+    mediaEl.innerHTML = '';
+    ocrEl.textContent = 'Đang phân tích...';
+
+    try {
+        const res = await fetch(`/api/posts/${postId}`, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) { bodyEl.innerHTML = `<div style="color:#ef4444; font-weight:600;">Nội dung bài viết gốc không khả dụng.</div>`; return; }
+
+        const post = await res.json();
+        document.getElementById('ard-target-id').textContent = `#${post.id}`;
+
+        const author = post.user || { fullName: 'Ẩn danh', id: '?', avatar: '' };
+        document.getElementById('ard-author-name').textContent = author.fullName;
+        document.getElementById('ard-author-id-badge').textContent = `ID: ${author.id}`;
+        document.getElementById('ard-author-avatar').src = author.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(author.fullName)}&background=F6DE50&color=1a1a1a`;
+
+        const setScore = (elId, score) => {
+            const el = document.getElementById(elId);
+            const val = Math.round((score || 0) * 100);
+            el.textContent = `${val}%`;
+            el.style.color = val >= 50 ? '#f14668' : '#00d1b2';
+        };
+        setScore('ard-ai-nsfw', post.nsfwScore);
+        setScore('ard-ai-violence', post.violenceScore);
+        setScore('ard-ai-hate', post.hateSpeechScore);
+
+        ocrEl.textContent = post.ocrContent || 'Không phát hiện vi phạm chữ viết trong hình ảnh/video.';
+        if (post.ocrContent) ocrEl.style.color = '#c53030';
+
+        if (isPost) {
+            bodyEl.textContent = post.content || '(Không có nội dung văn bản)';
+            if (post.imageUrl) {
+                mediaEl.style.display = 'block';
+                mediaEl.innerHTML = `<img src="${post.imageUrl}" style="max-width:100%; max-height:200px; object-fit:contain; margin-top:10px; border-radius:4px;">`;
+            } else if (post.videoUrl) {
+                mediaEl.style.display = 'block';
+                mediaEl.innerHTML = `<video src="${post.videoUrl}" controls style="max-width:100%; max-height:200px; margin-top:10px; border-radius:4px;"></video>`;
+            }
+        } else {
+            bodyEl.innerHTML = `
+                <div style="margin-bottom:10px; padding:10px; background:#fffbeb; border-radius:6px; border-left:3px solid #f59e0b;">
+                    <strong>Bình luận bị báo cáo:</strong><br>${escapeHtml(targetObj.content || '')}
+                </div>
+                <div style="font-size:12px; color:var(--text-muted);">
+                    Nằm trong bài viết: <em>${escapeHtml(post.content ? post.content.substring(0, 50) : '')}...</em>
+                </div>
+            `;
+        }
+    } catch (err) {
+        bodyEl.innerHTML = `<div style="color:#ef4444;">Lỗi khi tải nội dung.</div>`;
+    }
+}
+
+function adminResolveReport(reportId, status) {
+    const modal = document.getElementById('admin-action-note-modal');
+    if (!modal) { executeAdminResolveReport(reportId, status, ''); return; }
+
+    const titleEl = document.getElementById('admin-note-modal-title');
+    const descEl = document.getElementById('admin-note-modal-desc');
+    const confirmBtn = document.getElementById('admin-note-modal-confirm-btn');
+    const inputEl = document.getElementById('admin-note-modal-input');
+
+    inputEl.value = '';
+
+    if (status === 'DISMISSED') {
+        titleEl.innerHTML = '<i class="fa-solid fa-circle-minus" style="color:#6e7681;"></i> Bỏ qua báo cáo';
+        descEl.textContent = 'Thao tác này sẽ bỏ qua khiếu nại. Nội dung bị báo cáo vẫn hoạt động bình thường.';
+        confirmBtn.textContent = 'Xác nhận bỏ qua';
+        confirmBtn.style.background = '#6e7681';
+    } else {
+        titleEl.innerHTML = '<i class="fa-solid fa-gavel" style="color:#ff4d4f;"></i> Xử lý vi phạm';
+        descEl.textContent = 'Bài viết/bình luận vi phạm sẽ bị ẩn/xóa. Tác giả nhận cảnh báo và bị hạn chế đăng nội dung 3 ngày.';
+        confirmBtn.textContent = 'Xác nhận xử lý';
+        confirmBtn.style.background = '#ff4d4f';
+    }
+
+    confirmBtn.onclick = async () => {
+        const note = inputEl.value.trim();
+        closeAdminActionNoteModal();
+        await executeAdminResolveReport(reportId, status, note);
+    };
+
+    modal.style.display = 'flex';
+}
+
+function closeAdminActionNoteModal() {
+    const modal = document.getElementById('admin-action-note-modal');
+    if (modal) { modal.style.display = 'none'; document.getElementById('admin-note-modal-input').value = ''; }
+}
+
+async function executeAdminResolveReport(reportId, status, note) {
+    try {
+        const res = await fetch(`/api/admin/reports/${reportId}/status`, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status, adminNote: note })
+        });
+        if (res.ok) {
+            showToast('Đã xử lý báo cáo thành công.', 'success');
+            closeAdminReportDetailModal();
+            loadReports();
+            loadStats();
+        } else {
+            showToast('Có lỗi xảy ra khi xử lý báo cáo.', 'error');
+        }
+    } catch (e) {
+        showToast('Lỗi kết nối.', 'error');
+    }
+}
+
+// ===========================
 
 function filterReports() {
     const q = document.getElementById('report-search-input').value.toLowerCase();
@@ -1556,8 +1689,14 @@ function deleteModerator(id, name) {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
                 const data = await res.json().catch(() => ({}));
-                if (res.ok) { showToast(`Đã xoá tài khoản ${name}.`, 'success'); loadModerators(); }
-                else showToast(data.message || data || 'Có lỗi xảy ra.', 'error');
+                if (res.ok) {
+                    allModerators = allModerators.filter(m => m.id !== id);
+                    updateModStatCards(allModerators);
+                    filterModerators();
+                    showToast(`Đã xóa tài khoản ${escapeHtml(name)}`, 'success');
+                } else {
+                    showToast(data.message || 'Có lỗi xảy ra khi xóa tài khoản.', 'error');
+                }
             } catch (e) { showToast('Lỗi kết nối.', 'error'); }
         },
         'danger'

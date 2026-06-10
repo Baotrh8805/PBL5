@@ -377,3 +377,81 @@
 [EVAL] label=CLEAN score=0.003349
 [FINAL TEXT] len=5 text='helom'
 [REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)helom[O] detailed_tags=(Video:) (Content:)helom[O]
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=True has_video=False
+[CONTENT] len=28 text='Học tiếng Nhật cùng mình nào'
+[IMAGE] Start processing image_url
+[OCR] START frame=None second=None
+[OCR] frame=None sec=None raw='1.N TE 2. VITIVE V 11 THU TH 3. VN/NO TƯ 27?197125 thlo 031544 - 12 TH ( C (T) 51100h TRINH THỊ THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI HOOKING BETLE) II T E 5 là ti dh OH Charking H7) Kinh Thi H73 T T5 t th Uxcex5 th Ch theh 5h 1 h 3 1  03774 6.VV/1711 shh 7.V7.3 8. THE TH 00 toks L.C tl - 1 LITETIC 2.N 22?18/LT 33 12 17:22001 AK DE H PRE THE PHY tli 1 U L 13 8 TI phlas t th 4420144001714 KDITTIZ T11?1 thu 11 1115 hix 5 LOGETIVY 4 ta IL 5 V777 6. 2400' clean='1.N TE 2. VITIVE V 11 THU TH 3. VN/NO TƯ 27?197125 thlo 031544 - 12 TH ( C (T) 51100h TRINH THỊ THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI HOOKING BETLE) II T E 5 là ti dh OH Charking H7) Kinh Thi H73 T T5 t th Uxcex5 th Ch theh 5h 1 h 3 1  03774 6.VV/1711 shh 7.V7.3 8. THE TH 00 toks L.C tl - 1 LITETIC 2.N 22?18/LT 33 12 17:22001 AK DE H PRE THE PHY tli 1 U L 13 8 TI phlas t th 4420144001714 KDITTIZ T11?1 thu 11 1115 hix 5 LOGETIVY 4 ta IL 5 V777 6. 2400' len=536
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='Học tiếng Nhật cùng mình nào'
+[EVAL] label=CLEAN score=0.809211
+[OCR] video/image text='1.N TE 2. VITIVE V 11 THU TH 3. VN/NO TƯ 27?197125 thlo 031544 - 12 TH ( C (T) 51100h TRINH THỊ THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI HOOKING BETLE) II T E 5 là ti dh OH Charking H7) Kinh Thi H73 T T5 t th Uxcex5 th Ch theh 5h 1 h 3 1  03774 6.VV/1711 shh 7.V7.3 8. THE TH 00 toks L.C tl - 1 LITETIC 2.N 22?18/LT 33 12 17:22001 AK DE H PRE THE PHY tli 1 U L 13 8 TI phlas t th 4420144001714 KDITTIZ T11?1 thu 11 1115 hix 5 LOGETIVY 4 ta IL 5 V777 6. 2400'
+[EVAL] label=CLEAN score=0.827874
+[FINAL TEXT] len=565 text='Học tiếng Nhật cùng mình nào 1.N TE 2. VITIVE V 11 THU TH 3. VN/NO TƯ 27?197125 thlo 031544 - 12 TH ( C (T) 51100h TRINH THỊ THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI THI'
+[REQUEST] Complete best_score=0.9018 frames=0 violating_words=(Video:)1.n[O] te[O] 2.[O] vitive[O] v[O] 11[O] thu[O] th[O] 3.[O] vnno[O] tư[O] 27?197125[O] thlo[O] 031544[O] 12[O] th[O] c[O] t)[O] 51100h[O] trinh[O] thị[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] hooking[O] betle)[O] ii[O] t[O] e[O] 5[O] là[O] ti[O] dh[O] oh[O] charking[O] h7)[O] kinh[O] thi[O] h73[O] t[O] t5[O] t[O] th[O] uxcex5[O] th[O] ch[O] theh[O] 5h[O] 1[O] h[O] 3[O] 1[O] 03774[O] 6.vv1711[O] shh[O] 7.v7.3[O] 8.[O] the[O] th[O] 00[O] toks[O] lc[O] tl[O] 1[O] litetic[O] 2.n[O] 22?18lt[O] 33[O] 12[O] 17:22001[O] ak[O] de[O] h[O] pre[O] the[O] phy[O] tli[O] 1[O] u[O] l[O] 13[O] 8[O] ti[O] phlas[O] t[O] th[O] kdittiz[O] t11?1[O] thu[O] 11[O] 1115[O] hix[O] 5[O] logetivy[O] 4[O] ta[O] il[O] 5[O] v777[O] 6.[O] 2400[O] (Content:)học[O] tiếng[O] nhật[O] cùng[O] mình[O] nào[O] detailed_tags=(Video:)1.n[O] te[O] 2.[O] vitive[O] v[O] 11[O] thu[O] th[O] 3.[O] vnno[O] tư[O] 27?197125[O] thlo[O] 031544[O] 12[O] th[O] c[O] t)[O] 51100h[O] trinh[O] thị[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] hooking[O] betle)[O] ii[O] t[O] e[O] 5[O] là[O] ti[O] dh[O] oh[O] charking[O] h7)[O] kinh[O] thi[O] h73[O] t[O] t5[O] t[O] th[O] uxcex5[O] th[O] ch[O] theh[O] 5h[O] 1[O] h[O] 3[O] 1[O] 03774[O] 6.vv1711[O] shh[O] 7.v7.3[O] 8.[O] the[O] th[O] 00[O] toks[O] lc[O] tl[O] 1[O] litetic[O] 2.n[O] 22?18lt[O] 33[O] 12[O] 17:22001[O] ak[O] de[O] h[O] pre[O] the[O] phy[O] tli[O] 1[O] u[O] l[O] 13[O] 8[O] ti[O] phlas[O] t[O] th[O] kdittiz[O] t11?1[O] thu[O] 11[O] 1115[O] hix[O] 5[O] logetivy[O] 4[O] ta[O] il[O] 5[O] v777[O] 6.[O] 2400[O] (Content:)học[O] tiếng[O] nhật[O] cùng[O] mình[O] nào[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=True has_video=False
+[IMAGE] Start processing image_url
+[OCR] START frame=None second=None
+[OCR] frame=None sec=None raw='TON-Y 105 71HJ 7 TIN 18X05-7 1527) T7 ELALE5) 14155:54 4 A 1.7 7 7 TH ANSTUTTING 2. - TE VÀ LO NGHI 3. LOTED VITH THI THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ TH TRED Fthc HE 2017751 HOITER bá c HL 072177022255 Thith Tri 2011011100 HEL 032000000 1] (Tinh thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi MILLER BLEE 8 1 Vit BAT ( 6. THỊ NG, MỘT VÀ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ TDJ SLLITH 77 Vriz/n xe 8.0) 14 19 E5 LTSY 9. k n ATTHERANTING XETTING 4315 T? 5)173 0.011711201201 072072207731 TR E LINH 4 VI VINH Sla: 11 0371771401201201 HTON3 M ELAT 4.N77331 HUTH F T La  19 T) L VION BAN tine DEC 071133055555 44171400 hà Chi T 6.THT KHO THI THI THI TH' clean='TON-Y 105 71HJ 7 TIN 18X05-7 1527) T7 ELALE5) 14155:54 4 A 1.7 7 7 TH ANSTUTTING 2. - TE VÀ LO NGHI 3. LOTED VITH THI THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ TH TRED Fthc HE 2017751 HOITER bá c HL 072177022255 Thith Tri 2011011100 HEL 032000000 1] (Tinh thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi MILLER BLEE 8 1 Vit BAT ( 6. THỊ NG, MỘT VÀ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ TDJ SLLITH 77 Vriz/n xe 8.0) 14 19 E5 LTSY 9. k n ATTHERANTING XETTING 4315 T? 5)173 0.011711201201 072072207731 TR E LINH 4 VI VINH Sla: 11 0371771401201201 HTON3 M ELAT 4.N77331 HUTH F T La  19 T) L VION BAN tine DEC 071133055555 44171400 hà Chi T 6.THT KHO THI THI THI TH' len=880
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] video/image text='TON-Y 105 71HJ 7 TIN 18X05-7 1527) T7 ELALE5) 14155:54 4 A 1.7 7 7 TH ANSTUTTING 2. - TE VÀ LO NGHI 3. LOTED VITH THI THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ TH TRED Fthc HE 2017751 HOITER bá c HL 072177022255 Thith Tri 2011011100 HEL 032000000 1] (Tinh thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi thi MILLER BLEE 8 1 Vit BAT ( 6. THỊ NG, MỘT VÀ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ TDJ SLLITH 77 Vriz/n xe 8.0) 14 19 E5 LTSY 9. k n ATTHERANTING XETTING 4315 T? 5)173 0.011711201201 072072207731 TR E LINH 4 VI VINH Sla: 11 0371771401201201 HTON3 M ELAT 4.N77331 HUTH F T La  19 T) L VION BAN tine DEC 071133055555 44171400 hà Chi T 6.THT KHO THI THI THI TH'
+[EVAL] label=CLEAN score=0.832503
+[FINAL TEXT] len=880 text='TON-Y 105 71HJ 7 TIN 18X05-7 1527) T7 ELALE5) 14155:54 4 A 1.7 7 7 TH ANSTUTTING 2. - TE VÀ LO NGHI 3. LOTED VITH THI THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ THỊ TH'
+[REQUEST] Complete best_score=0.8945 frames=0 violating_words=(Video:)tony[O] 105[O] 71hj[O] 7[O] tin[O] 18x057[O] 1527)[O] t7[O] elale5)[O] 14155:54[O] 4[O] a[O] 1.7[O] 7[O] 7[O] th[O] 2.[O] te[O] và[O] lo[O] nghi[O] 3.[O] loted[O] vith[O] thi[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] th[O] tred[O] fthc[O] he[O] 2017751[O] hoiter[O] bá[O] c[O] hl[O] thith[O] tri[O] hel[O] 032000000[O] 1[O] tinh[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] miller[O] blee[O] 8[O] 1[O] vit[O] bat[O] 6.[O] thị[O] ng,[O] một[O] và[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] tdj[O] sllith[O] 77[O] vrizn[O] xe[O] 8.0)[O] 14[O] 19[O] e5[O] ltsy[O] 9.[O] k[O] n[O] xetting[O] 4315[O] t?[O] 5)173[O] tr[O] e[O] linh[O] 4[O] vi[O] vinh[O] sla:[O] 11[O] hton3[O] m[O] (Content:) detailed_tags=(Video:)tony[O] 105[O] 71hj[O] 7[O] tin[O] 18x057[O] 1527)[O] t7[O] elale5)[O] 14155:54[O] 4[O] a[O] 1.7[O] 7[O] 7[O] th[O] 2.[O] te[O] và[O] lo[O] nghi[O] 3.[O] loted[O] vith[O] thi[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] th[O] tred[O] fthc[O] he[O] 2017751[O] hoiter[O] bá[O] c[O] hl[O] thith[O] tri[O] hel[O] 032000000[O] 1[O] tinh[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] thi[O] miller[O] blee[O] 8[O] 1[O] vit[O] bat[O] 6.[O] thị[O] ng,[O] một[O] và[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] thị[O] tdj[O] sllith[O] 77[O] vrizn[O] xe[O] 8.0)[O] 14[O] 19[O] e5[O] ltsy[O] 9.[O] k[O] n[O] xetting[O] 4315[O] t?[O] 5)173[O] tr[O] e[O] linh[O] 4[O] vi[O] vinh[O] sla:[O] 11[O] hton3[O] m[O] (Content:)
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=True has_video=False
+[CONTENT] len=18 text='Ngôi nhà trong mơ.'
+[IMAGE] Start processing image_url
+[OCR] START frame=None second=None
+[OCR] frame=None sec=None raw='' clean='' len=0
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='Ngôi nhà trong mơ.'
+[EVAL] label=CLEAN score=0.814382
+[FINAL TEXT] len=18 text='Ngôi nhà trong mơ.'
+[REQUEST] Complete best_score=0.3146 frames=0 violating_words=(Video:) (Content:)ngôi[O] nhà[O] trong[O] mơ.[O] detailed_tags=(Video:) (Content:)ngôi[O] nhà[O] trong[O] mơ.[O]
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=True has_video=False
+[CONTENT] len=36 text='Xin chào mọi người, em là Tua Tua!!!'
+[IMAGE] Start processing image_url
+[OCR] START frame=None second=None
+[OCR] frame=None sec=None raw='rednote ID: 26819823589 JU' clean='rednote ID: 26819823589 JU' len=26
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='Xin chào mọi người, em là Tua Tua!!!'
+[EVAL] label=CLEAN score=0.814242
+[OCR] video/image text='rednote ID: 26819823589 JU'
+[EVAL] label=CLEAN score=0.813241
+[FINAL TEXT] len=63 text='Xin chào mọi người, em là Tua Tua!!! rednote ID: 26819823589 JU'
+[REQUEST] Complete best_score=0.4557 frames=0 violating_words=(Video:)rednote[O] id:[O] ju[O] (Content:)xin[O] chào[O] mọi[O] người,[O] em[O] là[O] tua[O] tua!!![O] detailed_tags=(Video:)rednote[O] id:[O] ju[O] (Content:)xin[O] chào[O] mọi[O] người,[O] em[O] là[O] tua[O] tua!!![O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=True has_video=False
+[CONTENT] len=69 text='Lũ súc vật này vô học và điên khùng quá, tao muốn giết hết chúng mày!'
+[IMAGE] Start processing image_url
+[OCR] START frame=None second=None
+[OCR] frame=None sec=None raw='' clean='' len=0
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='Lũ súc vật này vô học và điên khùng quá, tao muốn giết hết chúng mày!'
+[EVAL] label=HATE score=0.986148
+[FINAL TEXT] len=69 text='Lũ súc vật này vô học và điên khùng quá, tao muốn giết hết chúng mày!'
+[REQUEST] Complete best_score=0.9861 frames=0 violating_words=(Video:) (Content:)lũ[O] súc[I-T] vật[I-T] này[O] vô[O] học[O] và[O] điên[B-T] khùng[I-T] quá,[O] tao[B-T] muốn[O] giết[B-T] hết[O] chúng[O] mày![O] detailed_tags=(Video:) (Content:)lũ[O] súc[I-T] vật[I-T] này[O] vô[O] học[O] và[O] điên[B-T] khùng[I-T] quá,[O] tao[B-T] muốn[O] giết[B-T] hết[O] chúng[O] mày![O]

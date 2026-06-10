@@ -47,5 +47,15 @@ public interface PostRepository extends JpaRepository<Post, Long> {
        long countBySharedPost_Id(Long sharedPostId);
 
        List<Post> findBySharedPost_Id(Long sharedPostId);
+
+       @org.springframework.transaction.annotation.Transactional
+       @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+       @Query("UPDATE Post p SET p.processingModerator = null WHERE p.processingModerator.id = :userId")
+       void clearProcessingModerator(@Param("userId") Long userId);
+
+       @org.springframework.transaction.annotation.Transactional
+       @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+       @Query("UPDATE Post p SET p.sharedPost = null WHERE p.sharedPost.id = :postId")
+       void clearSharedPostReference(@Param("postId") Long postId);
 }
 

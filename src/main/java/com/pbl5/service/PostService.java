@@ -37,9 +37,11 @@ public class PostService {
      */
     public PostResponse createPost(User user, CreatePostRequest request) {
         if (user.getPostWarningExpiresAt() != null && user.getPostWarningExpiresAt().isAfter(java.time.LocalDateTime.now())) {
-            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
-            String expiryStr = user.getPostWarningExpiresAt().format(formatter);
-            throw new IllegalStateException("Bạn đang bị cấm đăng bài do vi phạm. Vui lòng quay lại sau " + expiryStr);
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            long secondsLeft = java.time.temporal.ChronoUnit.SECONDS.between(now, user.getPostWarningExpiresAt());
+            long daysLeft = (long) Math.ceil(secondsLeft / 86400.0);
+            if (daysLeft < 1) daysLeft = 1;
+            throw new IllegalStateException("Lỗi đăng bài do tài khoản bạn bị hạn chế đăng bài trong " + daysLeft + " ngày.");
         }
 
         boolean hasContent = request.getContent() != null && !request.getContent().trim().isEmpty();

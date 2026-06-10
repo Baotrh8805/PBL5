@@ -57,7 +57,7 @@ async function fetchUserProfile(token) {
             // Cập nhật avatar (nếu có custom url, hiện tại tạm xài chữ cái đầu)
             let avatarUrl = data.avatar;
             if (!avatarUrl && data.fullName) {
-                avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=00d1b2&color=fff`;
+                avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=F6DE50&color=1a1a1a`;
             }
 
             document.querySelectorAll('#header-avatar, .avatar-large, .avatar-small, #modal-avatar').forEach(img => {
@@ -634,10 +634,10 @@ function renderSearchResults(users, posts, query) {
         if (users.length > 0) {
             html += '<div class="search-section-header">Mọi người</div>';
             html += users.slice(0, 5).map(user => {
-                const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+                const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a`;
                 return `
                     <a href="/html/profile.html?userId=${user.id}" class="search-result-item">
-                        <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                        <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a'">
                         <div class="search-item-info">
                             <span class="user-name-result">${user.fullName}</span>
                             <span class="search-item-sub">Người dùng</span>
@@ -1134,23 +1134,47 @@ async function submitComment(postId) {
         if (res.ok) {
             input.value = '';
             removeCommentMedia(postId);
-            
+
             // Optimistic UI update: cộng số bình luận (nếu chưa cộng)
             const commentCountSpan = document.getElementById(`comment-count-${postId}`);
             if (commentCountSpan) {
                 const countMatch = commentCountSpan.innerText.match(/\d+/);
                 let currentCount = countMatch ? parseInt(countMatch[0], 10) : 0;
-                // Note: we don't increment here if we already did it optimistically elsewhere, 
+                // Note: we don't increment here if we already did it optimistically elsewhere,
                 // but fetchComments will refresh anyway.
             }
-            
-            fetchComments(postId); 
+
+            fetchComments(postId);
+        } else if (res.status === 403) {
+            const msg = await res.text();
+            showBanModal(msg);
         } else {
-            alert('Lỗi gửi bình luận');
+            const msg = await res.text();
+            alert(msg || 'Lỗi gửi bình luận');
         }
     } catch (err) {
         console.error(err);
     }
+}
+
+function showBanModal(message) {
+    const oldModal = document.getElementById('ban-alert-modal');
+    if (oldModal) oldModal.remove();
+
+    const modalHtml = `
+        <div id="ban-alert-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 999999;">
+            <div style="background: white; border-radius: 12px; width: 450px; max-width: 90vw; padding: 30px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.4); position: relative;">
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(228,30,63,0.1); color: #e41e3f; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.18s, color 0.18s, transform 0.15s; z-index: 10;" onmouseover="this.style.background='#e41e3f';this.style.color='#fff'" onmouseout="this.style.background='rgba(228,30,63,0.1)';this.style.color='#e41e3f'"><i class="fa-solid fa-xmark"></i></button>
+                <div style="margin-bottom: 20px;">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size: 60px; color: #e41e3f;"></i>
+                </div>
+                <h3 style="font-size: 22px; color: #1c1e21; margin-bottom: 15px; font-weight: 700;">LC Networks cho biết</h3>
+                <p style="font-size: 16px; color: #4b4f56; line-height: 1.5; margin-bottom: 25px;">${message}</p>
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="background: #e41e3f; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; width: 100%;">Tôi đã hiểu và cam kết tuân thủ</button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
 // ======================= SIDEBAR SUGGESTIONS =======================
@@ -1254,11 +1278,11 @@ function renderSidebarSuggestions(users) {
     }
 
     container.innerHTML = users.map(user => {
-        const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+        const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a`;
         return `
             <div class="suggestion-item" id="suggestion-item-${user.id}">
                 <a href="/html/profile.html?userId=${user.id}">
-                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a'">
                 </a>
                 <div class="suggestion-info">
                     <a href="/html/profile.html?userId=${user.id}" class="suggestion-name">${user.fullName}</a>

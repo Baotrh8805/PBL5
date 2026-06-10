@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface HiddenPostRepository extends JpaRepository<HiddenPost, Long> {
     List<HiddenPost> findByUserId(Long userId);
     Optional<HiddenPost> findByUserAndPost(User user, Post post);
+    List<HiddenPost> findByPostId(Long postId);
 }

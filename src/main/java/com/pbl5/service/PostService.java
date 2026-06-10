@@ -107,6 +107,70 @@ public class PostService {
     }
 
     /**
+     * Cập nhật bài đăng và kiểm duyệt lại nội dung
+     * 
+     * @param user    Người chỉnh sửa bài
+     * @param postId  ID bài đăng
+     * @param request Dữ liệu bài đăng mới
+     * @return PostResponse
+     */
+    public PostResponse updatePost(User user, Long postId, CreatePostRequest request) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("Bài viết không tồn tại."));
+
+        if (!post.getUser().getId().equals(user.getId())) {
+            throw new IllegalStateException("Bạn không có quyền chỉnh sửa bài viết này.");
+        }
+
+        boolean hasContent = request.getContent() != null && !request.getContent().trim().isEmpty();
+        boolean hasMedia = (request.getImageUrl() != null && !request.getImageUrl().trim().isEmpty())
+                || (request.getVideoUrl() != null && !request.getVideoUrl().trim().isEmpty());
+        if (!hasContent && !hasMedia && request.getSharedPostId() == null) {
+            throw new IllegalArgumentException("Nội dung bài đăng không được trống.");
+        }
+
+        // Cập nhật nội dung
+        post.setContent(request.getContent());
+        if (request.getImageUrl() != null) post.setImageUrl(request.getImageUrl());
+        if (request.getVideoUrl() != null) post.setVideoUrl(request.getVideoUrl());
+
+        if (request.getVisibility() != null) {
+            try {
+                post.setVisibility(PostVisibility.valueOf(request.getVisibility().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                post.setVisibility(PostVisibility.PUBLIC);
+            }
+        }
+
+        // Reset lại trạng thái kiểm duyệt
+        post.setStatus(PostStatus.ACTIVE);
+        post.setBestScore(0.0);
+        post.setNsfwScore(0.0);
+        post.setViolenceScore(0.0);
+        post.setHateSpeechScore(0.0);
+        post.setNsfwBox(null);
+        post.setViolenBox(null);
+        post.setHateSpeechWord("(Video:) (Content:)");
+        post.setViolationRate(0.0);
+        post.setReviewedAt(null);
+
+        Post savedPost = postRepository.save(post);
+
+        try {
+            moderationService.moderatePostAsync(
+                    savedPost.getId(),
+                    savedPost.getContent(),
+                    savedPost.getImageUrl(),
+                    savedPost.getVideoUrl());
+        } catch (Exception e) {
+            System.err.println(
+                    "Không thể khởi chạy kiểm duyệt nền cho bài viết " + savedPost.getId() + ": " + e.getMessage());
+        }
+
+        return convertToResponse(savedPost, user);
+    }
+
+    /**
      * Convert Post entity thành PostResponse
      */
     private PostResponse convertToResponse(Post post, User user) {

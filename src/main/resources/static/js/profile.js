@@ -351,26 +351,28 @@ function renderProfilePosts(posts) {
                 </div>
             </div>
             
-            ${!isRejected ? `
             <div class="post-options">
                 <button class="options-btn" onclick="toggleDropdown(${post.id})">
                     <i class="fa-solid fa-ellipsis"></i>
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
                     ${isMine ? `
-                        ${!isDeleted ? `
+                        ${isDeleted ? '' : (isRejected || isPending) ? `
+                        <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        ` : `
+                        <a href="javascript:void(0)" onclick="openEditPostModal(${post.id})"><i class="fa-solid fa-pen"></i> Chỉnh sửa bài viết</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
                         <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
                         <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
-                        ` : ''}
+                        `}
                     ` : `
                         <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
                     `}
                 </div>
-            </div>` : ''}
+            </div>
 
             <div class="post-content">
                 ${rejectedHtml}

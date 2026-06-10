@@ -455,3 +455,51 @@
 [EVAL] label=HATE score=0.986148
 [FINAL TEXT] len=69 text='Lũ súc vật này vô học và điên khùng quá, tao muốn giết hết chúng mày!'
 [REQUEST] Complete best_score=0.9861 frames=0 violating_words=(Video:) (Content:)lũ[O] súc[I-T] vật[I-T] này[O] vô[O] học[O] và[O] điên[B-T] khùng[I-T] quá,[O] tao[B-T] muốn[O] giết[B-T] hết[O] chúng[O] mày![O] detailed_tags=(Video:) (Content:)lũ[O] súc[I-T] vật[I-T] này[O] vô[O] học[O] và[O] điên[B-T] khùng[I-T] quá,[O] tao[B-T] muốn[O] giết[B-T] hết[O] chúng[O] mày![O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=5 text='helom'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='helom'
+[EVAL] label=CLEAN score=0.003349
+[FINAL TEXT] len=5 text='helom'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)helom[O] detailed_tags=(Video:) (Content:)helom[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=14 text='địt con mẹ mài'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='địt con mẹ mài'
+[EVAL] label=OFFENSIVE score=0.983030
+[FINAL TEXT] len=14 text='địt con mẹ mài'
+[REQUEST] Complete best_score=0.9830 frames=0 violating_words=(Video:) (Content:)địt[B-T] con[O] mẹ[O] mài[O] detailed_tags=(Video:) (Content:)địt[B-T] con[O] mẹ[O] mài[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=4 text='helo'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='helo'
+[EVAL] label=CLEAN score=0.813730
+[FINAL TEXT] len=4 text='helo'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)helo[O] detailed_tags=(Video:) (Content:)helo[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=14 text='địt con mẹ mài'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='địt con mẹ mài'
+[EVAL] label=OFFENSIVE score=0.983030
+[FINAL TEXT] len=14 text='địt con mẹ mài'
+[REQUEST] Complete best_score=0.9830 frames=0 violating_words=(Video:) (Content:)địt[B-T] con[O] mẹ[O] mài[O] detailed_tags=(Video:) (Content:)địt[B-T] con[O] mẹ[O] mài[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=4 text='helo'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='helo'
+[EVAL] label=CLEAN score=0.813730
+[FINAL TEXT] len=4 text='helo'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)helo[O] detailed_tags=(Video:) (Content:)helo[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=28 text='con chó m, đập chết mẹ nhà m'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='con chó m, đập chết mẹ nhà m'
+[EVAL] label=HATE score=0.986101
+[FINAL TEXT] len=28 text='con chó m, đập chết mẹ nhà m'
+[REQUEST] Complete best_score=0.9861 frames=0 violating_words=(Video:) (Content:)con[O] chó[B-T] m,[O] đập[O] chết[I-T] mẹ[O] nhà[O] m[O] detailed_tags=(Video:) (Content:)con[O] chó[B-T] m,[O] đập[O] chết[I-T] mẹ[O] nhà[O] m[O]

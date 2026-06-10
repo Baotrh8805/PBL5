@@ -563,9 +563,6 @@ public class ModeratorController {
 
     // ==================== KIỂM DUYỆT NGƯỜI DÙNG ====================
 
-    @Autowired
-    private com.pbl5.repository.FriendshipRepository friendshipRepository;
-
     /** Lấy danh sách người dùng (chỉ thông tin cơ bản) */
     @GetMapping("/users")
     public ResponseEntity<?> getUsers(@RequestHeader(value = "Authorization", required = false) String authHeader) {

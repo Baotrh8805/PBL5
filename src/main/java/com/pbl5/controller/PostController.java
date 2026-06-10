@@ -181,6 +181,38 @@ public class PostController {
         return ResponseEntity.ok(created);
     }
 
+    @PutMapping("/{postId}")
+    public ResponseEntity<?> updatePost(@RequestHeader("Authorization") String authHeader,
+                                        @PathVariable Long postId,
+                                        @RequestBody PostRequest request) {
+        User user = getAuthenticatedUser(authHeader);
+        if (user == null)
+            return ResponseEntity.status(401).body("Chưa đăng nhập.");
+
+        // Kiểm tra cảnh cáo chặn đăng bài (cũng áp dụng cho sửa bài)
+        if (user.getPostWarningExpiresAt() != null && user.getPostWarningExpiresAt().isAfter(java.time.LocalDateTime.now())) {
+            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
+            String expiryStr = user.getPostWarningExpiresAt().format(formatter);
+            return ResponseEntity.status(403).body("Bạn đang bị cấm đăng bài do vi phạm. Vui lòng quay lại sau " + expiryStr);
+        }
+
+        CreatePostRequest updatePostRequest = new CreatePostRequest(
+                request.getContent(),
+                request.getImageUrl(),
+                request.getVideoUrl(),
+                request.getVisibility(),
+                request.getSharedPostId());
+
+        try {
+            PostResponse updated = postService.updatePost(user, postId, updatePostRequest);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @GetMapping
     @Transactional(readOnly = true)
     public ResponseEntity<?> getAllPosts(@RequestHeader("Authorization") String authHeader) {

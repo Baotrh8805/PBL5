@@ -95,10 +95,21 @@ function parseErrorMessage(errorData, fallbackMessage) {
     return fallbackMessage;
 }
 
+let editingPostId = null;
+let existingImageUrl = null;
+let existingVideoUrl = null;
+
 /**
  * Mở modal tạo bài đăng
  */
 function openPostModal() {
+    editingPostId = null;
+    existingImageUrl = null;
+    existingVideoUrl = null;
+    document.querySelector('.modal-header h2').innerText = 'Tạo bài viết';
+    const btn = document.getElementById('modal-submit-btn');
+    if(btn) btn.innerText = 'Đăng';
+
     // Reset visibility to PUBLIC by default to match visual state
     const visibilitySelect = document.getElementById('modal-post-visibility');
     if (visibilitySelect) {
@@ -110,10 +121,78 @@ function openPostModal() {
 }
 
 /**
+ * Mở modal chỉnh sửa bài đăng
+ */
+async function openEditPostModal(postId) {
+    editingPostId = postId;
+    existingImageUrl = null;
+    existingVideoUrl = null;
+    document.querySelector('.modal-header h2').innerText = 'Chỉnh sửa bài viết';
+    const btn = document.getElementById('modal-submit-btn');
+    if(btn) btn.innerText = 'Lưu';
+
+    try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/posts/${postId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const post = await res.json();
+            
+            // Set content
+            document.getElementById('modal-post-content').value = post.content || '';
+            
+            // Set visibility
+            const visibilitySelect = document.getElementById('modal-post-visibility');
+            if (visibilitySelect) {
+                visibilitySelect.value = post.visibility || 'PUBLIC';
+                updateModalVisibility(post.visibility || 'PUBLIC');
+            }
+
+            // Set media
+            selectedMediaFile = null;
+            selectedMediaType = null;
+            const imgPreview = document.getElementById('modal-image-preview');
+            const videoPreview = document.getElementById('modal-video-preview');
+            const container = document.getElementById('modal-image-preview-container');
+            
+            if (post.videoUrl) {
+                existingVideoUrl = post.videoUrl;
+                imgPreview.style.display = 'none';
+                videoPreview.style.display = 'block';
+                videoPreview.src = post.videoUrl;
+                container.style.display = 'block';
+            } else if (post.imageUrl) {
+                existingImageUrl = post.imageUrl;
+                imgPreview.style.display = 'block';
+                videoPreview.style.display = 'none';
+                imgPreview.src = post.imageUrl;
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+
+            document.getElementById('create-post-modal').style.display = 'flex';
+            checkModalPostContent();
+        } else {
+            showPostNotification('Không thể tải bài viết để chỉnh sửa.', true);
+        }
+    } catch (err) {
+        console.error(err);
+        showPostNotification('Lỗi kết nối khi tải bài viết.', true);
+    }
+}
+
+/**
  * Đóng modal tạo bài đăng
  */
 function closePostModal() {
     document.getElementById('create-post-modal').style.display = 'none';
+    editingPostId = null;
+    existingImageUrl = null;
+    existingVideoUrl = null;
+    document.getElementById('modal-post-content').value = '';
+    removeModalMedia();
 }
 
 /**
@@ -122,7 +201,7 @@ function closePostModal() {
 function checkModalPostContent() {
     const text = document.getElementById('modal-post-content').value.trim();
     const btn = document.getElementById('modal-submit-btn');
-    if (text.length > 0 || selectedMediaFile) {
+    if (text.length > 0 || selectedMediaFile || existingImageUrl || existingVideoUrl) {
         btn.disabled = false;
         btn.classList.add('active');
     } else {
@@ -170,6 +249,8 @@ function previewModalMedia(event) {
 function removeModalMedia() {
     selectedMediaFile = null;
     selectedMediaType = null;
+    existingImageUrl = null;
+    existingVideoUrl = null;
     document.getElementById('modal-image-input').value = '';
     document.getElementById('modal-image-preview-container').style.display = 'none';
     document.getElementById('modal-image-preview').src = '';
@@ -202,16 +283,16 @@ async function submitModalPost() {
     let visibility = 'PUBLIC';
     if(visibilitySelect) visibility = visibilitySelect.value;
     
-    if (!content && !selectedMediaFile) {
+    if (!content && !selectedMediaFile && !existingImageUrl && !existingVideoUrl) {
         return;
     }
 
     const btn = document.getElementById('modal-submit-btn');
-    btn.innerText = 'Đang đăng...';
+    btn.innerText = editingPostId ? 'Đang lưu...' : 'Đang đăng...';
     btn.disabled = true;
 
-    let imageUrl = null;
-    let videoUrl = null;
+    let imageUrl = existingImageUrl;
+    let videoUrl = existingVideoUrl;
 
     // Upload media nếu có
     if (selectedMediaFile) {
@@ -272,11 +353,13 @@ async function submitModalPost() {
     };
 
     try {
-        btn.innerText = 'Đang đăng...';
-        
-        // Gửi bài đăng đến endpoint tạo bài đăng mới (có kiểm tra AI)
-        const res = await fetch('/api/posts/create', {
-            method: 'POST',
+        const isEditing = !!editingPostId;
+        const url = isEditing ? `/api/posts/${editingPostId}` : '/api/posts/create';
+        const method = isEditing ? 'PUT' : 'POST';
+
+        // Gửi bài đăng đến endpoint
+        const res = await fetch(url, {
+            method: method,
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -285,19 +368,24 @@ async function submitModalPost() {
         });
 
         if (res.ok) {
-            const createdPost = await res.json();
+            const returnedPost = await res.json();
 
             // Xóa dữ liệu từ modal
-            document.getElementById('modal-post-content').value = '';
-            removeModalMedia();
             closePostModal();
 
-            const inserted = typeof prependCreatedPostToFeed === 'function' && prependCreatedPostToFeed(createdPost);
-            if (!inserted && typeof fetchPosts === 'function') {
-                fetchPosts(token);
+            if (isEditing) {
+                // Fetch lại feed
+                if (typeof fetchPosts === 'function') {
+                    fetchPosts(token);
+                }
+                showPostNotification('Đã lưu bài viết. Hệ thống sẽ kiểm duyệt lại trong nền.');
+            } else {
+                const inserted = typeof prependCreatedPostToFeed === 'function' && prependCreatedPostToFeed(returnedPost);
+                if (!inserted && typeof fetchPosts === 'function') {
+                    fetchPosts(token);
+                }
+                showPostNotification('Bài đăng đã được đăng thành công. Hệ thống sẽ tự kiểm duyệt trong nền.');
             }
-
-            showPostNotification('Bài đăng đã được đăng thành công. Hệ thống sẽ tự kiểm duyệt trong nền.');
         } else {
             let errorData = null;
             try {
@@ -322,14 +410,14 @@ async function submitModalPost() {
                 showPostNotification('Bài đăng của bạn đang chờ duyệt bởi moderator.');
                 closePostModal();
             } else {
-                showPostNotification(parseErrorMessage(errorData, 'Không thể đăng bài, vui lòng thử lại.'), true);
+                showPostNotification(parseErrorMessage(errorData, isEditing ? 'Không thể lưu bài viết, vui lòng thử lại.' : 'Không thể đăng bài, vui lòng thử lại.'), true);
             }
         }
     } catch (error) {
         console.error(error);
-        showPostNotification('Lỗi kết nối khi đăng bài.', true);
+        showPostNotification('Lỗi kết nối mạng.', true);
     } finally {
-        btn.innerText = 'Đăng';
+        btn.innerText = editingPostId ? 'Lưu' : 'Đăng';
         checkModalPostContent();
     }
 }

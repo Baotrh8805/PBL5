@@ -226,9 +226,34 @@ function prependCreatedPostToFeed(post) {
     else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
     else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
     const isMine = post.mine ?? post.isMine ?? false;
+    const status = post.status || 'ACTIVE';
+    const isRejected = status === 'REJECTED' || status === 'AUTO_REJECTED';
+    const isPending = status === 'PENDING_REVIEW';
+
+    let warningBanner = '';
+    let cardStyle = '';
+    
+    if (isRejected) {
+        cardStyle = ' style="opacity: 0.85; border: 1.5px solid #ff8182;"';
+        warningBanner = `
+            <div style="background-color: #ffebe9; border: 1px solid #ff8182; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #d1293f; font-size: 13.5px; font-weight: 600;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
+                <span>Bài viết đã bị gỡ do vi phạm tiêu chuẩn cộng đồng (Chỉ bạn mới nhìn thấy).</span>
+            </div>
+        `;
+    } else if (isPending) {
+        cardStyle = ' style="border: 1.5px solid #fab005;"';
+        warningBanner = `
+            <div style="background-color: #fff9db; border: 1px solid #fab005; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #f08c00; font-size: 13.5px; font-weight: 600;">
+                <i class="fa-solid fa-clock" style="font-size: 16px;"></i>
+                <span>Bài viết đang chờ duyệt bởi đội ngũ quản trị (Chỉ bạn mới nhìn thấy).</span>
+            </div>
+        `;
+    }
 
     let postHtml = `
-        <article class="card post" id="post-${post.id}">
+        <article class="card post" id="post-${post.id}"${cardStyle}>
+            ${warningBanner}
             <div class="post-header">
                 <a href="/html/profile.html?userId=${post.authorId}">
                     <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
@@ -245,11 +270,16 @@ function prependCreatedPostToFeed(post) {
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
                     ${isMine ? `
+                        ${(isRejected || isPending) ? `
+                        <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        ` : `
+                        <a href="javascript:void(0)" onclick="openEditPostModal(${post.id})"><i class="fa-solid fa-pen"></i> Chỉnh sửa bài viết</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
                         <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
                         <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        `}
                     ` : `
                         <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
@@ -419,11 +449,16 @@ function renderPosts(posts, token) {
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
                     ${isMine ? `
+                        ${(isRejected || isPending) ? `
+                        <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        ` : `
+                        <a href="javascript:void(0)" onclick="openEditPostModal(${post.id})"><i class="fa-solid fa-pen"></i> Chỉnh sửa bài viết</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
                         <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
                         <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        `}
                     ` : `
                         <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>

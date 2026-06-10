@@ -549,3 +549,90 @@
 [VIDEO] Total frames analyzed: 4
 [FINAL TEXT] len=0 text=''
 [REQUEST] Complete best_score=0.8003 frames=4 violating_words=(Video:) (Content:) detailed_tags=(Video:) (Content:)
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=21 text='Cách xử lý này dở quá'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='Cách xử lý này dở quá'
+[EVAL] label=CLEAN score=0.818338
+[FINAL TEXT] len=21 text='Cách xử lý này dở quá'
+[REQUEST] Complete best_score=0.0000 frames=0 violating_words=(Video:) (Content:)cách[O] xử[O] lý[O] này[O] dở[O] quá[O] detailed_tags=(Video:) (Content:)cách[O] xử[O] lý[O] này[O] dở[O] quá[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=13 text='Mày dở hơi à?'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='Mày dở hơi à?'
+[EVAL] label=OFFENSIVE score=0.981765
+[FINAL TEXT] len=13 text='Mày dở hơi à?'
+[REQUEST] Complete best_score=0.9818 frames=0 violating_words=(Video:) (Content:)mày[B-T] dở[O] hơi[O] à?[O] detailed_tags=(Video:) (Content:)mày[B-T] dở[O] hơi[O] à?[O]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=True has_image=False has_video=False
+[CONTENT] len=20 text='Mày có bệnh à đồ ngu'
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] content text='Mày có bệnh à đồ ngu'
+[EVAL] label=HATE score=0.984045
+[FINAL TEXT] len=20 text='Mày có bệnh à đồ ngu'
+[REQUEST] Complete best_score=0.9840 frames=0 violating_words=(Video:) (Content:)mày[B-T] có[O] bệnh[O] à[O] đồ[O] ngu[I-T] detailed_tags=(Video:) (Content:)mày[B-T] có[O] bệnh[O] à[O] đồ[O] ngu[I-T]
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=False has_video=True
+[VIDEO] Start processing video_url
+[VIDEO] Opened successfully, fps=24.0
+[VIDEO] Analyze frame_index=0 sampled_index=1
+[OCR] START frame=0 second=0
+[OCR] frame=0 sec=0 raw='' clean='' len=0
+[VIDEO] Analyze frame_index=24 sampled_index=2
+[OCR] START frame=24 second=1
+[OCR] frame=24 sec=1 raw='Meta Al' clean='Meta Al' len=7
+[OCR] frame=24 sec=1 text='Meta Al'
+[EVAL] label=CLEAN score=0.811125
+[VIDEO] Analyze frame_index=48 sampled_index=3
+[OCR] START frame=48 second=2
+[OCR] frame=48 sec=2 raw='Meta AI' clean='Meta AI' len=7
+[OCR] frame=48 sec=2 text='Meta AI'
+[EVAL] label=CLEAN score=0.807319
+[VIDEO] Analyze frame_index=72 sampled_index=4
+[OCR] START frame=72 second=3
+[OCR] frame=72 sec=3 raw='Meta Al' clean='Meta Al' len=7
+[OCR] frame=72 sec=3 text='Meta Al'
+[EVAL] label=CLEAN score=0.811125
+[VIDEO] Analyze frame_index=96 sampled_index=5
+[OCR] START frame=96 second=4
+[OCR] frame=96 sec=4 raw='Meta AI' clean='Meta AI' len=7
+[OCR] frame=96 sec=4 text='Meta AI'
+[EVAL] label=CLEAN score=0.807319
+[VIDEO] Analyze frame_index=120 sampled_index=6
+[OCR] START frame=120 second=5
+[OCR] frame=120 sec=5 raw='Meta Al' clean='Meta Al' len=7
+[OCR] frame=120 sec=5 text='Meta Al'
+[EVAL] label=CLEAN score=0.811125
+[OCR SUMMARY] frames_with_text=5
+[VIDEO] Total frames analyzed: 6
+[OCR] video/image text='Meta Al'
+[EVAL] label=CLEAN score=0.811125
+[FINAL TEXT] len=7 text='Meta Al'
+[REQUEST] Complete best_score=0.2867 frames=6 violating_words=(Video:)meta[O] al[O] (Content:) detailed_tags=(Video:)meta[O] al[O] (Content:)
+[REQUEST] /api/moderate called
+[REQUEST] has_content=False has_image=True has_video=False
+[IMAGE] Start processing image_url
+[OCR] START frame=None second=None
+[OCR] frame=None sec=None raw='Dy' clean='Dy' len=2
+[VIHSD_SPEECH] Post does not contain video/audio
+[OCR] video/image text='Dy'
+[EVAL] label=CLEAN score=0.028111
+[FINAL TEXT] len=2 text='Dy'
+[REQUEST] Complete best_score=0.1119 frames=0 violating_words=(Video:)dy[O] (Content:) detailed_tags=(Video:)dy[O] (Content:)
+[INIT] Successfully loaded NSFW model
+[INIT] Successfully loaded Violence model
+[INIT] Successfully loaded PhoBERT Hate Speech model
+[INIT] Successfully loaded and mapped MFCC hatespeech PyTorch model from weights dict
+[MAIN] Flask startup

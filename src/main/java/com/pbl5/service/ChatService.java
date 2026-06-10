@@ -144,6 +144,29 @@ public class ChatService {
     }
 
     @Transactional
+    public ChatMessage deleteMessage(Long messageId, User currentUser) {
+        Message msg = messageRepository.findById(messageId).orElse(null);
+        if (msg == null) return null;
+        
+        if (!msg.getSender().getId().equals(currentUser.getId())) {
+            return null;
+        }
+        
+        ChatMessage revokeMsg = new ChatMessage();
+        revokeMsg.setId(messageId);
+        revokeMsg.setType("REVOKE");
+        revokeMsg.setSenderId(currentUser.getId());
+        if (msg.getChatGroup() != null) {
+            revokeMsg.setGroupId(msg.getChatGroup().getId());
+        } else if (msg.getReceiver() != null) {
+            revokeMsg.setReceiverId(msg.getReceiver().getId());
+        }
+        
+        messageRepository.delete(msg);
+        return revokeMsg;
+    }
+
+    @Transactional
     public ChatGroup createGroup(String name, List<Long> memberIds, User creator) {
         ChatGroup group = new ChatGroup();
         group.setName(name);

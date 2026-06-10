@@ -22,12 +22,6 @@ window.onload = () => {
     fetchSidebarSuggestions(token);
 };
 
-// Logout Function
-window.logout = function() {
-    localStorage.removeItem('token');
-    window.location.href = '/';
-};
-
 // Fetch User Profile
 async function fetchUserProfile(token) {
     try {

@@ -46,3 +46,9 @@ window.updateThemeToggleIcons = function() {
 document.addEventListener('DOMContentLoaded', () => {
     updateThemeToggleIcons();
 });
+
+// Global Logout Function
+window.logout = function() {
+    localStorage.removeItem('token');
+    window.location.href = '/';
+};

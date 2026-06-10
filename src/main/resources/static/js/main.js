@@ -107,7 +107,7 @@ function validateField(id, regex, emptyMsg, invalidMsg, matchingId = null) {
 document.getElementById('reg-username')?.addEventListener('input', () => validateField('reg-username', /^[a-zA-Z0-9_]{4,15}$/, 'Tên đăng nhập không được bỏ trống', 'Từ 4-15 ký tự, không chứa ký tự đặc biệt.'));
 document.getElementById('reg-email')?.addEventListener('input', () => validateField('reg-email', /^[^@\s]+@[^@\s]+\.[^@\s]+$/, 'Email không được bỏ trống', 'Định dạng email không hợp lệ.'));
 document.getElementById('reg-password')?.addEventListener('input', () => {
-    validateField('reg-password', /^.{6,}$/, 'Mật khẩu không được bỏ trống', 'Mật khẩu phải dài ít nhất 6 ký tự.');
+    validateField('reg-password', /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/, 'Mật khẩu không được bỏ trống', 'Mật khẩu phải >= 8 ký tự, gồm chữ, số và ký tự đặc biệt.');
     if (document.getElementById('reg-confirm-password').value !== '') {
         validateField('reg-confirm-password', null, 'Xác nhận mật khẩu không được bỏ trống', 'Mật khẩu không khớp.', 'reg-password');
     }
@@ -125,7 +125,7 @@ window.nextStep = function(currentStep) {
     if (currentStep === 1) {
         isValid &= validateField('reg-username', /^[a-zA-Z0-9_]{4,15}$/, 'Tên đăng nhập không được bỏ trống', 'Từ 4-15 ký tự, không chứa ký tự đặc biệt.');
         isValid &= validateField('reg-email', /^[^@\s]+@[^@\s]+\.[^@\s]+$/, 'Email không được bỏ trống', 'Định dạng email không hợp lệ.');
-        isValid &= validateField('reg-password', /^.{6,}$/, 'Mật khẩu không được bỏ trống', 'Mật khẩu phải dài ít nhất 6 ký tự.');
+        isValid &= validateField('reg-password', /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/, 'Mật khẩu không được bỏ trống', 'Mật khẩu phải >= 8 ký tự, gồm chữ, số và ký tự đặc biệt.');
         isValid &= validateField('reg-confirm-password', null, 'Xác nhận mật khẩu không được bỏ trống', 'Mật khẩu không khớp.', 'reg-password');
     } else if (currentStep === 2) {
         isValid &= validateField('reg-name', /^.+$/, 'Họ và tên không được bỏ trống', 'Họ và tên không hợp lệ.');
@@ -303,6 +303,12 @@ document.getElementById('reset-password-form')?.addEventListener('submit', async
     e.preventDefault();
     const token = document.getElementById('reset-pin').value;
     const newPassword = document.getElementById('new-password').value;
+
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+        showNotification('Mật khẩu phải >= 8 ký tự, gồm chữ, số và ký tự đặc biệt.', true);
+        return;
+    }
 
     try {
         const res = await fetch(`${API_URL}/reset-password`, {

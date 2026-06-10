@@ -242,7 +242,7 @@ function renderReviewPostsTable(posts) {
                     <!-- Author & Post Header -->
                     <div class="review-author-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName || 'User')}&background=0046a0&color=fff" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color);">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName || 'User')}&background=F6DE50&color=1a1a1a" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color);">
                             <div>
                                 <div class="review-author-name" style="font-weight: 700; color: var(--text-primary); font-size: 14px;">${escapeHtml(post.authorName || 'Ẩn danh')}</div>
                                 <div class="review-post-time-sub" style="font-size: 11px; color: var(--text-secondary);">${new Date(post.createdAt).toLocaleString('vi-VN')}</div>
@@ -282,7 +282,7 @@ function renderReviewPostsTable(posts) {
                              )
                              : ''
                              }
-                             <button class="btn-action detail" onclick="viewPostDetail('${post.id}')" style="padding: 8px 16px; font-size: 13px; font-weight: 700; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-color); background: var(--surface-bg); color: var(--text-primary); cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);"><i class="fa-solid fa-circle-info"></i> Chi tiết</button>
+                             <button class="btn-action detail" onclick="viewPostDetail('${post.id}')"><i class="fa-solid fa-circle-info"></i> Chi tiết</button>
                          </div>
                     </div>
                 </div>

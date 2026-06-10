@@ -16,6 +16,8 @@ import java.util.List;
 public interface LikeRepository extends JpaRepository<Like, Long> {
     Optional<Like> findByPostAndUser(Post post, User user);
     long countByPostId(Long postId);
+    List<Like> findByPost(Post post);
+    List<Like> findByUserId(Long userId);
 
     @Query("SELECT l.post.id, COUNT(l) FROM Like l WHERE l.post.id IN :postIds GROUP BY l.post.id")
     List<Object[]> countLikesByPostIds(@Param("postIds") List<Long> postIds);

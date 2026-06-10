@@ -38,7 +38,7 @@ function fetchUserProfile() {
         
         let avatarUrl = currentUser.avatar;
         if (!avatarUrl && currentUser.fullName) {
-            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=00d1b2&color=fff`;
+            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.fullName)}&background=F6DE50&color=1a1a1a`;
         }
 
         document.querySelectorAll('#header-avatar, .avatar-large, .avatar-small, #modal-avatar').forEach(img => {
@@ -127,7 +127,7 @@ function fillProfileData(user, isCurrentUser) {
             el.textContent = curr.fullName || 'Người dùng';
         });
         const modalAvt = document.getElementById('modal-avatar');
-        if (modalAvt) modalAvt.src = curr.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(curr.fullName)}&background=00d1b2&color=fff`;
+        if (modalAvt) modalAvt.src = curr.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(curr.fullName)}&background=F6DE50&color=1a1a1a`;
     });
 
     if (isCurrentUser) {
@@ -155,7 +155,7 @@ function fillProfileData(user, isCurrentUser) {
             const status = user.friendshipStatus;
             const targetId = user.id;
             if (!status || status === 'NONE') {
-                fAction.innerHTML = `<button class="btn btn-primary" onclick="sendFriendRequest(${targetId})"><i class="fa-solid fa-user-plus"></i> Thêm bạn bè</button>`;
+                fAction.innerHTML = `<button class="btn btn-add-friend" onclick="sendFriendRequest(${targetId})"><i class="fa-solid fa-user-plus"></i> Thêm bạn bè</button>`;
             } else if (status === 'PENDING') {
                 if (targetId === user.receiverId) {
                     fAction.innerHTML = `<button class="btn btn-secondary" onclick="removeFriend(${targetId})"><i class="fa-solid fa-user-clock"></i> Đã gửi lời mời</button>`;
@@ -170,7 +170,7 @@ function fillProfileData(user, isCurrentUser) {
             }
         }
             btnMsg.style.display = 'inline-block';
-            let avt = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+            let avt = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a`;
             btnMsg.onclick = () => {
                 if (typeof openChatBox === "function") {
                     openChatBox(user.id, user.fullName, avt);
@@ -245,10 +245,10 @@ async function fetchAndDisplayFriends(userId) {
             
             if (displayedFriends.length > 0) {
                 container.innerHTML = displayedFriends.map(f => {
-                    const avt = f.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff`;
+                    const avt = f.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=F6DE50&color=1a1a1a`;
                     return `
                         <a href="/html/profile.html?userId=${f.id}" class="friend-item">
-                            <img src="${avt}" alt="${f.fullName}" class="friend-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff'">
+                            <img src="${avt}" alt="${f.fullName}" class="friend-avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=F6DE50&color=1a1a1a'">
                             <span class="friend-name">${f.fullName}</span>
                         </a>
                     `;
@@ -351,26 +351,28 @@ function renderProfilePosts(posts) {
                 </div>
             </div>
             
-            ${!isRejected ? `
             <div class="post-options">
                 <button class="options-btn" onclick="toggleDropdown(${post.id})">
                     <i class="fa-solid fa-ellipsis"></i>
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
                     ${isMine ? `
-                        ${!isDeleted ? `
+                        ${isDeleted ? '' : (isRejected || isPending) ? `
+                        <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        ` : `
+                        <a href="javascript:void(0)" onclick="openEditPostModal(${post.id})"><i class="fa-solid fa-pen"></i> Chỉnh sửa bài viết</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
                         <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
                         <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
-                        ` : ''}
+                        `}
                     ` : `
                         <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
                     `}
                 </div>
-            </div>` : ''}
+            </div>
 
             <div class="post-content">
                 ${rejectedHtml}
@@ -775,34 +777,61 @@ async function submitComment(postId) {
     if (!content) return;
 
     const token = localStorage.getItem('token');
-    
+
     // Optimistic UI update: cộng số bình luận
     const commentCountSpan = document.getElementById(`comment-count-${postId}`);
+    let previousCount = 0;
     if (commentCountSpan) {
         const countMatch = commentCountSpan.innerText.match(/\d+/);
-        let currentCount = countMatch ? parseInt(countMatch[0], 10) : 0;
-        commentCountSpan.innerText = `Bình luận (${currentCount + 1})`;
+        previousCount = countMatch ? parseInt(countMatch[0], 10) : 0;
+        commentCountSpan.innerText = `Bình luận (${previousCount + 1})`;
     }
 
     try {
         const res = await fetch(`/api/posts/${postId}/comments`, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ content: content })
         });
-        
+
         if (res.ok) {
             input.value = '';
-            fetchComments(postId); // Chỉ tải lại đúng danh sách bình luận của bài này
+            fetchComments(postId);
+        } else if (res.status === 403) {
+            if (commentCountSpan) commentCountSpan.innerText = `Bình luận (${previousCount})`;
+            const msg = await res.text();
+            showBanModal(msg);
         } else {
-            alert('Lỗi gửi bình luận');
+            if (commentCountSpan) commentCountSpan.innerText = `Bình luận (${previousCount})`;
+            const msg = await res.text();
+            alert(msg || 'Lỗi gửi bình luận');
         }
     } catch (err) {
         console.error(err);
     }
+}
+
+function showBanModal(message) {
+    const oldModal = document.getElementById('ban-alert-modal');
+    if (oldModal) oldModal.remove();
+
+    const modalHtml = `
+        <div id="ban-alert-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 999999;">
+            <div style="background: white; border-radius: 12px; width: 450px; max-width: 90vw; padding: 30px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.4); position: relative;">
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(228,30,63,0.1); color: #e41e3f; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.18s, color 0.18s, transform 0.15s; z-index: 10;" onmouseover="this.style.background='#e41e3f';this.style.color='#fff'" onmouseout="this.style.background='rgba(228,30,63,0.1)';this.style.color='#e41e3f'"><i class="fa-solid fa-xmark"></i></button>
+                <div style="margin-bottom: 20px;">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size: 60px; color: #e41e3f;"></i>
+                </div>
+                <h3 style="font-size: 22px; color: #1c1e21; margin-bottom: 15px; font-weight: 700;">LC Networks cho biết</h3>
+                <p style="font-size: 16px; color: #4b4f56; line-height: 1.5; margin-bottom: 25px;">${message}</p>
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="background: #e41e3f; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; width: 100%;">Tôi đã hiểu và cam kết tuân thủ</button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
 // === FRIENDSHIP START ===
@@ -1066,12 +1095,12 @@ window.prependCreatedPostToFeed = function(post) {
     
     const isMine = true; // Bài mới tạo chắc chắn là của mình
 
-    let authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff`;
+    let authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=F6DE50&color=1a1a1a`;
     let postHtml = `
     <article class="card post" id="post-${post.id}">
         <div class="post-header">
             <a href="/html/profile.html">
-                <img src="${authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff'">
+                <img src="${authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=F6DE50&color=1a1a1a'">
             </a>
             <div class="post-meta">
                 <h4 class="post-author"><a href="/html/profile.html" style="text-decoration:none; color:inherit;">${post.authorName}</a></h4>
@@ -1125,7 +1154,7 @@ window.prependCreatedPostToFeed = function(post) {
         </div>
         <div id="comments-${post.id}" class="comments-section" style="display: none; padding: 15px; border-top: 1px solid #ced0d4;">
             <div class="comment-input-wrapper" style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <img src="${document.getElementById('header-avatar') ? document.getElementById('header-avatar').src : 'https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'}" alt="Avatar" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <img src="${document.getElementById('header-avatar') ? document.getElementById('header-avatar').src : 'https://ui-avatars.com/api/?name=User&background=F6DE50&color=1a1a1a'}" alt="Avatar" class="avatar-small" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=User&background=F6DE50&color=1a1a1a'">
                 <input type="text" id="comment-input-${post.id}" class="post-input" placeholder="Viết bình luận..." onkeypress="handleCommentKeyPress(event, ${post.id})">
                 <button class="btn btn-primary" onclick="submitComment(${post.id})"><i class="fa-solid fa-paper-plane"></i></button>
             </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BD Network - Bạn bè</title>
+    <title>LC Social Network - Bạn bè</title>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,8 +47,8 @@
         .friend-card-name { font-weight: 700; font-size: 15px; margin-bottom: 5px; color: var(--text-main); transition: color 0.3s ease; }
         .friend-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s ease; margin-top: 5px; font-size: 14px; }
         
-        .btn-add { background: var(--primary-light); color: var(--primary-color); }
-        .btn-add:hover { background: rgba(0, 209, 178, 0.25); transform: scale(1.02); }
+        .btn-add { background: #DCFCE7; color: #16A34A; border: 1px solid rgba(22, 163, 74, 0.25); }
+        .btn-add:hover { background: #BBF7D0; color: #15803D; border-color: rgba(22, 163, 74, 0.4); transform: scale(1.02); }
         
         .btn-confirm { background: var(--primary-color); color: white; }
         .btn-confirm:hover { background: #00b99d; transform: scale(1.02); }
@@ -60,9 +60,9 @@
         .btn-secondary:hover { background: var(--button-hover); transform: scale(1.02); }
         
         .nav-links-friends { display: flex; gap: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; transition: border-color 0.3s ease; }
-        .nav-links-friends div { font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 8px 12px; transition: all 0.2s ease; border-radius: 6px; }
-        .nav-links-friends div:hover { background: var(--button-hover); color: var(--text-main); }
-        .nav-links-friends div.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); border-radius: 6px 6px 0 0; background: transparent; }
+        .nav-links-friends div { font-weight: 700; color: var(--text-muted); cursor: pointer; padding: 8px 20px; transition: all 0.2s ease; border-radius: 999px; }
+        .nav-links-friends div:hover { background: var(--primary-light); color: var(--primary-text); }
+        .nav-links-friends div.active { color: #1a1a1a; background: var(--primary-color); border-radius: 999px; box-shadow: 0 2px 8px rgba(246, 222, 80, 0.4); }
     </style>
     <script src="/js/auth-interceptor.js"></script>
 </head>
@@ -72,7 +72,7 @@
         <div class="header-left">
             <a href="/html/home.html" class="logo">
                 <img src="/images/logo.png" alt="Logo" style="height: 32px; width: auto; object-fit: contain;">
-                <span class="logo-text">BD Network</span>
+                <span class="logo-text">LC Social Network</span>
             </a>
             <div class="search-bar">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -164,7 +164,7 @@
 
             <!-- User Avatar -->
             <div class="user-avatar-btn">
-                <img src="/uploads/default-avatar.png" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <img src="/uploads/default-avatar.png" alt="User Avatar" id="header-avatar" onerror="this.src='https://ui-avatars.com/api/?name=User&background=F6DE50&color=1a1a1a'">
             </div>
         </div>
     </header>
@@ -175,7 +175,7 @@
         <!-- Left Sidebar -->
         <aside class="left-sidebar">
             <div class="card profile-card" onclick="window.location.href='profile.html'" style="cursor: pointer; transition: 0.2s;">
-                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=F6DE50&color=1a1a1a'">
                 <div class="profile-info">
                     <h3 class="user-name">Người dùng</h3>
                     <p class="status"><span class="status-dot"></span> Đang trực truyến</p>

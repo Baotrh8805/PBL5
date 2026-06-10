@@ -14,4 +14,7 @@ public interface ChatGroupRepository extends JpaRepository<ChatGroup, Long> {
 
     @Query("SELECT g FROM ChatGroup g JOIN g.members m WHERE m.id = :userId ORDER BY g.createdAt DESC")
     List<ChatGroup> findByUserMemberId(@Param("userId") Long userId);
+
+    @Query("SELECT g FROM ChatGroup g WHERE g.createdBy.id = :userId")
+    List<ChatGroup> findByCreatedById(@Param("userId") Long userId);
 }

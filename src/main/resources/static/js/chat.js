@@ -196,7 +196,7 @@ async function loadInboxDropdown() {
         contacts.forEach(f => {
             let avatarUrl = f.avatar;
             if (!avatarUrl || avatarUrl.trim() === '') {
-                 avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff`;
+                 avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=F6DE50&color=1a1a1a`;
             }
             let msgStr = f.lastMessage || 'Bạn bè';
             let isUnread = f.unreadCount > 0;
@@ -213,7 +213,7 @@ async function loadInboxDropdown() {
             };
 
             item.innerHTML = `
-                <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=00d1b2&color=fff'">
+                <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName || 'User')}&background=F6DE50&color=1a1a1a'">
                 <div class="notification-content">
                     <div style="font-weight: ${isUnread ? '700' : '600'}; font-size: 15px; color: var(--text-main);">${f.fullName} ${f.isGroup ? '<span style="font-size: 11px; background: #e4e6eb; padding: 2px 6px; border-radius: 10px; color: #65676b; margin-left: 5px;"><i class="fa-solid fa-users"></i> Nhóm</span>' : ''}</div>
                     <div class="notification-msg" style="color: ${isUnread ? 'var(--text-main)' : 'var(--text-muted)'}; font-weight: ${isUnread ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px;">${msgStr}</div>
@@ -271,7 +271,7 @@ function renderNotifications(notifications) {
     notifications.forEach(n => {
         let avatarUrl = n.senderAvatar;
         if (!avatarUrl || avatarUrl.trim() === '') {
-            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(n.senderName || 'User')}&background=00d1b2&color=fff`;
+            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(n.senderName || 'User')}&background=F6DE50&color=1a1a1a`;
         }
         
         let dateStr = "";
@@ -299,7 +299,7 @@ function renderNotifications(notifications) {
         };
         
         item.innerHTML = `
-            <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(n.senderName || 'User')}&background=00d1b2&color=fff'">
+            <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(n.senderName || 'User')}&background=F6DE50&color=1a1a1a'">
             <div class="notification-content">
                 <div class="notification-msg">${n.message || ''}</div>
                 <div class="notification-time">${dateStr}</div>
@@ -404,7 +404,7 @@ function renderChatContacts(contacts, emptyMessage = 'Chưa có người liên h
     contacts.forEach(f => {
         let avatarUrl = f.avatar;
         if (!avatarUrl || avatarUrl.trim() === '') {
-            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff`;
+            avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=F6DE50&color=1a1a1a`;
         }
 
         const div = document.createElement('div');
@@ -413,7 +413,7 @@ function renderChatContacts(contacts, emptyMessage = 'Chưa có người liên h
         div.id = `chat-contact-${elementId}`;
         div.onclick = () => openChatBox(f.id, f.fullName, avatarUrl, !!f.isGroup);
         div.innerHTML = `
-            <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=00d1b2&color=fff'">
+            <img src="${avatarUrl}" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(f.fullName)}&background=F6DE50&color=1a1a1a'">
             <div class="chat-contact-name">${f.fullName}</div>
             <div id="unread-badge-${elementId}" class="chat-unread-badge" style="display:none;"></div>
         `;
@@ -444,7 +444,7 @@ function openChatBox(userId, name, avatar, isGroup = false) {
 
     let targetAvatar = avatar;
     if (!targetAvatar || targetAvatar.trim() === '') {
-        targetAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00d1b2&color=fff`;
+        targetAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F6DE50&color=1a1a1a`;
     }
 
     // Thêm vào mảng activeChats
@@ -628,10 +628,10 @@ function appendMessageToUI(msg, chatId) {
     
     let avatarUrl = msg.senderAvatar;
     if (!avatarUrl || avatarUrl.trim() === '') {
-        avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || 'User')}&background=00d1b2&color=fff`;
+        avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || 'User')}&background=F6DE50&color=1a1a1a`;
     }
 
-    const targetAvatarHtml = !isSent ? `<a href="/html/profile.html?userId=${msg.senderId}"><img src="${avatarUrl}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || 'User')}&background=00d1b2&color=fff'"></a>` : '';
+    const targetAvatarHtml = !isSent ? `<a href="/html/profile.html?userId=${msg.senderId}"><img src="${avatarUrl}" class="chat-msg-avatar" style="width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || 'User')}&background=F6DE50&color=1a1a1a'"></a>` : '';
     
     const chatInfo = activeChats.find(c => c.chatId === chatId);
     const isGroup = chatInfo ? chatInfo.isGroup : false;
@@ -815,7 +815,7 @@ function showCreateGroupModal() {
         <div class="modal-content" style="max-width: 400px; padding: 20px; background: var(--bg-card, #fff); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 90%; color: var(--text-main, #050505);">
             <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color, #ddd); padding-bottom: 10px; margin-bottom: 15px;">
                 <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: var(--text-main);">Tạo nhóm chat mới</h3>
-                <button type="button" class="close-modal" id="close-create-group-modal" style="background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" class="close-modal" id="close-create-group-modal"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
                 <div style="margin-bottom: 15px;">
@@ -852,7 +852,7 @@ function showCreateGroupModal() {
                 item.style.cssText = "display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border-color, #f0f2f5);";
                 item.innerHTML = `
                     <input type="checkbox" value="${f.id}" class="group-member-checkbox" id="checkbox-friend-${f.id}">
-                    <img src="${f.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(f.fullName) + '&background=00d1b2&color=fff'}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                    <img src="${f.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(f.fullName) + '&background=F6DE50&color=1a1a1a'}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
                     <label for="checkbox-friend-${f.id}" style="color: var(--text-main); cursor: pointer; flex-grow: 1; font-size: 14px;">${f.fullName}</label>
                 `;
                 listDiv.appendChild(item);

@@ -95,9 +95,10 @@ public class CommentService {
     @Transactional
     public CommentResponse addComment(Long postId, CommentRequest request, User user) throws Exception {
         if (user.getCommentWarningExpiresAt() != null && user.getCommentWarningExpiresAt().isAfter(LocalDateTime.now())) {
-            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm 'ngày' dd/MM/yyyy");
-            String expiryStr = user.getCommentWarningExpiresAt().format(formatter);
-            throw new Exception("Bạn đang bị cấm bình luận do vi phạm. Vui lòng quay lại sau " + expiryStr);
+            long secondsLeft = java.time.temporal.ChronoUnit.SECONDS.between(LocalDateTime.now(), user.getCommentWarningExpiresAt());
+            long daysLeft = (long) Math.ceil(secondsLeft / 86400.0);
+            if (daysLeft < 1) daysLeft = 1;
+            throw new Exception("Lỗi gửi bình luận do tài khoản bạn bị hạn chế bình luận trong " + daysLeft + " ngày.");
         }
 
         Optional<Post> postOpt = postRepository.findById(postId);

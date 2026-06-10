@@ -110,7 +110,7 @@
 .chat-header-actions {
     cursor: pointer;
     font-size: 20px;
-    color: #0084ff;
+    color: #7a6400;
     width: 32px;
     height: 32px;
     display: flex;
@@ -148,9 +148,8 @@
 }
 
 .chat-message.sent {
-    background-color: #0084ff; /* Messenger Blue */
-    color: white;
-
+    background-color: #F6DE50;
+    color: #1a1a1a;
     border-radius: 18px 18px 4px 18px;
 }
 
@@ -187,7 +186,7 @@
 .chat-input-area button {
     background: none;
     border: none;
-    color: #0084ff;
+    color: #7a6400;
     font-size: 24px;
     cursor: pointer;
     display: flex;
@@ -212,7 +211,7 @@
 .chat-attach-btn {
     cursor: pointer;
     margin-right: 8px;
-    color: #0084ff;
+    color: #7a6400;
     font-size: 18px;
     display: flex;
     align-items: center;
@@ -328,7 +327,7 @@
     transform: translateY(-50%);
     width: 10px;
     height: 10px;
-    background-color: #0084ff;
+    background-color: #d4b800;
     border-radius: 50%;
 }
 
@@ -426,9 +425,9 @@
 }
 
 .filter-chip.active {
-    background: #eaf3ff;
-    color: #0084ff;
-    border: 2px solid #050505;
+    background: rgba(246, 222, 80, 0.18);
+    color: #7a6400;
+    border: 2px solid #d4b800;
 }
 
 .filter-chip:hover:not(.active) {
@@ -459,7 +458,7 @@
 }
 
 .notification-item.unread {
-    background-color: rgba(0, 132, 255, 0.05);
+    background-color: rgba(246, 222, 80, 0.08);
 }
 
 /* Chat & Messenger Dark Mode Styles */
@@ -496,7 +495,7 @@ html[data-theme="dark"] .chat-target-info span {
 }
 
 html[data-theme="dark"] .chat-header-actions {
-    color: #0084ff;
+    color: #F6DE50;
 }
 
 html[data-theme="dark"] .chat-header-actions:hover {
@@ -576,9 +575,9 @@ html[data-theme="dark"] .filter-chip {
 }
 
 html[data-theme="dark"] .filter-chip.active {
-    background: rgba(0, 132, 255, 0.15);
-    color: #0084ff;
-    border: 2px solid #0084ff;
+    background: rgba(246, 222, 80, 0.18);
+    color: #F6DE50;
+    border: 2px solid #F6DE50;
 }
 
 html[data-theme="dark"] .filter-chip:hover:not(.active) {
@@ -598,7 +597,7 @@ html[data-theme="dark"] .notification-item:hover {
 }
 
 html[data-theme="dark"] .notification-item.unread {
-    background: rgba(0, 209, 178, 0.12) !important;
+    background: rgba(246, 222, 80, 0.12) !important;
 }
 
 /* Chat Sidebar Search & Input Override */
@@ -677,8 +676,8 @@ html[data-theme="dark"] #chat-sidebar-search-input::placeholder {
     line-height: 1.4;
 }
 .system-warning-modal-btn {
-    background: #00d1b2;
-    color: white;
+    background: #F6DE50;
+    color: #1a1a1a;
     border: none;
     padding: 12px 32px;
     font-size: 15px;
@@ -689,6 +688,7 @@ html[data-theme="dark"] #chat-sidebar-search-input::placeholder {
     outline: none;
 }
 .system-warning-modal-btn:hover {
-    background: #00b89c;
+    background: #d4b800;
+    color: #fff;
 }
 

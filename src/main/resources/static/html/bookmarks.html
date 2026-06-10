@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BD Network - Bài viết đã lưu</title>
+    <title>LC Social Network - Bài viết đã lưu</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@
         <div class="header-left">
             <a href="/html/home.html" class="logo">
                 <img src="/images/logo.png" alt="Logo" style="height: 32px; width: auto; object-fit: contain;">
-                <span class="logo-text">BD Network</span>
+                <span class="logo-text">LC Social Network</span>
             </a>
             <div class="search-bar">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -51,7 +51,7 @@
                 <i class="fa-solid fa-moon"></i>
             </button>
             <div class="user-avatar-btn" onclick="window.location.href='/html/profile.html'">
-                <img src="https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff" alt="User Avatar" id="header-avatar" style="cursor:pointer;">
+                <img src="https://ui-avatars.com/api/?name=User&background=F6DE50&color=1a1a1a" alt="User Avatar" id="header-avatar" style="cursor:pointer;">
             </div>
         </div>
     </header>
@@ -62,7 +62,7 @@
         <!-- Left Sidebar -->
         <aside class="left-sidebar">
             <div class="card profile-card" onclick="window.location.href='profile.html'" style="cursor: pointer; transition: 0.2s;">
-                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=00d1b2&color=fff'">
+                <img src="/uploads/default-avatar.png" alt="Avatar" class="avatar-large" onerror="this.src='https://ui-avatars.com/api/?name=User&background=F6DE50&color=1a1a1a'">
                 <div class="profile-info">
                     <h3 class="user-name">Người dùng</h3>
                     <p class="status"><span class="status-dot"></span> Đang trực truyến</p>
@@ -200,7 +200,7 @@
                 if (res.ok) {
                     const data = await res.json();
                     document.querySelectorAll('.user-name').forEach(el => el.textContent = data.fullName || 'Người dùng');
-                    let avatarUrl = data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=00d1b2&color=fff`;
+                    let avatarUrl = data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=F6DE50&color=1a1a1a`;
                     document.querySelectorAll('#header-avatar, .avatar-large').forEach(img => img.src = avatarUrl);
                 }
             } catch (err) { console.error(err); }

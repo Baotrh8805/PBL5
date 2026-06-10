@@ -18,12 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
         tab.addEventListener('click', () => {
             reportTabs.forEach(t => {
                 t.classList.remove('active');
-                t.style.borderBottomColor = 'transparent';
-                t.style.color = 'var(--text-secondary)';
+                t.style.removeProperty('border-bottom-color');
+                t.style.removeProperty('color');
             });
             tab.classList.add('active');
-            tab.style.borderBottomColor = 'var(--mod-primary)';
-            tab.style.color = 'var(--mod-primary)';
 
             const type = tab.getAttribute('data-report-type');
             const pc = document.getElementById('report-post-container');
@@ -130,11 +128,11 @@ function renderReportsTable(reports) {
 
         let actions = `
             <div class="action-group" style="display: flex; gap: 8px;">
-                <button class="mod-btn-refresh" style="padding: 5px 12px; font-size: 12px; color: var(--mod-primary); border-color: var(--mod-primary);" onclick="openReportDetailModal(${report.id})">
-                    Xem
+                <button class="btn-action detail" onclick="openReportDetailModal(${report.id})">
+                    <i class="fa-solid fa-circle-info"></i> Xem
                 </button>
-                <button class="mod-btn-refresh" style="padding: 5px 12px; font-size: 12px; color: var(--danger-color); border-color: var(--danger-color);" onclick="resolveReport(${report.id}, 'DISMISSED')">
-                    Xóa
+                <button class="btn-action danger" onclick="resolveReport(${report.id}, 'DISMISSED')">
+                    <i class="fa-solid fa-xmark"></i> Xóa
                 </button>
             </div>
         `;
@@ -201,7 +199,7 @@ window.openReportDetailModal = function(reportId) {
     const reporter = report.reporter || { fullName: 'Ẩn danh', id: '?', avatar: '' };
     document.getElementById('rd-reporter-name').textContent = reporter.fullName;
     document.getElementById('rd-reporter-id').textContent = `ID: ${reporter.id}`;
-    document.getElementById('rd-reporter-avatar').src = reporter.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reporter.fullName)}&background=00d1b2&color=fff`;
+    document.getElementById('rd-reporter-avatar').src = reporter.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(reporter.fullName)}&background=F6DE50&color=1a1a1a`;
 
     // Report Info
     document.getElementById('rd-category-badge').textContent = report.category || 'Nội dung';

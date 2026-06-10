@@ -625,29 +625,7 @@ class ContentModerationSystem:
             logger.error(f"Download media failed for URL {url[:200]}: {e}")
             return None
 
-    def _extract_audio(self, video_path):
-        """Extract audio from video file using ffmpeg; returns path to wav file or None."""
-        if not video_path or not os.path.exists(video_path):
-            return None
-        try:
-            wav_tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
-            wav_tmp.close()
-            cmd = [
-                'ffmpeg', '-y', '-i', video_path,
-                '-vn', '-ac', '1', '-ar', '16000', '-f', 'wav', wav_tmp.name
-            ]
-            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
-            if proc.returncode != 0:
-                logger.error(f"ffmpeg failed: {proc.stderr.decode('utf-8', errors='ignore')}")
-                try:
-                    os.unlink(wav_tmp.name)
-                except:
-                    pass
-                return None
-            return wav_tmp.name
-        except Exception as e:
-            logger.error(f"Audio extract error: {e}")
-            return None
+     
 
     def _compute_speech_probs(self, wav_path):
         """Compute MFCC and run the audio model to get 3-class probabilities.
@@ -750,29 +728,7 @@ class ContentModerationSystem:
             append_debug_line("[VIDEO] Start processing video_url")
             local_vid = self._download_file(video_url)
             if local_vid and os.path.exists(local_vid):
-                # Try extract audio and compute ViHSD speech probabilities
-                audio_wav = self._extract_audio(local_vid)
-                if audio_wav:
-                    speech_probs = self._compute_speech_probs(audio_wav)
-                    try:
-                        os.remove(audio_wav)
-                    except:
-                        pass
-                    if speech_probs:
-                        # choose label by highest prob
-                        label = max(speech_probs.items(), key=lambda x: x[1])[0]
-                        # Map string label to integer label: 'clean' -> 0, 'offensive' -> 1, 'hate' -> 2
-                        label_mapping = {'clean': 0, 'offensive': 1, 'hate': 2}
-                        speech_label = label_mapping.get(label, 0)
-                        speech_score = float(speech_probs.get(label, 0.0))
-                        
-                        label_names = {0: "CLEAN", 1: "OFFENSIVE", 2: "HATE"}
-                        lbl_str = label_names.get(speech_label, "CLEAN")
-                        append_debug_line(f"[VIHSD_SPEECH] label={lbl_str} score={speech_score:.6f} probs={speech_probs}")
-                    else:
-                        append_debug_line("[VIHSD_SPEECH] Speech evaluation failed (probs is None)")
-                else:
-                    append_debug_line("[VIHSD_SPEECH] Audio track not found or extraction failed")
+               
                 speech_probs = None if 'speech_probs' not in locals() else speech_probs
                 speech_label = None if 'speech_label' not in locals() else speech_label
                 speech_score = None if 'speech_score' not in locals() else speech_score

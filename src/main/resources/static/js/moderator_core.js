@@ -516,7 +516,7 @@ function populateProfileModal() {
     const bio = document.getElementById('profile-bio');
     const rel = document.getElementById('profile-relationshipStatus');
 
-    if (avatar) avatar.src = currentModerator.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentModerator.fullName || 'Moderator')}&background=00d1b2&color=fff`;
+    if (avatar) avatar.src = currentModerator.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentModerator.fullName || 'Moderator')}&background=F6DE50&color=1a1a1a`;
     if (fullName) fullName.value = currentModerator.fullName || '';
     if (phone) phone.value = currentModerator.phoneNumber || '';
     if (dob) dob.value = currentModerator.dateOfBirth ? String(currentModerator.dateOfBirth).slice(0, 10) : '';
@@ -665,7 +665,7 @@ async function fetchUserProfile() {
             }
             // Hiển thị avatar lên header
             const avatarImg = document.getElementById('header-avatar');
-            if (avatarImg) avatarImg.src = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+            if (avatarImg) avatarImg.src = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a`;
 
             const staffName = document.getElementById('staff-display-name');
             if (staffName) staffName.textContent = user.fullName || 'Nhân viên điều phối';
@@ -782,7 +782,7 @@ window.renderPostDetailContent = function (post) {
     if (timeElem) timeElem.innerText = new Date(post.createdAt).toLocaleString('vi-VN');
 
     const avatarElem = document.getElementById('mod-post-modal-avatar');
-    if (avatarElem) avatarElem.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(post.authorName || 'Ẩn danh') + '&background=00d1b2&color=fff';
+    if (avatarElem) avatarElem.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(post.authorName || 'Ẩn danh') + '&background=F6DE50&color=1a1a1a';
 
     const contentElem = document.getElementById('mod-post-modal-content-original');
     if (contentElem) contentElem.innerText = post.content || '(Nội dung trống)';
@@ -1488,7 +1488,7 @@ function openModChat(id, name, avatar) {
     chatWindow.style.display = 'flex';
 
     document.getElementById('chat-partner-name').textContent = name;
-    document.getElementById('chat-partner-avatar').src = avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00d1b2&color=fff`;
+    document.getElementById('chat-partner-avatar').src = avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F6DE50&color=1a1a1a`;
 
     const body = document.getElementById('chat-messages-body');
     body.innerHTML = '<div style="text-align:center; color:#b0b3b8; font-size:12px;">Đang tải tin nhắn...</div>';
@@ -2021,7 +2021,7 @@ function injectCommonModals() {
             <div class="profile-modal-content" style="max-width: 450px; background: #242526; border-radius: 8px; overflow: hidden; box-shadow: 0 12px 28px rgba(0,0,0,0.5);">
                 <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid #3e4042; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0; font-size: 18px; color: #e4e6eb;">Thiết lập cảnh cáo</h3>
-                    <button onclick="closeWarnUserModal()" style="background: none; border: none; color: #b0b3b8; font-size: 24px; cursor: pointer;">&times;</button>
+                    <button onclick="closeWarnUserModal()" class="profile-modal-close" style="position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(228,30,63,0.15); color: #e41e3f; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;" onmouseover="this.style.background='#e41e3f';this.style.color='#fff'" onmouseout="this.style.background='rgba(228,30,63,0.15)';this.style.color='#e41e3f'"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="profile-modal-body" style="padding: 20px;">
                     <input type="hidden" id="warn-user-id">
@@ -2059,7 +2059,7 @@ function injectCommonModals() {
             <div class="profile-modal-content" style="background: #242526; width: 450px; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 28px rgba(0,0,0,0.5);">
                 <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid #3e4042; display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin: 0; font-size: 18px; color: #e4e6eb;">Khóa tài khoản người dùng</h3>
-                    <button onclick="closeLockUserModal()" style="background: none; border: none; color: #b0b3b8; font-size: 24px; cursor: pointer;">&times;</button>
+                    <button onclick="closeLockUserModal()" class="profile-modal-close" style="position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(228,30,63,0.15); color: #e41e3f; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;" onmouseover="this.style.background='#e41e3f';this.style.color='#fff'" onmouseout="this.style.background='rgba(228,30,63,0.15)';this.style.color='#e41e3f'"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="profile-modal-body" style="padding: 20px;">
                     <input type="hidden" id="lock-user-id">

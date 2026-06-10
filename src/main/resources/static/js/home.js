@@ -57,7 +57,7 @@ async function fetchUserProfile(token) {
             // Cập nhật avatar (nếu có custom url, hiện tại tạm xài chữ cái đầu)
             let avatarUrl = data.avatar;
             if (!avatarUrl && data.fullName) {
-                avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=00d1b2&color=fff`;
+                avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=F6DE50&color=1a1a1a`;
             }
 
             document.querySelectorAll('#header-avatar, .avatar-large, .avatar-small, #modal-avatar').forEach(img => {
@@ -226,9 +226,34 @@ function prependCreatedPostToFeed(post) {
     else if (post.visibility === 'FRIENDS') visibilityIcon = '<i class="fa-solid fa-user-group" style="margin-left: 5px; font-size: 10px;"></i>';
     else visibilityIcon = '<i class="fa-solid fa-lock" style="margin-left: 5px; font-size: 11px;"></i>';
     const isMine = post.mine ?? post.isMine ?? false;
+    const status = post.status || 'ACTIVE';
+    const isRejected = status === 'REJECTED' || status === 'AUTO_REJECTED';
+    const isPending = status === 'PENDING_REVIEW';
+
+    let warningBanner = '';
+    let cardStyle = '';
+    
+    if (isRejected) {
+        cardStyle = ' style="opacity: 0.85; border: 1.5px solid #ff8182;"';
+        warningBanner = `
+            <div style="background-color: #ffebe9; border: 1px solid #ff8182; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #d1293f; font-size: 13.5px; font-weight: 600;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
+                <span>Bài viết đã bị gỡ do vi phạm tiêu chuẩn cộng đồng (Chỉ bạn mới nhìn thấy).</span>
+            </div>
+        `;
+    } else if (isPending) {
+        cardStyle = ' style="border: 1.5px solid #fab005;"';
+        warningBanner = `
+            <div style="background-color: #fff9db; border: 1px solid #fab005; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: #f08c00; font-size: 13.5px; font-weight: 600;">
+                <i class="fa-solid fa-clock" style="font-size: 16px;"></i>
+                <span>Bài viết đang chờ duyệt bởi đội ngũ quản trị (Chỉ bạn mới nhìn thấy).</span>
+            </div>
+        `;
+    }
 
     let postHtml = `
-        <article class="card post" id="post-${post.id}">
+        <article class="card post" id="post-${post.id}"${cardStyle}>
+            ${warningBanner}
             <div class="post-header">
                 <a href="/html/profile.html?userId=${post.authorId}">
                     <img src="${post.authorAvatar}" alt="Avatar" class="avatar-medium" onerror="this.src='/uploads/default-avatar.png'">
@@ -245,11 +270,16 @@ function prependCreatedPostToFeed(post) {
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
                     ${isMine ? `
+                        ${(isRejected || isPending) ? `
+                        <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        ` : `
+                        <a href="javascript:void(0)" onclick="openEditPostModal(${post.id})"><i class="fa-solid fa-pen"></i> Chỉnh sửa bài viết</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
                         <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
                         <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        `}
                     ` : `
                         <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
@@ -419,11 +449,16 @@ function renderPosts(posts, token) {
                 </button>
                 <div id="dropdown-${post.id}" class="dropdown-content">
                     ${isMine ? `
+                        ${(isRejected || isPending) ? `
+                        <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        ` : `
+                        <a href="javascript:void(0)" onclick="openEditPostModal(${post.id})"><i class="fa-solid fa-pen"></i> Chỉnh sửa bài viết</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PUBLIC')"><i class="fa-solid fa-earth-americas"></i> Công khai</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'FRIENDS')"><i class="fa-solid fa-user-group"></i> Chỉ bạn bè</a>
                         <a href="javascript:void(0)" onclick="changeVisibility(${post.id}, 'PRIVATE')"><i class="fa-solid fa-lock"></i> Chỉ mình tôi</a>
                         <div style="height: 1px; background: #e4e6eb; margin: 4px 0;"></div>
                         <a href="javascript:void(0)" onclick="deletePost(${post.id})" style="color: var(--red-icon);"><i class="fa-regular fa-trash-can"></i> Xóa bài viết</a>
+                        `}
                     ` : `
                         <a href="javascript:void(0)" onclick="hidePost(${post.id})"><i class="fa-solid fa-eye-slash"></i> Ẩn bài viết này</a>
                         <a href="javascript:void(0)" onclick="reportPost(${post.id})"><i class="fa-regular fa-flag"></i> Báo cáo bài viết</a>
@@ -634,10 +669,10 @@ function renderSearchResults(users, posts, query) {
         if (users.length > 0) {
             html += '<div class="search-section-header">Mọi người</div>';
             html += users.slice(0, 5).map(user => {
-                const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+                const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a`;
                 return `
                     <a href="/html/profile.html?userId=${user.id}" class="search-result-item">
-                        <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                        <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a'">
                         <div class="search-item-info">
                             <span class="user-name-result">${user.fullName}</span>
                             <span class="search-item-sub">Người dùng</span>
@@ -1134,23 +1169,47 @@ async function submitComment(postId) {
         if (res.ok) {
             input.value = '';
             removeCommentMedia(postId);
-            
+
             // Optimistic UI update: cộng số bình luận (nếu chưa cộng)
             const commentCountSpan = document.getElementById(`comment-count-${postId}`);
             if (commentCountSpan) {
                 const countMatch = commentCountSpan.innerText.match(/\d+/);
                 let currentCount = countMatch ? parseInt(countMatch[0], 10) : 0;
-                // Note: we don't increment here if we already did it optimistically elsewhere, 
+                // Note: we don't increment here if we already did it optimistically elsewhere,
                 // but fetchComments will refresh anyway.
             }
-            
-            fetchComments(postId); 
+
+            fetchComments(postId);
+        } else if (res.status === 403) {
+            const msg = await res.text();
+            showBanModal(msg);
         } else {
-            alert('Lỗi gửi bình luận');
+            const msg = await res.text();
+            alert(msg || 'Lỗi gửi bình luận');
         }
     } catch (err) {
         console.error(err);
     }
+}
+
+function showBanModal(message) {
+    const oldModal = document.getElementById('ban-alert-modal');
+    if (oldModal) oldModal.remove();
+
+    const modalHtml = `
+        <div id="ban-alert-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 999999;">
+            <div style="background: white; border-radius: 12px; width: 450px; max-width: 90vw; padding: 30px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.4); position: relative;">
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(228,30,63,0.1); color: #e41e3f; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.18s, color 0.18s, transform 0.15s; z-index: 10;" onmouseover="this.style.background='#e41e3f';this.style.color='#fff'" onmouseout="this.style.background='rgba(228,30,63,0.1)';this.style.color='#e41e3f'"><i class="fa-solid fa-xmark"></i></button>
+                <div style="margin-bottom: 20px;">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size: 60px; color: #e41e3f;"></i>
+                </div>
+                <h3 style="font-size: 22px; color: #1c1e21; margin-bottom: 15px; font-weight: 700;">LC Networks cho biết</h3>
+                <p style="font-size: 16px; color: #4b4f56; line-height: 1.5; margin-bottom: 25px;">${message}</p>
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="background: #e41e3f; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; width: 100%;">Tôi đã hiểu và cam kết tuân thủ</button>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 
 // ======================= SIDEBAR SUGGESTIONS =======================
@@ -1254,11 +1313,11 @@ function renderSidebarSuggestions(users) {
     }
 
     container.innerHTML = users.map(user => {
-        const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+        const avatarUrl = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a`;
         return `
             <div class="suggestion-item" id="suggestion-item-${user.id}">
                 <a href="/html/profile.html?userId=${user.id}">
-                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff'">
+                    <img src="${avatarUrl}" alt="Avatar" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a'">
                 </a>
                 <div class="suggestion-info">
                     <a href="/html/profile.html?userId=${user.id}" class="suggestion-name">${user.fullName}</a>

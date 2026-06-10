@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moderator Control Panel - BD Network</title>
+    <title>Moderator Control Panel - LC Social Network</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -71,7 +71,7 @@
                 <div class="staff-menu-wrap" style="position: relative; width: 100%;">
                     <button id="staff-menu-toggle" class="staff-menu-toggle" type="button" style="width: 100%; justify-content: space-between; color: var(--text-primary); background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; text-align: left; padding: 0;" aria-expanded="false" aria-controls="staff-menu-dropdown">
                         <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                            <img id="header-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=0046a0&color=fff" alt="Avatar" class="staff-avatar" style="width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;">
+                            <img id="header-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=F6DE50&color=1a1a1a" alt="Avatar" class="staff-avatar" style="width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;">
                             <div style="display: flex; flex-direction: column; min-width: 0;">
                                 <span id="staff-display-name" style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary);">Nhân viên điều phối</span>
                                 <span style="font-size: 11px; color: var(--sidebar-text);">Moderator</span>
@@ -115,7 +115,7 @@
             <section id="overview-view" class="mod-section active">
                 <div class="section-title">
                     <h2>Bảng điều khiển chung</h2>
-                    <p>Tổng quan tình trạng kiểm duyệt của hệ thống BD Network.</p>
+                    <p>Tổng quan tình trạng kiểm duyệt của hệ thống LC Social Network.</p>
                 </div>
 
                 <div class="stats-grid">
@@ -328,9 +328,9 @@
                     </div>
                 </div>
                 
-                <div class="report-tabs" style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); display: flex; gap: 20px;">
-                    <button class="report-tab-btn active" data-report-type="POST" style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid var(--mod-primary); color: var(--mod-primary);">Bài viết bị báo cáo</button>
-                    <button class="report-tab-btn" data-report-type="COMMENT" style="background: none; border: none; padding: 10px 15px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; color: var(--text-secondary);">Bình luận bị báo cáo</button>
+                <div class="report-tabs" style="margin-bottom: 20px; display: flex; gap: 8px;">
+                    <button class="report-tab-btn active" data-report-type="POST">Bài viết bị báo cáo</button>
+                    <button class="report-tab-btn" data-report-type="COMMENT">Bình luận bị báo cáo</button>
                 </div>
 
                 <div class="mod-table-card" id="report-post-container">
@@ -484,7 +484,7 @@
             </div>
             <div class="modal-body">
                 <div class="profile-modal-avatar-row">
-                    <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=0046a0&color=fff" alt="Avatar">
+                    <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Moderator&background=F6DE50&color=1a1a1a" alt="Avatar">
                     <div>
                         <button type="button" id="profile-modal-change-avatar" class="btn btn-secondary">Đổi ảnh đại diện</button>
                         <input type="file" id="profile-modal-avatar-upload" accept="image/*" hidden>
@@ -544,7 +544,7 @@
                     Chi tiết nội dung 
                     <span id="mod-post-modal-id-badge" style="background: var(--bg-main); padding: 2px 8px; border-radius: 4px; font-size: 13px; color: var(--text-secondary); border: 1px solid var(--border-color);">#P-?</span>
                 </h2>
-                <button type="button" onclick="closeModPostDetailModal()" class="close-modal" aria-label="Đóng" style="background: var(--bg-main); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+                <button type="button" onclick="closeModPostDetailModal()" class="close-modal" aria-label="Đóng">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -600,7 +600,7 @@
                 <h2 id="user-profile-modal-title" style="font-size: 18px; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
                     <i class="fa-solid fa-user-shield" style="color: var(--mod-primary);"></i> Hồ sơ người dùng
                 </h2>
-                <button type="button" onclick="closeUserProfileModal()" class="close-modal" aria-label="Đóng" style="background: var(--bg-main); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+                <button type="button" onclick="closeUserProfileModal()" class="close-modal" aria-label="Đóng">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -633,7 +633,7 @@
         <div class="profile-modal-content" style="max-width: 450px; background: var(--surface-bg); border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); border: 1px solid var(--border-color);">
             <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--surface-bg);">
                 <h3 style="margin: 0; font-size: 18px; color: var(--text-primary);">Thiết lập cảnh cáo</h3>
-                <button class="profile-modal-close" onclick="closeWarnUserModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
+                <button class="profile-modal-close" onclick="closeWarnUserModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="profile-modal-body" style="padding: 20px; background: var(--bg-main);">
                 <input type="hidden" id="warn-user-id">
@@ -684,7 +684,7 @@
         <div class="profile-modal-content" style="background: var(--surface-bg); width: 450px; border-radius: 12px; overflow: hidden; box-shadow: var(--card-shadow); border: 1px solid var(--border-color);">
             <div class="profile-modal-header" style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--surface-bg);">
                 <h3 style="margin: 0; font-size: 18px; color: var(--text-primary);">Khóa tài khoản người dùng</h3>
-                <button class="profile-modal-close" onclick="closeLockUserModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 24px; cursor: pointer;">&times;</button>
+                <button class="profile-modal-close" onclick="closeLockUserModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="profile-modal-body" style="padding: 20px; background: var(--bg-main);">
                 <input type="hidden" id="lock-user-id">
@@ -844,7 +844,7 @@
                 <h3 id="note-modal-title" style="font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
                     <i class="fa-solid fa-pen-to-square" style="color: #0046a0;"></i> Ghi chú xử lý báo cáo
                 </h3>
-                <button type="button" onclick="closeActionNoteModal()" class="close-modal" style="border: none; background: none; font-size: 20px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                <button type="button" onclick="closeActionNoteModal()" class="close-modal" aria-label="Đóng">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>

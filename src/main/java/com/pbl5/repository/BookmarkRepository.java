@@ -22,4 +22,8 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 
     @Query("SELECT b FROM Bookmark b WHERE b.user = :user ORDER BY b.createdAt DESC")
     List<Bookmark> findByUserOrderByCreatedAtDesc(@Param("user") User user);
+
+    List<Bookmark> findByUserId(Long userId);
+
+    List<Bookmark> findByPostId(Long postId);
 }

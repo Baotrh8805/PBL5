@@ -158,12 +158,36 @@
 }
 
 .btn-primary {
-    background: #0866ff;
-    color: white;
+    background: #F6DE50;
+    color: #1a1a1a;
 }
 
 .btn-primary:hover {
-    background: #075ce5;
+    background: #d4b800;
+    color: #fff;
+}
+
+.btn-add-friend {
+    background: #DCFCE7;
+    color: #16A34A;
+    border: 1px solid rgba(22, 163, 74, 0.3);
+}
+
+.btn-add-friend:hover {
+    background: #BBF7D0;
+    color: #15803D;
+    border-color: rgba(22, 163, 74, 0.5);
+}
+
+html[data-theme="dark"] .btn-add-friend {
+    background: rgba(22, 163, 74, 0.18);
+    color: #4ADE80;
+    border-color: rgba(22, 163, 74, 0.3);
+}
+
+html[data-theme="dark"] .btn-add-friend:hover {
+    background: rgba(22, 163, 74, 0.28);
+    color: #4ADE80;
 }
 
 .btn-secondary {
@@ -194,7 +218,7 @@
 }
 
 .profile-navbar a.active {
-    color: #0866ff;
+    color: #7a6400;
 }
 
 .profile-navbar a.active::after {
@@ -204,7 +228,7 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: #0866ff;
+    background: #F6DE50;
     border-radius: 3px 3px 0 0;
 }
 
@@ -287,7 +311,7 @@
 }
 
 .card-header h3 { margin: 0; font-size: 20px; }
-.card-header a { color: #0866ff; text-decoration: none; font-size: 15px; }
+.card-header a { color: #7a6400; text-decoration: none; font-size: 15px; }
 
 .photos-grid {
     display: grid;

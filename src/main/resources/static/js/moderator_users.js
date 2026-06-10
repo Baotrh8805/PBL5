@@ -66,13 +66,15 @@ function renderUsersTable(users) {
         }
 
         const scoreClass = user.score > 0 ? 'high' : 'low';
-        const roleLabel = `<span class="status-badge info" style="background: rgba(0, 70, 160, 0.08); color: var(--mod-primary); font-size: 11px;"><i class="fa-solid fa-user-shield"></i> ${escapeHtml(user.role || 'USER')}</span>`;
+        const roleClass = (user.role === 'MODERATOR') ? 'role-moderator' : 'role-user';
+        const roleIcon  = (user.role === 'MODERATOR') ? 'fa-user-shield' : 'fa-user';
+        const roleLabel = `<span class="role-badge ${roleClass}"><i class="fa-solid ${roleIcon}"></i> ${escapeHtml(user.role || 'USER')}</span>`;
 
         return `
         <tr>
             <td>
                 <div class="user-cell" style="display: flex; align-items: center; gap: 10px;">
-                    <img src="${user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.fullName || 'User')}" width="38" height="38" style="border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color);">
+                    <img src="${user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.fullName || 'User') + '&background=F6DE50&color=1a1a1a'}" width="38" height="38" style="border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color);">
                     <div>
                         <div style="font-weight: 700; color: var(--text-primary); font-size: 13.5px;">${escapeHtml(user.fullName)}</div>
                         <div style="font-size: 11px; color: var(--text-secondary);">#UID-${user.id}</div>
@@ -91,11 +93,12 @@ function renderUsersTable(users) {
                 <div class="action-group">
                     ${user.role === 'USER' ? `
                         <button class="btn-action warning" onclick="window.warnUser('${user.id}')" title="Cảnh cáo"><i class="fa-solid fa-triangle-exclamation"></i> Cảnh cáo</button>
-                        ${user.status === 'BANNED' ? 
-                            `<button class="btn-action success" onclick="window.unlockUser('${user.id}')" title="Mở khóa"><i class="fa-solid fa-user-check"></i> Mở khóa</button>` : 
+                        ${user.status === 'BANNED' ?
+                            `<button class="btn-action success" onclick="window.unlockUser('${user.id}')" title="Mở khóa"><i class="fa-solid fa-user-check"></i> Mở khóa</button>` :
                             `<button class="btn-action danger" onclick="window.openLockModal('${user.id}')" title="Khóa"><i class="fa-solid fa-user-slash"></i> Khóa</button>`
                         }
                         <button class="btn-action detail" onclick="window.viewUserDetails('${user.id}')" title="Xem chi tiết"><i class="fa-solid fa-eye"></i> Chi tiết</button>
+                        <button class="btn-action danger-outline" onclick="window.deleteModUser(${user.id}, '${escapeHtml(user.fullName)}')" title="Xóa tài khoản"><i class="fa-solid fa-trash"></i> Xóa</button>
                     ` : `
                         <!-- Moderator: Thay Chi tiết bằng Nhắn tin -->
                         <button class="btn-action chat" onclick="openChatWith(${user.id})" title="Nhắn tin"><i class="fa-solid fa-comment"></i> Nhắn tin</button>
@@ -118,7 +121,7 @@ function renderFriendButton(user) {
     } else if (user.friendStatus === 'PENDING_SENT') {
         return `<button class="btn-action secondary" disabled><i class="fa-solid fa-user-clock"></i> Đã gửi</button>`;
     } else {
-        return `<button class="btn-action primary" onclick="addFriend(${user.id})" title="Kết bạn"><i class="fa-solid fa-user-plus"></i> Kết bạn</button>`;
+        return `<button class="btn-action add-friend" onclick="addFriend(${user.id})" title="Kết bạn"><i class="fa-solid fa-user-plus"></i> Kết bạn</button>`;
     }
 }
 
@@ -243,11 +246,11 @@ window.viewUserDetails = async function(userId) {
                 <!-- Tóm tắt người dùng - Sticky Header -->
                 <div style="position: sticky; top: -20px; z-index: 100; background: var(--bg-main); padding-bottom: 20px; margin-bottom: 25px;">
                     <div style="display: flex; align-items: center; gap: 20px; padding: 20px; background: var(--surface-bg); border-radius: 12px; border: 1px solid ${isDanger ? 'var(--danger-color)' : 'var(--border-color)'}; box-shadow: var(--card-shadow);">
-                        <img src="${user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.fullName)}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid ${isDanger ? 'var(--danger-color)' : 'var(--border-color)'}; object-fit: cover;">
+                        <img src="${user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.fullName) + '&background=F6DE50&color=1a1a1a'}" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid ${isDanger ? 'var(--danger-color)' : 'var(--border-color)'}; object-fit: cover;">
                         <div style="flex: 1;">
                             <div style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
                                 ${user.fullName}
-                                <span style="font-size: 11px; font-weight: 700; color: var(--mod-primary); background: var(--mod-primary-light); padding: 2px 10px; border-radius: 4px; border: 1px solid rgba(0,70,160,0.15);">${user.role}</span>
+                                <span class="role-badge ${user.role === 'MODERATOR' ? 'role-moderator' : 'role-user'}"><i class="fa-solid ${user.role === 'MODERATOR' ? 'fa-user-shield' : 'fa-user'}"></i> ${user.role}</span>
                                 ${isDanger ? '<span style="font-size: 10px; font-weight: 800; color: #fff; background: var(--danger-color); padding: 2px 10px; border-radius: 4px; animation: pulse 2s infinite;"><i class="fa-solid fa-triangle-exclamation"></i> VI PHẠM NHIỀU LẦN</span>' : ''}
                             </div>
                             <div style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.8;">
@@ -305,7 +308,7 @@ window.viewUserDetails = async function(userId) {
                                 <span style="font-size: 15px;">Người dùng này chưa có bài viết nào trong hệ thống.</span>
                             </div>
                         ` : posts.map(post => {
-                            const authorAvatar = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || 'User')}&background=00d1b2&color=fff`;
+                            const authorAvatar = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || 'User')}&background=F6DE50&color=1a1a1a&size=52`;
                             const postTime = typeof timeSince === 'function' ? timeSince(post.createdAt) : new Date(post.createdAt).toLocaleString('vi-VN');
                             
                             let mediaHtml = '';
@@ -430,4 +433,29 @@ window.showUserFullInfo = function(userId) {
     `;
 
     showCustomAlert(`Thông tin chi tiết #UID-${userId}`, infoHtml, 'info');
+};
+
+window.deleteModUser = function(id, name) {
+    showCustomConfirm(
+        '<i class="fa-solid fa-trash" style="color:var(--danger-color);"></i> Xóa vĩnh viễn người dùng',
+        `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản của <strong>"${escapeHtml(name)}"</strong>?<br><span style="color:var(--danger-color); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Hành động này không thể hoàn tác!</span>`,
+        async () => {
+            try {
+                const res = await fetch(`/api/moderator/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${window.token || localStorage.getItem('token')}` }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    cache.users = cache.users.filter(u => u.id !== id);
+                    filterAndRenderUsers();
+                    showCustomAlert('Thành công', `Đã xóa tài khoản ${escapeHtml(name)}.`, 'success');
+                } else {
+                    showCustomAlert('Lỗi', data.message || 'Có lỗi xảy ra khi xóa tài khoản.', 'error');
+                }
+            } catch (e) {
+                showCustomAlert('Lỗi kết nối', 'Không thể kết nối đến máy chủ.', 'error');
+            }
+        }
+    );
 };

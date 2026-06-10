@@ -156,7 +156,7 @@ function renderPostDetail(post) {
 
     // Author
     document.getElementById('post-author-name').innerHTML = `<a href="/html/profile.html?userId=${post.authorId}" style="text-decoration:none; color:inherit;">${post.authorName}</a>`;
-    const authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=00d1b2&color=fff`;
+    const authorAvatar = post.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.authorName)}&background=F6DE50&color=1a1a1a`;
     const authorAvatarImg = document.getElementById('post-author-avatar');
     authorAvatarImg.src = authorAvatar;
     authorAvatarImg.style.cursor = 'pointer';
@@ -273,7 +273,7 @@ function renderComments(comments) {
 }
 
 function renderCommentItem(c, isReply = false) {
-    const avatar = c.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.authorName)}&background=00d1b2&color=fff`;
+    const avatar = c.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.authorName)}&background=F6DE50&color=1a1a1a`;
     let mediaHtml = '';
     if (c.imageUrl) {
         mediaHtml = `<img src="${c.imageUrl}" loading="lazy" style="max-width: 100%; border-radius: 8px; margin-top: 8px; display: block;">`;
@@ -490,13 +490,13 @@ function showBanModal(message) {
     const modalHtml = `
         <div id="ban-alert-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 999999;">
             <div style="background: white; border-radius: 12px; width: 450px; max-width: 90vw; padding: 30px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.4); position: relative;">
-                <button onclick="document.getElementById('ban-alert-modal').remove()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; color: #65676b; cursor: pointer;">&times;</button>
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(228,30,63,0.1); color: #e41e3f; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.18s, color 0.18s, transform 0.15s; z-index: 10;" onmouseover="this.style.background='#e41e3f';this.style.color='#fff'" onmouseout="this.style.background='rgba(228,30,63,0.1)';this.style.color='#e41e3f'"><i class="fa-solid fa-xmark"></i></button>
                 <div style="margin-bottom: 20px;">
                     <i class="fa-solid fa-circle-exclamation" style="font-size: 60px; color: #e41e3f;"></i>
                 </div>
-                <h3 style="font-size: 22px; color: #1c1e21; margin-bottom: 15px; font-weight: 700;">Thông báo vi phạm</h3>
+                <h3 style="font-size: 22px; color: #1c1e21; margin-bottom: 15px; font-weight: 700;">LC Networks cho biết</h3>
                 <p style="font-size: 16px; color: #4b4f56; line-height: 1.5; margin-bottom: 25px;">${message}</p>
-                <button onclick="document.getElementById('ban-alert-modal').remove()" style="background: #e41e3f; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; width: 100%;">Đóng</button>
+                <button onclick="document.getElementById('ban-alert-modal').remove()" style="background: #e41e3f; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer; width: 100%;">Tôi đã hiểu và cam kết tuân thủ</button>
             </div>
         </div>
     `;
@@ -510,7 +510,7 @@ async function fetchMyProfile(token) {
         });
         if (res.ok) {
             const user = await res.json();
-            const avatar = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=00d1b2&color=fff`;
+            const avatar = user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=F6DE50&color=1a1a1a`;
             document.getElementById('my-avatar').src = avatar;
         }
     } catch (err) {

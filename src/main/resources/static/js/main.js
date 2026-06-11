@@ -7,14 +7,16 @@ function showSection(sectionId) {
     document.getElementById(sectionId).classList.remove('hidden');
     hideNotification();
 
-    // Update Top Right Navigation dynamically
+    // nav-right-actions removed in new layout — guard for safety
     const navRight = document.getElementById('nav-right-actions');
-    if (sectionId === 'login-section') {
-        navRight.innerHTML = `<span>Bạn là người mới?</span> <button class="btn btn-outline" onclick="showSection('register-section')">Đăng ký</button>`;
-    } else if (sectionId === 'register-section') {
-        navRight.innerHTML = `<span>Đã có tài khoản?</span> <button class="btn btn-outline" onclick="showSection('login-section')">Đăng nhập</button>`;
-    } else {
-        navRight.innerHTML = `<button class="btn btn-outline" onclick="showSection('login-section')">Quay lại</button>`;
+    if (navRight) {
+        if (sectionId === 'login-section') {
+            navRight.innerHTML = `<span>Bạn là người mới?</span> <button class="btn btn-outline" onclick="showSection('register-section')">Đăng ký</button>`;
+        } else if (sectionId === 'register-section') {
+            navRight.innerHTML = `<span>Đã có tài khoản?</span> <button class="btn btn-outline" onclick="showSection('login-section')">Đăng nhập</button>`;
+        } else {
+            navRight.innerHTML = `<button class="btn btn-outline" onclick="showSection('login-section')">Quay lại</button>`;
+        }
     }
 }
 
